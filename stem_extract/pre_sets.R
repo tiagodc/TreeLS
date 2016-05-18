@@ -10,6 +10,7 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
   # cell.size = pixel size for creating raster layers (in meters)
   # min.den = minimum point density of pixels to test circles using the hough transformation
   
+    # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
   
   baseline = filter(tree, Plot = F, cell.size = cell.size, rad.inf = 2, min.val = min.den)
   dists = apply(tree, 1, function(u) sum( (u[1:2] - baseline[3:4])^2 )^(1/2) )
@@ -88,6 +89,8 @@ pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .
   # l.int = length of segments to split the tree into, from bottom to top (in meters) (for this method it only relates to code speed and to recuce RAM usage)
   # freq.ratio = minimum proportion of number of points in a group, in relation to the largest found group, in order to keep it in the output point cloud (between 0 and 1)
   
+    # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
+
   
   comps = Vsections(tree, l.int = l.int, overlap = 1/3 ,Plot = F)
   comps = comps[sapply(comps, nrow) > 3]
@@ -146,6 +149,8 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
   # largest.cov = minimum accepeted proportion of points in a cover set, in relation to the largest cover set, to keep it in the output cloud. If =NULL an automated maximum curve detection method is applied.
   # axis.dist = maximum distance from an estimated z axis tolerated to keep a cover set in the output cloud
   
+    # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
+
   
   tree2 = balls(tree, ball.rad = noise1.rad, sec.filt = noise2.rad)
   sps = cube.space(tree2)
@@ -244,6 +249,8 @@ fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99
   # p = estimated proportion of inliers (stem points)
   # P = confidence level
   
+    # OUTPUT = single stem point cloud, matrix with 3 columns, x, y and z, respectively
+
   
   slices = Vsections(trunk, l.int = l.int, Plot = F)
   
@@ -300,6 +307,8 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
   # speed.up = TRUE or FALSE, if TRUE takes no more than 500 points to fit a cylinder, randomly selected (applicable for large point clouds)
   # opt.method = optimization method, passed to optim (R base function)
   
+    # OUTPUT = single stem point cloud, matrix with 3 columns, x, y and z, respectively
+
   
   zbound = c((s.height-c.len/2) , (s.height+c.len/2)) + min(trunk[,3])
   
@@ -362,6 +371,8 @@ fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, time
   # timesN = factor that multiplies N, for the number of iterations of the RANSAC, N=36 as default
   # opt.method = optimization method, passed to optim (R base function)
   
+    # OUTPUT = single stem point cloud, matrix with 3 columns, x, y and z, respectively
+
   
   zbound = c((h.init-c.len/2) , (h.init+c.len/2)) + min(trunk[,3])
   
