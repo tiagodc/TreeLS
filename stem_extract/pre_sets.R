@@ -1,6 +1,15 @@
 ##Pre-filtering phase
 
+# Circle hough transformation pre-filter (based on Olofsson et al. 2014)
 pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
+  
+  ### INSTRUCTIONS ###
+  
+  # tree = single tree point cloud. Matrix with 3 columns: x, y and z coordinates, respectively
+  # l.int = length of segments to split the tree into, from bottom to top (in meters)
+  # cell.size = pixel size for creating raster layers (in meters)
+  # min.den = minimum point density of pixels to test circles using the hough transformation
+  
   
   baseline = filter(tree, Plot = F, cell.size = cell.size, rad.inf = 2, min.val = min.den)
   dists = apply(tree, 1, function(u) sum( (u[1:2] - baseline[3:4])^2 )^(1/2) )
@@ -66,7 +75,19 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
   
 }
 
+
+# Spectral decomposition pre-filter (based on Liang et. al 2012)
 pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .25){
+  
+   ### INSTRUCTIONS ###
+  
+  # tree = single tree point cloud. Matrix with 3 columns: x, y and z coordinates, respectively
+  # k = number of points belonging to a surface to be tested for flatness
+  # flat.min = minimum tolerated flatness (between 0 and 1)
+  # ang.tol = maximum deviation from a perpendicular angle with the z axis (90 +/- ang.tol, in degrees)
+  # l.int = length of segments to split the tree into, from bottom to top (in meters) (for this method it only relates to code speed and to recuce RAM usage)
+  # freq.ratio = minimum proportion of number of points in a group, in relation to the largest found group, in order to keep it in the output point cloud (between 0 and 1)
+  
   
   comps = Vsections(tree, l.int = l.int, overlap = 1/3 ,Plot = F)
   comps = comps[sapply(comps, nrow) > 3]
@@ -110,7 +131,20 @@ pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .
   return(trunk)
 }
 
+# Voxel neighborhoods pre-filter (based on Raumonen et al. 2013)
 pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.tol=10, neighborhood = 4, largest.cov=NULL, axis.dist = .5){
+  
+  ### INSTRUCTIONS ###
+  
+  # tree = single tree point cloud. Matrix with 3 columns: x, y and z coordinates, respectively
+  # noise1.rad = sphere radii to use for the first rough noise filtering step (in meters)
+  # noise2.rad = sphere radii to use for the second rough noise filtering step (in meters)
+  # flat.min = minimum tolerated flatness (between 0 and 1)
+  # ang.tol = maximum deviation from a perpendicular angle with the z axis (90 +/- ang.tol, in degrees)
+  # neighborhood = order of voxel neighborhood to merge (for voxels of 5 cm)
+  # largest.cov = minimum accepeted proportion of points in a cover set, in relation to the largest cover set, to keep it in the output cloud. If =NULL an automated maximum curve detection method is applied.
+  # axis.dist = maximum distance from an estimated z axis tolerated to keep a cover set in the output cloud
+  
   
   tree2 = balls(tree, ball.rad = noise1.rad, sec.filt = noise2.rad)
   sps = cube.space(tree2)
@@ -197,7 +231,18 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
 
 ###Fitting phase
 
+# RANSAC circle fit
 fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99){
+
+  ### INSTRUCTIONS ###
+  
+  # trunk = output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively
+  # l.int = length of stem segments to fit (in meters)
+  # cut.rad = value to add to the radius, removing all points outside a range of radius+cut.rad from the point cloud (in meters)
+  # n = number of points to take in every RANSAC iteration
+  # p = estimated proportion of inliers (stem points)
+  # P = confidence level
+  
   
   slices = Vsections(trunk, l.int = l.int, Plot = F)
   
@@ -241,7 +286,19 @@ fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99
   return(stem)
 }
 
+
+# Iterated reqeighted total least squares cylinder fit
 fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, opt.method = 'Nelder-Mead'){
+  
+  ### INSTRUCTIONS ###
+  
+  # trunk = output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively
+  # c.len = length of stem segments to fit (in meters)
+  # max.rad = maximum radius accepted as estimate (in meters)
+  # s.height = starting height for acquiring baseline cylinder parameters (in meters)
+  # speed.up = TRUE or FALSE, if TRUE takes no more than 500 points to fit a cylinder, randomly selected (applicable for large point clouds)
+  # opt.method = optimization method, passed to optim (R base function)
+  
   
   zbound = c((s.height-c.len/2) , (s.height+c.len/2)) + min(trunk[,3])
   
@@ -292,7 +349,17 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
   return(stem)
 }
 
+# RANSAC cylinder fit
 fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, timesN = 2, opt.method = 'Nelder-Mead'){
+  
+   ### INSTRUCTIONS ###
+  
+  # trunk = output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively
+  # c.len = length of stem segments to fit (in meters)
+  # max.rad = maximum radius accepted as estimate (in meters)
+  # timesN = factor that multiplies N, for the number of iterations of the RANSAC, N=36 as default
+  # opt.method = optimization method, passed to optim (R base function)
+  
   
   zbound = c((h.init-c.len/2) , (h.init+c.len/2)) + min(trunk[,3])
   
