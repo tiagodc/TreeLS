@@ -79,7 +79,7 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
 # Spectral decomposition pre-filter (based on Liang et. al 2012)
 pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .25){
   
-   ### INSTRUCTIONS ###
+  ### INSTRUCTIONS ###
   
   # tree = single tree point cloud. Matrix with 3 columns: x, y and z coordinates, respectively
   # k = number of points belonging to a surface to be tested for flatness
@@ -130,6 +130,7 @@ pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .
   
   return(trunk)
 }
+
 
 # Voxel neighborhoods pre-filter (based on Raumonen et al. 2013)
 pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.tol=10, neighborhood = 4, largest.cov=NULL, axis.dist = .5){
@@ -349,10 +350,11 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
   return(stem)
 }
 
+
 # RANSAC cylinder fit
 fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, timesN = 2, opt.method = 'Nelder-Mead'){
   
-   ### INSTRUCTIONS ###
+  ### INSTRUCTIONS ###
   
   # trunk = output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively
   # c.len = length of stem segments to fit (in meters)
