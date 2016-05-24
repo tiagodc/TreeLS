@@ -202,17 +202,6 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
     curv = which(rot[,2] == min(rot[,2]))
     
     largest.cov = y[curv]
-    
-    #png('curve.png', width = 15, height = 15, units = 'cm', res = 300)
-    #plot(y~x, pch=20, xlab = 'Ordered cover sets', ylab = 'Relative point frequency')
-    #lines(rev(range(x)), range(y), lwd=2, lty=2)
-    #points(x[curv], largest.cov, col='red', cex=3, pch=20)
-    #abline(a=-.025, b=.00017, col='blue')
-    #lines(c(x[curv],5200), c(largest.cov, .58), col='red', lty=2, lwd=2)
-    #legend('topright', pch=20, pt.cex=2, lty=c(0,0,1), lwd=2, col=c('black', 'red'), 
-    #      legend=c('cover set point frequency', 'point of maximum curvature'))
-    #dev.off()
-    
   }
   
   trunk2 = retrunk[obs.rat > largest.cov]
