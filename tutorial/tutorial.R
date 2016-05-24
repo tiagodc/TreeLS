@@ -1,4 +1,4 @@
-require(rLiDAR) ; require(rgl)
+require(rgl)
 source('https://raw.githubusercontent.com/tiagodc/TreeLS/master/stem_extract/base_functions.R')
 source('https://raw.githubusercontent.com/tiagodc/TreeLS/master/stem_extract/pre_sets.R')
 
