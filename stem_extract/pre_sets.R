@@ -150,7 +150,6 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
   # axis.dist = maximum distance from an estimated z axis tolerated to keep a cover set in the output cloud
   
     # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
-
   
   tree2 = balls(tree, ball.rad = noise1.rad, sec.filt = noise2.rad)
   sps = cube.space(tree2)
@@ -193,32 +192,29 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
     x = length(obs):1
     y = sort(obs.rat)
     
-    func = lm(log(y)~log(x)-1) #nls(y~x^i), start = list(i=1,j=1))
-    cf = coef(func)
+    a = lm(rev(range(y))~range(x))
     
-    nlfunc = nls(y~x^a, start = list(a=cf))
-    nlcf = coef(nlfunc)
+    ang = -atan(a$coefficients[2])
     
-    dk = function(x, n = nlcf){#a=nlcf[2], b=nlcf[1]){
-      
-      #dk=abs(n-1)*abs(n)*abs(x^(n-2))/(n^2*x^(2*(n-1))+1)^(3/2)
-      dk=-abs(n-1)*abs(n)*x^(2*n-7)*((2*n^3-n^2)*x^(2*n)+(2-n)*x^2)/((n^2*x^(2*(n-1))+1)^(5/2)*abs(x^(n-2)))
-      
-      return(abs(dk))
-    }
-    curvmax = nlm(dk, p = 1)[[2]]
-    largest.cov = curvmax^nlcf
+    rtm = matrix(c(cos(ang), sin(ang), -sin(ang), cos(ang)), ncol=2, byrow = T)
+    rot = cbind(x,y) %*% rtm
+    
+    curv = which(rot[,2] == min(rot[,2]))
+    
+    largest.cov = y[curv]
     
     #png('curve.png', width = 15, height = 15, units = 'cm', res = 300)
-    #plot(y~x, pch=20, xlab = 'Order of sorted relative point frequency', ylab = 'Relative point frequency')
-    #lines(x, predict(nlfunc), col='red', lwd=2)
-    #points(curvmax, largest.cov, col='red', cex=2, pch=18)
-    #lines(c(-100000, curvmax, curvmax), c(largest.cov, largest.cov, -1), col='red', lty=2)
-    #legend('topright', pch=c(20, 18, -1), pt.cex=1, lty=c(0,0,1), lwd=2, col=c('black', 'red', 'red'), 
-    #       legend=c('cover set point frequency', 'estimated point of maximum curvature', expression(paste('rough power function ', y==x^beta))))
+    #plot(y~x, pch=20, xlab = 'Ordered cover sets', ylab = 'Relative point frequency')
+    #lines(rev(range(x)), range(y), lwd=2, lty=2)
+    #points(x[curv], largest.cov, col='red', cex=3, pch=20)
+    #abline(a=-.025, b=.00017, col='blue')
+    #lines(c(x[curv],5200), c(largest.cov, .58), col='red', lty=2, lwd=2)
+    #legend('topright', pch=20, pt.cex=2, lty=c(0,0,1), lwd=2, col=c('black', 'red'), 
+    #      legend=c('cover set point frequency', 'point of maximum curvature'))
     #dev.off()
     
   }
+  
   trunk2 = retrunk[obs.rat > largest.cov]
   
   meandis = sapply(trunk2, function(u){
