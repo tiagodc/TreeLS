@@ -1,5 +1,7 @@
 ##Pre-filtering phase
 
+# Output of all pre-filtering functions is a rough trunk point cloud - matrix with 3 columns, x, y and z, respectively.
+
 # Circle hough transformation pre-filter (based on Olofsson et al. 2014)
 pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
   
@@ -9,8 +11,6 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
   # l.int = length of segments to split the tree into, from bottom to top (in meters)
   # cell.size = pixel size for creating raster layers (in meters)
   # min.den = minimum point density of pixels to test circles using the hough transformation
-  
-    # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
   
   baseline = filter(tree, Plot = F, cell.size = cell.size, rad.inf = 2, min.val = min.den)
   dists = apply(tree, 1, function(u) sum( (u[1:2] - baseline[3:4])^2 )^(1/2) )
@@ -76,7 +76,6 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
   
 }
 
-
 # Spectral decomposition pre-filter (based on Liang et. al 2012)
 pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .25){
   
@@ -88,9 +87,6 @@ pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .
   # ang.tol = maximum deviation from a perpendicular angle with the z axis (90 +/- ang.tol, in degrees)
   # l.int = length of segments to split the tree into, from bottom to top (in meters) (for this method it only relates to code speed and to recuce RAM usage)
   # freq.ratio = minimum proportion of number of points in a group, in relation to the largest found group, in order to keep it in the output point cloud (between 0 and 1)
-  
-    # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
-
   
   comps = Vsections(tree, l.int = l.int, overlap = 1/3 ,Plot = F)
   comps = comps[sapply(comps, nrow) > 3]
@@ -134,7 +130,6 @@ pref_SD = function(tree, k=30, flat.min=.9, ang.tol=10, l.int=.5, freq.ratio = .
   return(trunk)
 }
 
-
 # Voxel neighborhoods pre-filter (based on Raumonen et al. 2013)
 pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.tol=10, neighborhood = 4, largest.cov=NULL, axis.dist = .5){
   
@@ -148,8 +143,6 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
   # neighborhood = order of voxel neighborhood to merge (for voxels of 5 cm)
   # largest.cov = minimum accepeted proportion of points in a cover set, in relation to the largest cover set, to keep it in the output cloud. If =NULL an automated maximum curve detection method is applied.
   # axis.dist = maximum distance from an estimated z axis tolerated to keep a cover set in the output cloud
-  
-    # OUTPUT = rough trunk point cloud, matrix with 3 columns, x, y and z, respectively
   
   tree2 = balls(tree, ball.rad = noise1.rad, sec.filt = noise2.rad)
   sps = cube.space(tree2)
@@ -202,6 +195,17 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
     curv = which(rot[,2] == min(rot[,2]))
     
     largest.cov = y[curv]
+    
+    #png('curve.png', width = 15, height = 15, units = 'cm', res = 300)
+    #plot(y~x, pch=20, xlab = 'Ordered cover sets', ylab = 'Relative point frequency')
+    #lines(rev(range(x)), range(y), lwd=2, lty=2)
+    #points(x[curv], largest.cov, col='red', cex=3, pch=20)
+    #abline(a=-.025, b=.00017, col='blue')
+    #lines(c(x[curv],5200), c(largest.cov, .58), col='red', lty=2, lwd=2)
+    #legend('topright', pch=20, pt.cex=2, lty=c(0,0,1), lwd=2, col=c('black', 'red'), 
+    #      legend=c('cover set point frequency', 'point of maximum curvature'))
+    #dev.off()
+    
   }
   
   trunk2 = retrunk[obs.rat > largest.cov]
@@ -222,9 +226,13 @@ pref_VN = function(tree, noise1.rad = .05, noise2.rad=.1 , flat.min = .9, ang.to
 
 ###Fitting phase
 
+# Output for all functions is a list of length 2:
+  # $stem.points = single stem point cloud, matrix with 3 columns, x, y and z, respectively;
+  # $circles / $cylinders = matrix displaying the optimal parameters of all circles/cylinders fitted along the stem.
+
 # RANSAC circle fit
 fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99){
-
+  
   ### INSTRUCTIONS ###
   
   # trunk = output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively
@@ -234,13 +242,11 @@ fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99
   # p = estimated proportion of inliers (stem points)
   # P = confidence level
   
-    # OUTPUT = single stem point cloud, matrix with 3 columns, x, y and z, respectively
-
-  
   slices = Vsections(trunk, l.int = l.int, Plot = F)
   
   N = log(1 - P) / log(1 - p^n)
   
+  hs = c()
   slices2 = list()
   best = matrix(ncol=4,nrow=0)
   dt=NULL
@@ -248,7 +254,7 @@ fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99
     
     slc = slices[[i]]
     
-    if(nrow(slc) < n){ best = rbind(best, rep(0,4)) ; next}
+    if(nrow(slc) < n){ best = rbind(best, rep(0,4)) ; hs = rbind(hs, range(slc[,3])) ; next}
     
     data = matrix(ncol=4, nrow=0)
     for(j in 1:(5*N)){
@@ -269,16 +275,19 @@ fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99
     slices2[[i]] = slc[dst < cut.rad+dt[3],]
     
     best = rbind(best, dt)
-    
+    hs = rbind(hs, range(slices2[[i]][,3]))
   }
   
-  colnames(best) = c('x','y','radius','ssq')
-  best = data.frame(best, h=names(slices), row.names = NULL)
-  stem = do.call(rbind, slices2)
+  circ.fits = cbind(hs, best)
+  colnames(circ.fits) = c('z1','z2', 'x','y','r','ssq')
+  rownames(circ.fits) = NULL
   
-  return(stem)
+  stem = do.call(rbind, slices2)
+  colnames(stem) = c('x','y','z')
+  rownames(stem) = NULL
+  
+  return(list(stem.points = stem, circles = circ.fits))
 }
-
 
 # Iterated reqeighted total least squares cylinder fit
 fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, opt.method = 'Nelder-Mead'){
@@ -292,12 +301,8 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
   # speed.up = TRUE or FALSE, if TRUE takes no more than 500 points to fit a cylinder, randomly selected (applicable for large point clouds)
   # opt.method = optimization method, passed to optim (R base function)
   
-    # OUTPUT = single stem point cloud, matrix with 3 columns, x, y and z, respectively
-
-  
   zbound = c((s.height-c.len/2) , (s.height+c.len/2)) + min(trunk[,3])
-  
-  #max.rad = .5
+   
   rrad = 100
   thr=.05
   
@@ -317,6 +322,8 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
   u.dist = cyl.dists(rreg$pars, below)
   below = below[abs(u.dist) < thr,]
   
+  cyl.fits = c(range(below[,3]), unlist(rreg[1:2]))
+  
   above = trunk[trunk[,3]>=zbound[1],]
   ab.list = Vsections(above, l.int = c.len, Plot = F)
   
@@ -335,15 +342,21 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
     a.dist = cyl.dists(par, temp)
     temp = temp[abs(a.dist)<.01,]
     
+    cyl.fits = rbind(cyl.fits, c(range(temp[,3]), par, a.rreg$sqd))
     ab.list[[i]] = temp
   }
-  above = do.call(rbind,ab.list)
   
+  colnames(cyl.fits) = c('z1', 'z2', 'rho', 'theta', 'phi', 'alpha', 'r', 'ssq')
+  rownames(cyl.fits) = NULL
+  
+  above = do.call(rbind,ab.list)
   stem = rbind(below,above)
   
-  return(stem)
+  colnames(stem) = c('x','y','z')
+  rownames(stem) = NULL
+  
+  return(list(stem.points = stem, cylinders = cyl.fits))
 }
-
 
 # RANSAC cylinder fit
 fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, timesN = 2, opt.method = 'Nelder-Mead'){
@@ -355,9 +368,6 @@ fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, time
   # max.rad = maximum radius accepted as estimate (in meters)
   # timesN = factor that multiplies N, for the number of iterations of the RANSAC, N=36 as default
   # opt.method = optimization method, passed to optim (R base function)
-  
-    # OUTPUT = single stem point cloud, matrix with 3 columns, x, y and z, respectively
-
   
   zbound = c((h.init-c.len/2) , (h.init+c.len/2)) + min(trunk[,3])
   
@@ -379,6 +389,8 @@ fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, time
   u.dist = cyl.dists(rreg[-6], below)
   below = below[abs(u.dist) < thr,]
   
+  cyl.fits = c(range(below[,3]), rreg)
+  
   above = trunk[trunk[,3]>=zbound[1],]
   ab.list = Vsections(above, l.int = c.len, Plot = F)
   
@@ -398,13 +410,18 @@ fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, time
     a.dist = cyl.dists(par, temp)
     temp = temp[abs(a.dist)<.01,]
     
-    #plot(temp[,-3])
-    
+    cyl.fits = rbind(cyl.fits, c(range(temp[,3]), a.rreg))
     ab.list[[i]] = temp
   }
+  
+  colnames(cyl.fits) = c('z1', 'z2', 'rho', 'theta', 'phi', 'alpha', 'r', 'ssq')
+  rownames(cyl.fits) = NULL
   
   above = do.call(rbind,ab.list)
   stem = rbind(below,above)
   
-  return(stem)
+  colnames(stem) = c('x','y','z')
+  rownames(stem) = NULL
+  
+  return(list(stem.points = stem, cylinders = cyl.fits))
 }
