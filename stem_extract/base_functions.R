@@ -162,6 +162,95 @@ rglAXES = function(xyz = c(1,1,1), cols = c('red','green','blue'), ...){
   rgl.lines(c(0,0), c(0,0), c(0,xyz[3]), col=cols[3], ...)
 }
 
+stem.model = function(stem.out, cyl.len=NA, col=rainbow, bg='black', alpha=.5){
+  
+  require(alphashape3d)
+  
+  st = stem.out[[1]]
+  ft = stem.out[[2]]
+  
+  if(ncol(ft) == 8){
+    
+    cln = if(is.na(cyl.len)) ft[,2]-ft[,1] else rep(cyl.len, nrow(ft))
+    cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
+    
+    abs = list()
+    pts = list()
+    for(i in 1:nrow(ft)){
+      
+      tp = st[st[,3] <= ft[i,'z2'] & st[,3] >= ft[i,'z1'],]
+      
+      vcs = cyl.vectors(ft[i,3:7])
+      d = ft[i,'r']*2
+      
+      a = vcs$a
+      #h = if(a[3] < 0) ft[i,'z1'] else ft[i,'z1']
+      
+      zang = angle(a, c(0,0,1))
+      xang = angle(c(vcs$n[-3],0), c(1,0,0))
+      
+      rot = xyz.rotation.matrix(0,zang,xang)
+      
+      cl = cyl(n=1000, len=cln[i], d=d)
+
+      go = change.coords(cl, rot, shift = vcs$Q)
+      ed = sqrt(sum((colMeans(tp) - colMeans(go))^2))
+      if(a[3]<0) ed = -ed
+      go = t(apply(go, 1, function(x) x+a*ed))
+      
+      #go[,3] = go[,3] + abs(h)-min(go[,3])
+      
+      acl = ashape3d(go, alpha = alpha)
+      
+      abs[[i]] = acl
+      pts[[i]] = tp
+       
+    }
+
+} else { 
+  
+  if(ncol(ft) == 6){
+   
+  if(is.na(cyl.len)) cln = .02
+  cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
+  
+  abs = list()
+  pts = list()
+  for(i in 1:nrow(ft)){
+    
+    tp = st[st[,3] <= ft[i,'z2'] & st[,3] >= ft[i,'z1'],]
+    
+    xy = ft[i,3:4]
+    d = ft[i,'r']*2
+    
+    if(d == 0) next
+    
+    cl = cyl(n=1000, len=cln, d=d)
+    
+    h = mean(ft[i,1:2])
+    
+    go = t(apply(cl, 1, function(u) u + c(xy,h)))
+    
+    acl = ashape3d(go, alpha = alpha)
+    
+    abs[[i]] = acl
+    pts[[i]] = tp
+    
+  }
+  
+  }}
+    
+  nulls = sapply(abs, is.null)
+  nl2 = sapply(pts, is.null)
+  
+    bg3d(bg)
+    lapply(1:length(abs), function(u) if(!nulls[u]) plot.ashape3d(abs[[u]], clear=F, edges=F, vertices=F, col=cols[[u]]))
+    lapply(1:length(pts), function(u) if(!nl2[u]) rgl.points(pts[[u]], col=cols[[u]]) )
+    
+    return(abs[!nulls])
+  
+}
+
 Vfilter = function(XYZtree, l.int = .3, thr = 10000){
   
   #Description: reduces the point density of a point cloud
@@ -495,7 +584,7 @@ SD.prefilt = function(sec, k, flat.min, ang.tol){
   fln = sapply(cld, FL)
   angs = sapply(cld, ang.deg)
   
-  out = sec[fln > flat.min & abs(angs-90) < ang.tol,]
+  out = sec[fln > flat.min & (abs(angs-90) < ang.tol | abs(angs-270) < ang.tol),]
   
   return(out)
 }
@@ -1011,6 +1100,31 @@ cyl.parameters = function(P, init = NULL, opt.method = 'Nelder-Mead'){
   out = optim(fn = cyl.fit, par = init, P=P, method = opt.method)
   
   return(out)
+}
+
+cyl.vectors = function(ang.rad){
+  
+  #ang.rad = c(rho, theta, phi, alpha, r)
+  
+  rho = ang.rad[1]
+  theta = ang.rad[2]
+  phi = ang.rad[3]
+  alpha = ang.rad[4]
+  r = ang.rad[5]
+  
+  n = c( cos(phi) * sin(theta) , sin(phi) * sin(theta) , cos(theta) )
+  n.theta = c( cos(phi) * cos(theta) , sin(phi) * cos(theta) , -sin(theta) )
+  n.phi = c(-sin(phi) * sin(theta) , cos(phi) * sin(theta) , 0 )
+  n.phi.bar = n.phi / sin(theta)
+  
+  a = n.theta * cos(alpha) + n.phi.bar * sin(alpha)
+  
+  Q = crossprod(rho + r,n)
+  
+  out = list(n = n, a = a, Q=c(Q), n.theta = n.theta, n.phi.bar = n.phi.bar)  
+
+  return(out)
+  
 }
 
 dist.filt = function(xyz, bprs, inf = .1, abs = NULL){
