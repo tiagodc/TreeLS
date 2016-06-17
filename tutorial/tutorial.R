@@ -1,11 +1,11 @@
 if(!require(alphashape3d)) install.packages('alphashape3d')
 
-source('base_functions.R')
-source('pre_sets.R')
+source('https://raw.githubusercontent.com/tiagodc/TreeLS/master/stem_extract/base_functions.R')
+source('https://raw.githubusercontent.com/tiagodc/TreeLS/master/stem_extract/pre_sets.R')
 
 path = 'https://raw.githubusercontent.com/tiagodc/TreeLS/master/tutorial/'
 
-trn = 1 # 1 == spruce , 2 == pine
+trn = 1 # 1 for spruce , 2 for pine
 
 tree = read.table(url(paste(path,'SW_tree_',trn,'.xyz',sep='')), header = T)
 tree = Vfilter(tree, l.int = .1, thr = 500)
