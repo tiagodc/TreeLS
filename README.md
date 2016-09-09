@@ -5,4 +5,5 @@ The package contains two scripts: `base_functions` containing all core functions
 
 ## Installation
 On the R console, type:
+
 `devtools::install_github('tiagodc/TreeLS')`
