@@ -342,6 +342,8 @@ fit_IRTLS = function(trunk, c.len = .5, max.rad=.5, s.height = 1, speed.up = T, 
     ab.list[[i]] = temp
   }
 
+  if(class(cyl.fits) == 'numeric') cyl.fits = rbind(cyl.fits)
+
   colnames(cyl.fits) = c('z1', 'z2', 'rho', 'theta', 'phi', 'alpha', 'r', 'ssq')
   rownames(cyl.fits) = NULL
 
@@ -409,6 +411,8 @@ fit_RANSAC_cylinder = function(trunk, c.len = .5, h.init = 1, max.rad = .5, time
     cyl.fits = rbind(cyl.fits, c(range(temp[,3]), a.rreg))
     ab.list[[i]] = temp
   }
+
+  if(class(cyl.fits) == 'numeric') cyl.fits = rbind(cyl.fits)
 
   colnames(cyl.fits) = c('z1', 'z2', 'rho', 'theta', 'phi', 'alpha', 'r', 'ssq')
   rownames(cyl.fits) = NULL

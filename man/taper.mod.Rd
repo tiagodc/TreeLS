@@ -8,7 +8,7 @@ taper.mod(stem, tree, l.int = 0.5, method = "circle", rad.max = 0.5,
   b = 2)
 }
 \arguments{
-\item{stem}{stem point cloud - \emph{xyz} matrix}
+\item{stem}{stem point cloud - \emph{xyz} matrix OR stem summary table from a fitting algorithm}
 
 \item{tree}{tree point cloud - \emph{xyz} matrix}
 

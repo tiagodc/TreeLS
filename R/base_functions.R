@@ -297,7 +297,7 @@ stem.model = function(stem.out, cyl.len=NA, col=rainbow, bg='black', alpha=.5){
 
   if(ncol(ft) == 6){
 
-  if(is.na(cyl.len)) cln = .02
+  if(is.na(cyl.len)) cln = .02 else cln = cyl.len
   cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
 
   abs = list()
@@ -309,7 +309,7 @@ stem.model = function(stem.out, cyl.len=NA, col=rainbow, bg='black', alpha=.5){
     xy = ft[i,3:4]
     d = ft[i,'r']*2
 
-    if(d == 0) next
+    if(d == 0 | d > 2) next
 
     cl = cyl(n=1000, len=cln, d=d)
 
@@ -370,6 +370,8 @@ Vfilter = function(XYZtree, l.int = .3, thr = 10000){
 #' @param Plot create a plot for every point cloud segment? TRUE or FALSE
 #' @param units if \code{Plot == TRUE}, provide the units of measurement for labelling the plots
 #' @param ... further arguments passed to \code{plot}
+#' @return list with every compartment containing a section of the point cloud in fixed \emph{z} intervals
+#' @export
 Vsections = function(XYZtree, n.int = 100, l.int = NULL, overlap = NULL, Plot =T, units = 'm', ...){
 
   #Description: subdivides the point cloud in height intervals
@@ -1438,18 +1440,22 @@ RANSAC.cylinder = function(stem.sec, n=20, p=.9, P=.99, timesN = 5, init = NULL,
 #' @param H cylinder's/circle's mean height
 #' @param bound height interval from H, i.e. H +/- bound
 #' @param method \emph{"circle"} or \emph{"cylinder"}
+#' @param RANSAC if \code{TRUE} estimates using RANSAC, otherwise applies regular fitting
+#' @param fast if \code{TRUE}, uses a reduced samples from the point cloud to speed up processing
+#' @param resample sample size for \emph{fast}
 #' @return vector of circle or cylinder parameters and its residual sum of squares related to the extracted \emph{stem}'s section
 #' @export
-cyl.iso = function(stem, H=1.3, bound=.5, method='circle'){
+cyl.iso = function(stem, H=1.3, bound=.5, method='circle', RANSAC=F, fast=T, resample = 500){
   chunk = stem[stem[,3]<H+bound & stem[,3]>H-bound , ]
 
   if(method == 'circle'){
-    params = if(nrow(chunk) < 3) rep(100,4) else RANSAC.circle(chunk, p = .99)
+    params = if(nrow(chunk) < 3) rep(100,4) else{ if(RANSAC) RANSAC.circle(chunk, p = .99) else circlefit(chunk[,1], chunk[,2]) }
     if(is.null(params)) params = rep(100,4)
     names(params) = c('x','y','r','ssq')
   }
   if(method == 'cylinder'){
-    params = if(nrow(chunk) < 3) rep(100,6) else RANSAC.cylinder(chunk, p = .99, timesN = 5)
+    if(fast & nrow(chunk) > resample & !RANSAC) chunk = chunk[sample(1:nrow(chunk), size = resample, replace = F),]
+    params = if(nrow(chunk) < 3) rep(100,6) else{ if(RANSAC) RANSAC.cylinder(chunk, p = .99, timesN = 5) else unlist(cyl.parameters(chunk)[1:2]) }
     if(is.null(params)) params = rep(100,6)
     names(params) = c('rho', 'theta', 'phi', 'alpha', 'r', 'ssq')
   }
@@ -1530,7 +1536,7 @@ solid = function(tree.height, z.stem, rad.max, b=2){
 
 #' Tree taper model
 #' @description builds a simple model estimating stem section radii from height above ground
-#' @param stem stem point cloud - \emph{xyz} matrix
+#' @param stem stem point cloud - \emph{xyz} matrix OR stem summary table from a fitting algorithm
 #' @param tree tree point cloud - \emph{xyz} matrix
 #' @param l.int interval of estimation along the stem (cylinder length)
 #' @param method 'circle' or 'cylinder'

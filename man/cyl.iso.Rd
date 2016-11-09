@@ -4,7 +4,8 @@
 \alias{cyl.iso}
 \title{Isolation of cylinder from stem point cloud}
 \usage{
-cyl.iso(stem, H = 1.3, bound = 0.5, method = "circle")
+cyl.iso(stem, H = 1.3, bound = 0.5, method = "circle", RANSAC = F,
+  fast = T, resample = 500)
 }
 \arguments{
 \item{stem}{stem point cloud - \emph{xyz} matrix}
@@ -14,6 +15,12 @@ cyl.iso(stem, H = 1.3, bound = 0.5, method = "circle")
 \item{bound}{height interval from H, i.e. H +/- bound}
 
 \item{method}{\emph{"circle"} or \emph{"cylinder"}}
+
+\item{RANSAC}{if \code{TRUE} estimates using RANSAC, otherwise applies regular fitting}
+
+\item{fast}{if \code{TRUE}, uses a reduced samples from the point cloud to speed up processing}
+
+\item{resample}{sample size for \emph{fast}}
 }
 \value{
 vector of circle or cylinder parameters and its residual sum of squares related to the extracted \emph{stem}'s section

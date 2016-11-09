@@ -22,6 +22,9 @@ Vsections(XYZtree, n.int = 100, l.int = NULL, overlap = NULL, Plot = T,
 
 \item{...}{further arguments passed to \code{plot}}
 }
+\value{
+list with every compartment containing a section of the point cloud in fixed \emph{z} intervals
+}
 \description{
 divides a point cloud in many smaller ones, according to height intervals
 }

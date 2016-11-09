@@ -24,4 +24,10 @@ stem.model(stem.out, cyl.len = NA, col = rainbow, bg = "black",
 \description{
 plots a stem model of stacked cylinders or circles, depending on the \emph{fitting} routine used to calculate the stem segments
 }
+\examples{
+trunk <- pref_HT(spruce)
+stem <- fit_RANSAC_circle(trunk)
+obj3d <- stem.model(stem)
+rgl.points(spruce, size=1)
+}
 
