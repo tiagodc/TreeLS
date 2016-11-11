@@ -449,7 +449,7 @@ HT_base_filter = function(XYZmat, z.int = NULL, rad.inf = 2, cell.size = .025, m
   chunk = XYZmat[XYZmat[,3] >= z.int[1] & XYZmat[,3] <= z.int[2],]
 
   ras = makeRaster(chunk, cell.size = cell.size, image = F)
-  rad = hough(ras, nAng=120, nRad = 50, Plot = F, min.val = min.val)
+  rad = hough(ras, pixel_size = cell.size, Plot = F, min.val = min.val)
   top = which(rad$centers[,4] == max(rad$centers[,4]))
   if(nrow(rad$centers[top,,drop=F]) > 1) goal = apply(rad$centers[top,], 2, mean) else goal = rad$centers[top,]
 
@@ -466,8 +466,7 @@ HT_base_filter = function(XYZmat, z.int = NULL, rad.inf = 2, cell.size = .025, m
 #' @description estimates the circle parameters for a point cloud using the Hough transformation
 #' @param raster output from \code{\link{makeRaster}}
 #' @param rad lower and upper limits of radii to survey
-#' @param nRad total number of radii to test in between the \emph{rad}'s limits
-#' @param nAng number of sample points for each tested circle
+#' @param pixel_size pixel side length, in meters
 #' @param min.val minimum pixel density or frequency that applies for testing
 #' @param Plot if TRUE, saves a .png file showing all sample points generated for the input raster
 #' @param img.prefix file name for \emph{Plot}
@@ -479,10 +478,13 @@ HT_base_filter = function(XYZmat, z.int = NULL, rad.inf = 2, cell.size = .025, m
 #' \item{$circles}{list of xy coordinates of all peripheral circles tested, each compartment contains a matrix with xy point coordinates from circles with same radius (the ones used in 'images')
 #' }}
 #' @export
-hough = function(raster, rad = c(.025,.5), nRad = 100, nAng = 360, min.val = .1, Plot = F, img.prefix = '', ...){
+hough = function(raster, rad = c(.025,.5), pixel_size = .025, min.val = .1, Plot = F, img.prefix = '', ...){
 
-  rads = seq(rad[1],rad[2],length.out = nRad)
-  angs = seq(0, 2*pi, length.out = nAng)
+  rads = seq(rad[1],rad[2], pixel_size)
+  angs = seq(0, 2*pi, pixel_size / rad[2])
+
+  nRad = length(rads)
+  nAng = length(angs)
 
   combs = expand.grid(rads, angs)
 

@@ -4,17 +4,15 @@
 \alias{hough_plot}
 \title{Hough transformation plot-wise}
 \usage{
-hough_plot(raster, rad = c(0.025, 0.5), nRad = 50, nAng = 90,
-  min.val = 0.1, votes = 3, Plot = F, img.prefix = "", ...)
+hough_plot(raster, rad = c(0.025, 0.5), pixel_size = 0.025, min.val = 0.1,
+  votes = 3, Plot = F, img.prefix = "", ...)
 }
 \arguments{
 \item{raster}{output from \code{\link{makeRaster}}}
 
 \item{rad}{interval of radii to fit circles}
 
-\item{nRad}{number of radii to test in between \code{rad}}
-
-\item{nAng}{number of points in a circle}
+\item{pixel_size}{pixel side length}
 
 \item{min.val}{minimum pixel density value to be included in the circle fitting procedure}
 

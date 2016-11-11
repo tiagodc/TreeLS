@@ -4,17 +4,15 @@
 \alias{hough}
 \title{Circle hough transformation for a single circle}
 \usage{
-hough(raster, rad = c(0.025, 0.5), nRad = 100, nAng = 360,
-  min.val = 0.1, Plot = F, img.prefix = "", ...)
+hough(raster, rad = c(0.025, 0.5), pixel_size = 0.025, min.val = 0.1,
+  Plot = F, img.prefix = "", ...)
 }
 \arguments{
 \item{raster}{output from \code{\link{makeRaster}}}
 
 \item{rad}{lower and upper limits of radii to survey}
 
-\item{nRad}{total number of radii to test in between the \emph{rad}'s limits}
-
-\item{nAng}{number of sample points for each tested circle}
+\item{pixel_size}{pixel side length, in meters}
 
 \item{min.val}{minimum pixel density or frequency that applies for testing}
 

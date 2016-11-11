@@ -28,7 +28,7 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
 
   for(i in take){
     ras = makeRaster(slices[[i]], cell.size = cell.size, image = F)
-    ctr = hough(ras, nRad = 50, rad = c(.025,baseline[5]*.75), nAng = 120, min.val = min.den, Plot = F)
+    ctr = hough(ras, rad = c(.025,baseline[5]*.75), pixel_size = cell.size, min.val = min.den, Plot = F)
     row = which(ctr[[1]][,4] == max(ctr[[1]][,4]))
 
     if(length(row) > 1) sec.info = ctr[[1]][sample(row,1),] else sec.info = ctr[[1]][row,]
@@ -56,7 +56,7 @@ pref_HT = function(tree, l.int = .5, cell.size = .025, min.den = .3){
 
     ras = makeRaster(slices[[i]], cell.size = cell.size, image = F)
     if(length(ras$z) <= 1) next
-    ctr = hough(ras, rad = c(cell.size, (4/3)*sec.info[3]), nRad = 30 ,nAng = 120, min.val = min.den, Plot = F)
+    ctr = hough(ras, rad = c(cell.size, (4/3)*sec.info[3]), pixel_size = cell.size, min.val = min.den, Plot = F)
     row = which(ctr[[1]][,4] == max(ctr[[1]][,4]))
 
     if(length(row) > 1) sec.info = ctr[[1]][sample(row, 1),] else sec.info = ctr[[1]][row,]

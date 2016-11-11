@@ -2,8 +2,7 @@
 #' @description Applies the hough transformation on TLS plot, returning ALL circles found
 #' @param raster output from \code{\link{makeRaster}}
 #' @param rad interval of radii to fit circles
-#' @param nRad number of radii to test in between \code{rad}
-#' @param nAng number of points in a circle
+#' @param pixel_size pixel side length
 #' @param min.val minimum pixel density value to be included in the circle fitting procedure
 #' @param votes minimum number of votes for a circle to be included in the output
 #' @param Plot if TRUE, saves a .png file showing all sample points generated for the input raster
@@ -11,10 +10,13 @@
 #' @param ... arguments passed to \code{\link{plot}}
 #' @return matrix of all circle centers found
 #' @export
-hough_plot = function(raster, rad = c(.025,.5), nRad = 50, nAng = 90, min.val = .1, votes=3 ,Plot = F, img.prefix = '', ...){
+hough_plot = function(raster, rad = c(.025,.5), pixel_size = .025, min.val = .1, votes=3 , Plot = F, img.prefix = '', ...){
 
-  rads = seq(rad[1],rad[2],length.out = nRad)
-  angs = seq(0, 2*pi, length.out = nAng)
+  rads = seq(rad[1],rad[2],by=pixel_size)
+  angs = seq(0, 2*pi, pixel_size / rad[2])
+
+  nRad = length(rads)
+  nAng = length(angs)
 
   combs = expand.grid(rads, angs)
 
@@ -108,7 +110,7 @@ map_HT = function(xyz.cloud, z.lim = 1:2, min.votes=2, pixel.size=.05, min.den=.
   slice = xyz.cloud[ xyz.cloud[,3] >= z.lim[1] & xyz.cloud[,3] <= z.lim[2] ,]
 
   ras = makeRaster(slice, cell.size = pixel.size, image = F)
-  ana = hough_plot(ras, nRad=50, nAng=90, votes = min.votes, min.val = min.den ,Plot = F)
+  ana = hough_plot(ras, pixel_size = pixel.size , votes = min.votes, min.val = min.den ,Plot = F)
 
   remaining = ana
   pos = matrix(nrow=0, ncol=2)
