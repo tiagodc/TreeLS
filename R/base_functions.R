@@ -674,9 +674,12 @@ RANSAC.circle = function(stem.sec, n=15, p=.8, P=.99){
   for(j in 1:(5*N)){
     a = sample(1:nrow(slc), size = n)
 
-    if(class(try(circlefit(slc[a,1], slc[a,2]), silent = T)) == "try-error") next
+    b = tryCatch(circlefit(slc[a,1], slc[a,2]),
+                 error = function(con){ return(next) },
+                 warning = function(con) return(next))
 
-    b = circlefit(slc[a,1], slc[a,2])
+    #if(class(try(circlefit(slc[a,1], slc[a,2]), silent = T)) == "try-error") next
+    #b = circlefit(slc[a,1], slc[a,2])
     data = rbind(data, b)
   }
 
