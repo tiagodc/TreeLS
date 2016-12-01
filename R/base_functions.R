@@ -211,12 +211,15 @@ center.zero = function(xyz.cloud){
 #' @param center x and y center coordinates for the circle
 #' @return point cloud of all points inside the specified circle
 #' @export
-clip.XY = function(cloud, rad = 1.5, center = c(0,0)){
-
-  dists = apply(cloud, 1, function(u) sqrt(sum((u[1:2]-center)^2)))
-  out = cloud[dists <= rad,]
-  return(out)
-
+clip.XY = function(cloud, rad = 1.5, center = c(0,0)) {
+  if (center[1] == 0 & center[2] == 0) {
+    dists = sqrt(cloud[,1]^2+cloud[,2]^2)
+    out = cloud[dists <= rad, ]
+  } else {
+    dists = sqrt(((cloud[,1]-center[1])^2 + (cloud[,2]-center[2])^2))
+    out=cloud[dists<=rad, ]
+  }  
+  return (out)
 }
 
 #' Plot 3D axes from the origin
