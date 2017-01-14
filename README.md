@@ -2,10 +2,10 @@
 
 R functions for processing individual tree TLS point clouds.
 
-## Installation:
+## Installation
 `devtools` is required*
 
-On the R console, enter: `devtools::install_github('tiagodc/TreeLS')`
+#### On the R console, enter: `devtools::install_github('tiagodc/TreeLS')`
 
 ## Example
 
