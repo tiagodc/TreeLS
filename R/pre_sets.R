@@ -258,8 +258,10 @@ fit_RANSAC_circle = function(trunk, l.int = .5, cut.rad = .01, n=15, p=.8, P=.99
       a = sample(1:nrow(slc), size = n)
 
       b = tryCatch(circlefit(slc[a,1], slc[a,2]),
-                   error = function(con){ return(next) },
-                   warning = function(con) return(next))
+                   error = function(con){ return('next') },
+                   warning = function(con) return('next'))
+				   
+	  if(b == 'next') next
 
       #if(class(try(circlefit(slc[a,1], slc[a,2]), silent = T)) == "try-error") next
       #b = circlefit(slc[a,1], slc[a,2])
