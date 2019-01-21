@@ -3,10 +3,7 @@ Title: Tree Terrestrial Laser Scanning Processing
 Version: 1.0
 Authors@R: person("Tiago", "de Conto", email = "tiagodc_89@yahoo.com.br", role = c("aut", "cre"))
 Description: Functions for processing individual tree point clouds from terrestrial laser scanning datasets, with focus on stem isolation algorithms.
-Depends:
-    R (>= 3.3.1),
-	rgl (>= 0.96.0),
-	alphashape3d (>= 1.2)
+Depends: R (>= 3.3.1), rgl (>= 0.96.0), alphashape3d (>= 1.2)
 License: GNU GENERAL PUBLIC LICENSE
 Encoding: UTF-8
 LazyData: true
