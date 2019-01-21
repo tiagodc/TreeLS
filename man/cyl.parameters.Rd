@@ -19,4 +19,3 @@ cyl.parameters(P, init = NULL, opt.method = "Nelder-Mead")
 \description{
 Estimates the cylinder parameters of a point cloud
 }
-

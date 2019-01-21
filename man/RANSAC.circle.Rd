@@ -21,4 +21,3 @@ vector object containing x, y center coordinates, circle radius and sum of squar
 \description{
 returns the best circle parameters using the RANSAC algorithm
 }
-

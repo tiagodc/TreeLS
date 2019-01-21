@@ -15,4 +15,3 @@ angle between the plane's normal vector and the \emph{z} axis \code{c(0,0,1)} (i
 \description{
 Calculates the angle between a plane's normal vector and the \emph{z} axis \code{c(0,0,1)}. The plane here is a point cloud sample.
 }
-

@@ -35,4 +35,3 @@ estimates the circle parameters for a point cloud using the Hough transformation
 \seealso{
 \code{\link{makeRaster}}
 }
-

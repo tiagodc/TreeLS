@@ -17,4 +17,3 @@ vector of distances from every point to the cylinder's surface
 \description{
 Calculates the distances from every point in a point cloud to its model cylinder
 }
-

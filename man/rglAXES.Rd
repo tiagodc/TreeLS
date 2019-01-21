@@ -19,4 +19,3 @@ plots 3D axes over the current rgl environment
 \description{
 plots the 3 main axes (\emph{xyz}) starting at \code{c(0,0,0)}
 }
-

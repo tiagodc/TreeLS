@@ -21,4 +21,3 @@ vector object containing x, y center coordinates, circle radius and sum of squar
 \description{
 Fits a circle to a set of points - adapted from the \code{pracma} package.
 }
-

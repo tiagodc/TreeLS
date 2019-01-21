@@ -17,4 +17,3 @@ vector containing RMSE, bias and correlation, respectively
 \description{
 extracts RMSE, bias and Pearson's correlation from estimated diameters in relation to their respective field measured values
 }
-

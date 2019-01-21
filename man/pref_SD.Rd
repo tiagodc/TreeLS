@@ -26,4 +26,3 @@ rough trunk point cloud - matrix with 3 columns, x, y and z, respectively.
 \description{
 Spectral decomposition pre-filter (based on Liang et. al 2012)
 }
-

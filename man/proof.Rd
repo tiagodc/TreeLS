@@ -10,4 +10,3 @@ proof
 \description{
 Field measurements from sample trees
 }
-

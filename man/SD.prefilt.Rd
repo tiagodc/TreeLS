@@ -21,4 +21,3 @@ filtered tree section
 \description{
 Removes points from the provided point cloud whose neighborhoods don't follow the specified criteria
 }
-

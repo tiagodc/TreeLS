@@ -26,4 +26,3 @@ taper.mod(stem, tree, l.int = 0.5, method = "circle", rad.max = 0.5,
 \description{
 builds a simple model estimating stem section radii from height above ground
 }
-

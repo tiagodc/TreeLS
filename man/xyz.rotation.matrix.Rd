@@ -19,4 +19,3 @@ xyz.rotation.matrix(ax, az, ax2)
 \description{
 calculates the 3D rotation matrix for a \emph{xyz} dataset
 }
-

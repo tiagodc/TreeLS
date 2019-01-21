@@ -21,4 +21,3 @@ cube.space(xyz.tree, l = 0.03, systematic = T, n = 3, iterate = 1)
 \description{
 creates sample points in the 3D space randomly or systematically distributed
 }
-

@@ -26,4 +26,3 @@ tree point cloud without rough noise
 \description{
 removes isolated points from a point cloud
 }
-

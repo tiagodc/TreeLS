@@ -17,4 +17,3 @@ sum of squared distances from \emph{P} to the cylinder surface with \emph{ang.ra
 \description{
 Calculates the sum of squared distances from a cylinder surface
 }
-

@@ -4,8 +4,8 @@
 \alias{fit_IRTLS}
 \title{Iterated reweighted total least squares cylinder fit for stem isolation}
 \usage{
-fit_IRTLS(trunk, c.len = 0.5, max.rad = 0.5, s.height = 1, speed.up = T,
-  opt.method = "Nelder-Mead")
+fit_IRTLS(trunk, c.len = 0.5, max.rad = 0.5, s.height = 1,
+  speed.up = T, opt.method = "Nelder-Mead")
 }
 \arguments{
 \item{trunk}{output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively}
@@ -26,4 +26,3 @@ list of length 2: /n $stem.points = single stem point cloud, matrix with 3 colum
 \description{
 Iterated reweighted total least squares cylinder fit for stem isolation
 }
-

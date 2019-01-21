@@ -19,4 +19,3 @@ list object in which every compartment contains a cover set neighborhood
 \description{
 Defines cover set cubic neighborhoods based on a voxel space
 }
-

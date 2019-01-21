@@ -26,4 +26,3 @@ list containing the cylinder optimal parameters, its sum of squared distances fr
 \description{
 Estimates the optimal cylinder parameters of a point cloud using Iterated Reweighted Least Squares
 }
-

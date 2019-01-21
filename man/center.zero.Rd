@@ -15,4 +15,3 @@ point cloud with new coordinates
 \description{
 reassigns the x and y coordinates of a point cloud considering zero as its center
 }
-

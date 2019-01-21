@@ -26,4 +26,3 @@ list of length 2: /n $stem.points = single stem point cloud, matrix with 3 colum
 \description{
 RANSAC cylinder fit stem isolation
 }
-

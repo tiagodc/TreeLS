@@ -5,7 +5,8 @@
 \title{Voxel neighborhoods pre-filter}
 \usage{
 pref_VN(tree, noise1.rad = 0.05, noise2.rad = 0.1, flat.min = 0.9,
-  ang.tol = 10, neighborhood = 4, largest.cov = NULL, axis.dist = 0.5)
+  ang.tol = 10, neighborhood = 4, largest.cov = NULL,
+  axis.dist = 0.5)
 }
 \arguments{
 \item{tree}{single tree point cloud. Matrix with 3 columns: x, y and z coordinates, respectively}
@@ -30,4 +31,3 @@ rough trunk point cloud - matrix with 3 columns, x, y and z, respectively.
 \description{
 Voxel neighborhoods pre-filter (based on Raumonen et al. 2013)
 }
-

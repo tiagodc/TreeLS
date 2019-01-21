@@ -28,4 +28,3 @@ vector of circle or cylinder parameters and its residual sum of squares related 
 \description{
 Takes out a stem section in a specified interval and gets its circle or cylinder parameters
 }
-

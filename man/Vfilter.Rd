@@ -22,4 +22,3 @@ reduces a point cloud's density processing different height intervals individual
 \seealso{
 \code{\link{Vsections}}
 }
-

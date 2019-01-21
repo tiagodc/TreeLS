@@ -21,4 +21,3 @@ radii on \emph{z.stem} heights
 \description{
 builds a 3D reference solid wiath a tree's height and arbitrary shape and base diameter
 }
-

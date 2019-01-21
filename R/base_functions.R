@@ -244,10 +244,12 @@ rglAXES = function(xyz = c(1,1,1), cols = c('red','green','blue'), ...){
 #' @param bg background color of the rgl environemnt
 #' @param alpha alpha value passed on to the \code{\link{ashape3d}} function
 #' @examples
+#'\dontrun{
 #' trunk <- pref_HT(spruce)
 #' stem <- fit_RANSAC_circle(trunk)
 #' obj3d <- stem.model(stem)
 #' rgl.points(spruce, size=1)
+#'}
 #' @return 3D stem model of stacked cylinders/circles
 #' @import alphashape3d
 #' @export

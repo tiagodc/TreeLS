@@ -28,4 +28,3 @@ optimal cylinder parameters of \emph{stem.sec} and sum of squared distances, res
 \description{
 RAndom SAmple Consensus cylinder fit
 }
-

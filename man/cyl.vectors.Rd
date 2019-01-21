@@ -15,4 +15,3 @@ list containing the vectors, respectively: \emph{n, a, Q, n^theta and n^phi bar}
 \description{
 Extracts the vectors that define a cylinder's direction based on its five main parameters - as in \code{\link{cyl.parameters}} output
 }
-

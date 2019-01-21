@@ -21,4 +21,3 @@ rough trunk point cloud - matrix with 3 columns, x, y and z, respectively.
 \description{
 Circle hough transformation pre-filter (based on Olofsson et al. 2014)
 }
-

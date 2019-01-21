@@ -17,4 +17,3 @@ list of length 2: \describe{\item{$Y}{residuals / MAD} \item{$weights}{weights}}
 \description{
 Tukey's biweight function
 }
-

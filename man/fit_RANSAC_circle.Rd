@@ -4,8 +4,8 @@
 \alias{fit_RANSAC_circle}
 \title{RANSAC circle fit stem isolation}
 \usage{
-fit_RANSAC_circle(trunk, l.int = 0.5, cut.rad = 0.01, n = 15, p = 0.8,
-  P = 0.99)
+fit_RANSAC_circle(trunk, l.int = 0.5, cut.rad = 0.01, n = 15,
+  p = 0.8, P = 0.99)
 }
 \arguments{
 \item{trunk}{output point cloud from a pre-filtering method. Matrix with 3 columns: x, y and z coordinates, respectively}
@@ -26,4 +26,3 @@ list of length 2: /n $stem.points = single stem point cloud, matrix with 3 colum
 \description{
 RANSAC circle fit stem isolation
 }
-

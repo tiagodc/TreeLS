@@ -32,4 +32,3 @@ xy matrix with all estimated stem coordinates
 \description{
 Outputs the approximate stem positions in a TLS point cloud, estimated from surface flatness and verticality obtained through spectral decomposition
 }
-

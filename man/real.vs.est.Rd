@@ -4,8 +4,8 @@
 \alias{real.vs.est}
 \title{Performance check of estimated vs. measured diameters}
 \usage{
-real.vs.est(tree, stem, d, H, model, rad.max = 0.5, b = 2, cyl.len = 0.5,
-  plot.dd = T, method = "circle", ...)
+real.vs.est(tree, stem, d, H, model, rad.max = 0.5, b = 2,
+  cyl.len = 0.5, plot.dd = T, method = "circle", ...)
 }
 \arguments{
 \item{tree}{tree point cloud - \emph{xyz} matrix}
@@ -36,4 +36,3 @@ list containing summarized stem section-wise results and RMSE
 \description{
 Extracts precision and accuracy measures and plots estimated vs. measured diameters for a single tree
 }
-

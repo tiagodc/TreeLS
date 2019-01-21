@@ -15,4 +15,3 @@ angle between \emph{a} and \emph{b} (in degrees).
 \description{
 Calculates the angle between two vectors.
 }
-

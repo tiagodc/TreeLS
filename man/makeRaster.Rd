@@ -24,4 +24,3 @@ object of clas 'list' with 4 compartments: \describe{\item{$x}{cell breaks in x}
 \description{
 extracts a raster (\emph{xy}) containing density or frequency information from a xyz a point cloud
 }
-

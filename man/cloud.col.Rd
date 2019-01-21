@@ -21,4 +21,3 @@ plots \emph{xyz.cloud} using \code{rgl} and with the specified color pallete
 \description{
 colors a point cloud by height intervals
 }
-

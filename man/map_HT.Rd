@@ -30,4 +30,3 @@ xy matrix with all estimated stem coordinates
 \description{
 Outputs the approximate stem positions in a TLS point cloud, estimated by circular patterns found through the hough transformation
 }
-

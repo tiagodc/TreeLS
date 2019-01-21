@@ -15,4 +15,3 @@ surface flatness - ranging from 0 (non-flat) to 1 (perfectly flat)
 \description{
 calculates the flatness of a point cloud
 }
-

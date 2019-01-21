@@ -29,4 +29,3 @@ identification of reference cylinder at the tree's base for filtering outliers u
 \seealso{
 \code{\link{hough}}
 }
-

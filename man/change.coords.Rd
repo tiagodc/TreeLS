@@ -22,4 +22,3 @@ Rotates and shifts the coordinates of a 3D point cloud
 \seealso{
 \code{\link{xyz.rotation.matrix}}
 }
-

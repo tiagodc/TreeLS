@@ -4,8 +4,8 @@
 \alias{hough_plot}
 \title{Hough transformation plot-wise}
 \usage{
-hough_plot(raster, rad = c(0.025, 0.5), pixel_size = 0.025, min.val = 0.1,
-  votes = 3, Plot = F, img.prefix = "", ...)
+hough_plot(raster, rad = c(0.025, 0.5), pixel_size = 0.025,
+  min.val = 0.1, votes = 3, Plot = F, img.prefix = "", ...)
 }
 \arguments{
 \item{raster}{output from \code{\link{makeRaster}}}
@@ -30,4 +30,3 @@ matrix of all circle centers found
 \description{
 Applies the hough transformation on TLS plot, returning ALL circles found
 }
-

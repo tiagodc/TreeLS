@@ -4,8 +4,8 @@
 \alias{Vsections}
 \title{Split point cloud into height intervals}
 \usage{
-Vsections(XYZtree, n.int = 100, l.int = NULL, overlap = NULL, Plot = T,
-  units = "m", ...)
+Vsections(XYZtree, n.int = 100, l.int = NULL, overlap = NULL,
+  Plot = T, units = "m", ...)
 }
 \arguments{
 \item{XYZtree}{point cloud (not necessarily a tree) - \emph{xyz} matrix}
@@ -28,4 +28,3 @@ list with every compartment containing a section of the point cloud in fixed \em
 \description{
 divides a point cloud in many smaller ones, according to height intervals
 }
-

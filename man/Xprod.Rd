@@ -15,4 +15,3 @@ vector cross product
 \description{
 calculates the cross product between two vectors - not to be confused with \code{crossprod}, which gives the dot product
 }
-

@@ -21,4 +21,3 @@ list object in which every compartment contains a cover set neighborhood
 \description{
 Defines cover set spherical neighborhoods for a 3D point cloud based on euclidian distances
 }
-

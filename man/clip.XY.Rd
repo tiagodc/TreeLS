@@ -19,4 +19,3 @@ point cloud of all points inside the specified circle
 \description{
 clips a region of a point cloud in circular shape
 }
-

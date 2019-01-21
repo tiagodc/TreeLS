@@ -10,4 +10,3 @@ spruce
 \description{
 Norway Spruce point cloud
 }
-
