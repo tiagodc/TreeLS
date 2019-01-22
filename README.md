@@ -2,6 +2,11 @@
 
 R functions for processing individual tree TLS point clouds.
 
+# 2019 UPDATE
+I haven't touched this project in 2 years. I have reimplemented some of its functions (way) more efficiently in C++. I will refactor the whole package on the next weeks, incorporating the heavy functionality through `Rcpp`, as well as make the package compatible with the LAS infrastructure kindly provided by @Jean-Romain with the [`rlas`](https://github.com/Jean-Romain/rlas) and [`lidR`](https://github.com/Jean-Romain/lidR) packages.
+
+The current package should work just fine for the main functionalities, although some dependendencies might be broken. I'll open a development branch to work on the *new*, improved version of `TreeLS`, releasing it as soon as I have a first stable version of the package.
+
 ## Installation
 `devtools` is required*
 
