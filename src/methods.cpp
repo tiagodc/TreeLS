@@ -7,8 +7,6 @@
 using namespace Rcpp;
 using namespace std;
 
-// #define PI 3.141592653589793238463
-
 // [[Rcpp::plugins("cpp11")]]
 
 vector<double> absCenter(int x, int y, double min_x, double min_y, float step){
@@ -300,9 +298,11 @@ void assignTreeId(vector<HoughCenters>& disks, float distmax, float countDensity
 
 };
 
-NumericMatrix saveCloud(vector<HoughCenters>* coordinates){
+List saveCloud(vector<HoughCenters>* coordinates){
 
-  NumericMatrix stack(0, 3);
+  vector<double> xout;
+  vector<double> yout;
+  vector<double> zout;
 
   vector<HoughCenters>::iterator point;
   point = coordinates->begin();
@@ -323,9 +323,9 @@ NumericMatrix saveCloud(vector<HoughCenters>* coordinates){
     c_point = point->circles.begin();
 
     z = (point->low_z + point->up_z)/2;
-    stack.push_back(point->avg_x);
-    stack.push_back(point->avg_y);
-    stack.push_back(z);
+    xout.push_back(point->avg_x);
+    yout.push_back(point->avg_y);
+    zout.push_back(z);
 
     // laspoint.set_z( (point->low_z + point->up_z)/2 );
     // laspoint.set_x( point->avg_x );
@@ -346,9 +346,9 @@ NumericMatrix saveCloud(vector<HoughCenters>* coordinates){
     int counter = 0;
     while(c_point != point->circles.end()){
 
-      stack.push_back(c_point->x_center);
-      stack.push_back(c_point->y_center);
-      stack.push_back(z);
+      xout.push_back(c_point->x_center);
+      yout.push_back(c_point->y_center);
+      zout.push_back(z);
 
       // laspoint.set_x( (*c_point).x_center );
       // laspoint.set_y( (*c_point).y_center );
@@ -397,9 +397,9 @@ NumericMatrix saveCloud(vector<HoughCenters>* coordinates){
       float mainX = sumX / counter;
       float mainY = sumY / counter;
 
-      stack.push_back(mainX);
-      stack.push_back(mainY);
-      stack.push_back(z);
+      xout.push_back(mainX);
+      yout.push_back(mainY);
+      zout.push_back(z);
 
       // laspoint.set_x(mainX);
       // laspoint.set_y(mainY);
@@ -411,9 +411,9 @@ NumericMatrix saveCloud(vector<HoughCenters>* coordinates){
       float meanX = sumAvgX / counter;
       float meanY = sumAvgY / counter;
 
-      stack.push_back(meanX);
-      stack.push_back(meanY);
-      stack.push_back(z);
+      xout.push_back(meanX);
+      yout.push_back(meanY);
+      zout.push_back(z);
 
       // laspoint.set_x(meanX);
       // laspoint.set_y(meanY);
@@ -422,12 +422,17 @@ NumericMatrix saveCloud(vector<HoughCenters>* coordinates){
       // laspoint.set_synthetic_flag(1);
     }
   }
-  return stack;
+
+  List out;
+  out["X"] = xout;
+  out["Y"] = yout;
+  out["Z"] = zout;
+  return out;
 }
 /////////////////////////////////////////////////////////////
 
 // [[Rcpp::export]]
-NumericMatrix singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float min_den=0.1){
+List singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float min_den=0.1){
 
     vector<HoughCenters> treeMap;
     Raster ras;
@@ -445,6 +450,7 @@ NumericMatrix singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.
     assignTreeId(treeMap, rad_max, min_den, 1);
 
     cout << "# writing cloud of center candidates" << endl;
+
     return saveCloud(&treeMap);
 
 }

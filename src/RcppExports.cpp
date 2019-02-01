@@ -16,9 +16,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getEigenValues
+VectorXd getEigenValues(Map<MatrixXd> M);
+RcppExport SEXP _TreeLS_getEigenValues(SEXP MSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Map<MatrixXd> >::type M(MSEXP);
+    rcpp_result_gen = Rcpp::wrap(getEigenValues(M));
+    return rcpp_result_gen;
+END_RCPP
+}
+// singleStack
+List singleStack(NumericMatrix& las, float pixel, float rad_max, float min_den);
+RcppExport SEXP _TreeLS_singleStack(SEXP lasSEXP, SEXP pixelSEXP, SEXP rad_maxSEXP, SEXP min_denSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< float >::type pixel(pixelSEXP);
+    Rcpp::traits::input_parameter< float >::type rad_max(rad_maxSEXP);
+    Rcpp::traits::input_parameter< float >::type min_den(min_denSEXP);
+    rcpp_result_gen = Rcpp::wrap(singleStack(las, pixel, rad_max, min_den));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_timesTwo", (DL_FUNC) &_TreeLS_timesTwo, 1},
+    {"_TreeLS_getEigenValues", (DL_FUNC) &_TreeLS_getEigenValues, 1},
+    {"_TreeLS_singleStack", (DL_FUNC) &_TreeLS_singleStack, 4},
     {NULL, NULL, 0}
 };
 

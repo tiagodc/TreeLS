@@ -5,3 +5,11 @@ timesTwo <- function(x) {
     .Call('_TreeLS_timesTwo', PACKAGE = 'TreeLS', x)
 }
 
+getEigenValues <- function(M) {
+    .Call('_TreeLS_getEigenValues', PACKAGE = 'TreeLS', M)
+}
+
+singleStack <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1) {
+    .Call('_TreeLS_singleStack', PACKAGE = 'TreeLS', las, pixel, rad_max, min_den)
+}
+
