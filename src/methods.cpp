@@ -429,6 +429,7 @@ List saveCloud(vector<HoughCenters>* coordinates){
   out["Z"] = zout;
   return out;
 }
+
 /////////////////////////////////////////////////////////////
 
 // [[Rcpp::export]]
