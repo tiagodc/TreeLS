@@ -1,45 +1,8 @@
-#include <Rcpp.h>
-#include <math.h>
 #include <iostream>
-
 #include "classes.hpp"
 
 using namespace Rcpp;
 using namespace std;
-
-// [[Rcpp::plugins("cpp11")]]
-
-vector<double> absCenter(int x, int y, double min_x, double min_y, float step){
-  double x_cen = ( min_x + (step/2) ) + ( x * step );
-  double y_cen = ( min_y + (step/2) ) + ( y * step );
-  return vector<double> {x_cen, y_cen};
-}
-
-vector<int> pixPosition(double x, double y, double min_x, double min_y, float step){
-  int x_pix = floor( (x - min_x) / step );
-  int y_pix = floor( (y - min_y) / step );
-  return vector<int> {x_pix, y_pix};
-}
-
-vector< vector<int> > rasterCircle(float radius, float pixel_size, double cx, double cy, double mx, double my){
-
-  int n_points = ceil( (2 * PI * radius) / pixel_size );
-  double angle_dist = 2 * PI / n_points;
-  double x, y;
-  vector<int> pxy(2);
-  vector< vector<int> > pixels;
-
-  for(double i = 0; i < 2*PI; i += angle_dist){
-    x = cos(i)*radius + cx;
-    y = sin(i)*radius + cy;
-
-    pxy = pixPosition(x, y, mx, my, pixel_size);
-    pixels.push_back(pxy);
-  }
-
-  return pixels;
-
-}
 
 Raster getCounts(NumericMatrix& slice , float pixel_size, float x_mid=0, float y_mid=0, float d_mid=-1){
 
@@ -64,17 +27,13 @@ Raster getCounts(NumericMatrix& slice , float pixel_size, float x_mid=0, float y
   ras.pixel_size = pixel_size;
   ras.thickness = ras.max_z - ras.min_z;
 
-  int xn = abs( ceil( (ras.max_x - ras.min_x) / pixel_size ) ) ;
-  int yn = abs( ceil( (ras.max_y - ras.min_y) / pixel_size ) ) ;
+  ras.setDims();
+  ras.setMatrixSize();
 
-  ras.x_dim = xn;
-  ras.y_dim = yn;
-  ras.setMatrixSize(xn, yn);
-
-  int max_votes = 0;
-  double x,y;
-  int xCell;
-  int yCell;
+  unsigned int max_votes = 0;
+  float x,y;
+  unsigned int xCell;
+  unsigned int yCell;
 
   for(int i = 0; i < slice.nrow(); i++){
 
@@ -87,17 +46,15 @@ Raster getCounts(NumericMatrix& slice , float pixel_size, float x_mid=0, float y
     xCell = abs( floor( (x - ras.min_x) / pixel_size ) );
     yCell = abs( floor( (y - ras.min_y) / pixel_size ) );
 
-    if(xCell >= xn) xCell = xn-1;
-    if(yCell >= yn) yCell = yn-1;
+    if(xCell >= ras.x_dim) xCell = ras.x_dim-1;
+    if(yCell >= ras.y_dim) yCell = ras.y_dim-1;
 
-    ras.matrix[xCell][yCell] += 1;
+    ras.matrix[xCell][yCell]++;
 
     if(ras.matrix[xCell][yCell] > max_votes) max_votes = ras.matrix[xCell][yCell];
   }
 
   ras.max_count = max_votes;
-
-  cout << "x: " << ras.matrix.size() << " y: " << ras.matrix[0].size() << endl;
 
   return ras;
 
@@ -106,9 +63,9 @@ Raster getCounts(NumericMatrix& slice , float pixel_size, float x_mid=0, float y
 vector<HoughCenters> getCenters(Raster* raster, float max_radius=0.25, float min_den=0.1, unsigned int min_votes=3){
 
   //count raster properties (&raster)
-  unsigned int x_len = raster->x_dim;
-  unsigned int y_len = raster->y_dim;
-  int min_count = ceil( (raster->max_count)*min_den );
+  unsigned int& x_len = raster->x_dim;
+  unsigned int& y_len = raster->y_dim;
+  unsigned int min_count = ceil( (raster->max_count)*min_den );
 
   //empty raster properties (votes)
   Raster empty_raster;
@@ -117,154 +74,131 @@ vector<HoughCenters> getCenters(Raster* raster, float max_radius=0.25, float min
   empty_raster.max_x = raster->max_x + max_radius;
   empty_raster.max_y = raster->max_y + max_radius;
   empty_raster.pixel_size = raster->pixel_size;
-  empty_raster.x_dim = abs( ceil( (empty_raster.max_x - empty_raster.min_x) / empty_raster.pixel_size ) );
-  empty_raster.y_dim = abs( ceil( (empty_raster.max_y - empty_raster.min_y) / empty_raster.pixel_size ) );
-  empty_raster.setMatrixSize(empty_raster.x_dim, empty_raster.y_dim);
+  empty_raster.setDims();
+  empty_raster.setMatrixSize();
 
   //get valid pixels
-  vector< vector<unsigned int> > pixels;
+  vector< array<unsigned int,2> > pixels;
 
   for(unsigned i = 0; i < x_len; ++i){
     for(unsigned j = 0; j < y_len; ++j){
-      if(raster->matrix[i][j] >= min_count ){
+      if(raster->matrix[i][j] >= min_count )
         pixels.push_back( {i,j} );
-      }
     }
   }
 
   //make circles centered in every valid pixel
-  vector<HoughCenters> g_circles = {};
-  HoughCenters g_cen;
-  g_cen.circles = {};
-  g_cen.avg_x = -1000;
-  g_cen.avg_y = -1000;
-  g_cen.low_z = raster->min_z;
-  g_cen.up_z = raster->max_z;
-  g_cen.aggregate_radius = max_radius * 3;
-  g_circles.push_back(g_cen);
+  vector<HoughCenters> g_circles;
+  float inclusionRadius = max_radius * 3;
 
-  vector< vector<int> > votes;
-  HoughCircle hc;
-  vector<double> center;
-  vector< vector<int> > h_circle;
-  set<unsigned long long int> pixel_set; //cod = 100.000*x + y
-  vector<double> coor(2);
-  unsigned int vx, vy;
-  vector<int> pixel(2);
-  vector<float> radii;
+  for(float rad = raster->pixel_size; rad <= max_radius; rad+=raster->pixel_size){
 
-  for(float i = 0; i <= max_radius; i+=raster->pixel_size){
-    radii.push_back(i);
-  }
+    vector< vector<unsigned int> > votes = empty_raster.matrix;
+    PixelSet pixel_set;
 
-  for(auto& rad : radii){
-    votes = empty_raster.matrix;
-    hc.radius = rad;
-    pixel_set = {};
+    for(auto& p : pixels){
 
-    for(unsigned i = 0; i < pixels.size(); ++i){
+      vector<float> center = raster->absCenter(p[0], p[1]);
+      PixelSet h_circle = empty_raster.rasterCircle(rad, center[0], center[1]);
 
-      center = absCenter(pixels[i][0], pixels[i][1], raster->min_x, raster->min_y, raster->pixel_size);
-      h_circle = rasterCircle(rad, empty_raster.pixel_size, center[0], center[1], empty_raster.min_x, empty_raster.min_y);
-
-      for(unsigned j = 0; j < h_circle.size(); ++j){
-        vx = h_circle[j][0];
-        vy = h_circle[j][1];
+      for(auto& h : h_circle){
+        unsigned int vx = h[0];
+        unsigned int vy = h[1];
 
         if( vx >= votes.size() || vy >= votes[0].size() ) continue;
 
-        votes[ vx ][ vy ] += 1;
+        votes[ vx ][ vy ]++;
 
         if(votes[ vx ][ vy ] >= min_votes){
-          pixel_set.insert( 100000*vx + vy );
+          array<unsigned int, 2> vxy = {vx, vy};
+          pixel_set.insert( vxy );
         }
       }
-
     }
 
     for(auto& k : pixel_set){
-      vx = floor(k / 100000);
-      vy = k - 100000*vx;
-      coor = absCenter(vx, vy, empty_raster.min_x, empty_raster.min_y, empty_raster.pixel_size);
+      unsigned int vx = k[0];
+      unsigned int vy = k[1];
+      vector<float> coor = empty_raster.absCenter(vx, vy);
+
+      HoughCircle hc;
+      hc.radius = rad;
       hc.x_center = coor[0];
       hc.y_center = coor[1];
       hc.n_votes = votes[vx][vy];
-      //p_circles.push_back(hc);
 
-      for(unsigned i = 0; i < g_circles.size(); ++i){
-        double dist = sqrt( pow(hc.x_center - g_circles[i].avg_x, 2) + pow(hc.y_center - g_circles[i].avg_y, 2) );
+      // disposable when looking at single circle
+      bool newCircle = true;
+      for(auto& gc : g_circles){
 
-        if(dist < g_cen.aggregate_radius){
-          g_circles[i].circles.push_back(hc);
+        float dist = sqrt( pow(hc.x_center - gc.avg_x, 2) + pow(hc.y_center - gc.avg_y, 2) );
+
+        if(dist < inclusionRadius){
+          gc.circles.push_back(hc);
+          newCircle = false;
           break;
         }
+      }
 
-        if(i == (g_circles.size()-1)){
-          g_cen.circles = {};
-          g_cen.circles.push_back(hc);
-          g_cen.avg_x = hc.x_center;
-          g_cen.avg_y = hc.y_center;
-          g_circles.push_back(g_cen);
-        }
+      if(newCircle){
+        HoughCenters g_cen;
+        g_cen.circles = {hc};
+        g_cen.avg_x = hc.x_center;
+        g_cen.avg_y = hc.y_center;
+        g_cen.low_z = raster->min_z;
+        g_cen.up_z = raster->max_z;
+        g_cen.aggregate_radius = inclusionRadius;
+        g_circles.push_back(g_cen);
       }
     }
-
   }
+
+  for(auto& i : g_circles) i.getCenters();
 
   return g_circles;
 
 }
 
-void getPreciseCenters(vector<HoughCenters>& circles){
-
-  circles.erase(circles.begin());
-  for(unsigned i = 0; i < circles.size(); ++i){
-    circles[i].getCenters();
-  }
-
-}
-
 void assignTreeId(vector<HoughCenters>& disks, float distmax, float countDensity, unsigned minLayers){
 
-    vector<HoughCenters>::iterator dsk;
-    dsk = disks.begin();
-
     unsigned maxCount = 0;
-    for(unsigned i = 0; i < disks.size(); i++){
-      unsigned tempSize = disks[i].circles.size();
+    for(auto& i : disks){
+      unsigned tempSize = i.circles.size();
       if(maxCount < tempSize){
         maxCount = tempSize;
       }
     }
+
     unsigned mincount = maxCount * countDensity;
 
-  #ifdef _DEBUG
-    cout << "discs over " << mincount << " points" << endl;
-  #endif // _DEBUG
+    vector<HoughCenters>::iterator dsk;
+    dsk = disks.begin();
 
     unsigned id = 1;
-    while( dsk != disks.end() ){
+    while(dsk != disks.end()){
+
       if(dsk->tree_id > 0 || dsk->circles.size() < mincount ){
         dsk++;
         continue;
       }
 
       dsk->tree_id = id++;
-      double x = dsk->getMainCircle().x_center;
-      double y = dsk->getMainCircle().y_center;
+      float x = dsk->main_circle->x_center;
+      float y = dsk->main_circle->y_center;
 
       vector<HoughCenters>::iterator dsk2;
       dsk2 = disks.begin();
-      while( dsk2 != disks.end()){
+      while(dsk2 != disks.end()){
+
         if(dsk2->tree_id > 0 || dsk2->circles.size() < mincount ){
           dsk2++;
           continue;
         }
 
-        double x2 = dsk2->getMainCircle().x_center;
-        double y2 = dsk2->getMainCircle().y_center;
+        float x2 = dsk2->main_circle->x_center;
+        float y2 = dsk2->main_circle->y_center;
 
-        double euclidean = sqrt( pow(x - x2, 2) + pow(y - y2, 2) );
+        float euclidean = sqrt( pow(x - x2, 2) + pow(y - y2, 2) );
 
         if(euclidean < distmax){
           dsk2->tree_id = dsk->tree_id;
@@ -275,25 +209,16 @@ void assignTreeId(vector<HoughCenters>& disks, float distmax, float countDensity
       dsk++;
     }
 
-  #ifdef _DEBUG
-    cout << "n of trees: " << id << endl;
-  #endif // _DEBUG
-
     unsigned treeStacks[id] = {0};
-    for(unsigned i = 0; i < disks.size(); i++){
-      unsigned index = disks[i].tree_id;
-      if(index > 0){
-        treeStacks[index]++;
-      }
+    for(auto& i : disks){
+      unsigned index = i.tree_id;
+      if(index > 0) treeStacks[index]++;
     }
 
     for(auto& dsk : disks){
       unsigned index = dsk.tree_id;
       unsigned indexCount = treeStacks[index];
-
-      if(indexCount < minLayers){
-        dsk.tree_id = 0;
-      }
+      if(indexCount < minLayers) dsk.tree_id = 0;
     }
 
 };
@@ -380,8 +305,8 @@ List saveCloud(vector<HoughCenters>* coordinates){
       if(point->tree_id == i){
         counter++;
 
-        sumX += point->getMainCircle().x_center;
-        sumY += point->getMainCircle().y_center;
+        sumX += point->main_circle->x_center;
+        sumY += point->main_circle->y_center;
 
         sumAvgX += point->avg_x;
         sumAvgY += point->avg_y;
@@ -443,9 +368,6 @@ List singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float
 
     cout << "# extracting center candidates" << endl;
     treeMap = getCenters(&ras);
-
-    cout << "# extracting center estimates" << endl;
-    getPreciseCenters(treeMap);
 
     cout << "# assigning tree IDs" << endl;
     assignTreeId(treeMap, rad_max, min_den, 1);
