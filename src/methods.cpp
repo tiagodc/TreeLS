@@ -159,6 +159,84 @@ vector<HoughCenters> getCenters(Raster* raster, float max_radius=0.25, float min
 
 }
 
+HoughCenters getSingleCenter(Raster* raster, float max_radius=0.25, float min_den=0.1, unsigned int min_votes=3){
+
+  //count raster properties (&raster)
+  unsigned int& x_len = raster->x_dim;
+  unsigned int& y_len = raster->y_dim;
+  unsigned int min_count = ceil( (raster->max_count)*min_den );
+
+  //empty raster properties (votes)
+  Raster empty_raster;
+  empty_raster.min_x = raster->min_x - max_radius;
+  empty_raster.min_y = raster->min_y - max_radius;
+  empty_raster.max_x = raster->max_x + max_radius;
+  empty_raster.max_y = raster->max_y + max_radius;
+  empty_raster.pixel_size = raster->pixel_size;
+  empty_raster.setDims();
+  empty_raster.setMatrixSize();
+
+  //get valid pixels
+  vector< array<unsigned int,2> > pixels;
+
+  for(unsigned i = 0; i < x_len; ++i){
+    for(unsigned j = 0; j < y_len; ++j){
+      if(raster->matrix[i][j] >= min_count )
+        pixels.push_back( {i,j} );
+    }
+  }
+
+  //make circles centered in every valid pixel
+  HoughCenters circle_candidates;
+  circle_candidates.low_z = raster->min_z;
+  circle_candidates.up_z = raster->max_z;
+
+  for(float rad = raster->pixel_size; rad <= max_radius; rad+=raster->pixel_size){
+
+    vector< vector<unsigned int> > votes = empty_raster.matrix;
+    PixelSet pixel_set;
+
+    for(auto& p : pixels){
+
+      vector<float> center = raster->absCenter(p[0], p[1]);
+      PixelSet h_circle = empty_raster.rasterCircle(rad, center[0], center[1]);
+
+      for(auto& h : h_circle){
+        unsigned int vx = h[0];
+        unsigned int vy = h[1];
+
+        if( vx >= votes.size() || vy >= votes[0].size() ) continue;
+
+        votes[ vx ][ vy ]++;
+
+        if(votes[ vx ][ vy ] >= min_votes){
+          array<unsigned int, 2> vxy = {vx, vy};
+          pixel_set.insert( vxy );
+        }
+      }
+    }
+
+    for(auto& k : pixel_set){
+      unsigned int vx = k[0];
+      unsigned int vy = k[1];
+      vector<float> coor = empty_raster.absCenter(vx, vy);
+
+      HoughCircle hc;
+      hc.radius = rad;
+      hc.x_center = coor[0];
+      hc.y_center = coor[1];
+      hc.n_votes = votes[vx][vy];
+
+      circle_candidates.circles.push_back(hc);
+    }
+  }
+
+  circle_candidates.getCenters();
+
+  return circle_candidates;
+
+}
+
 void assignTreeId(vector<HoughCenters>& disks, float distmax, float countDensity, unsigned minLayers){
 
     unsigned maxCount = 0;
@@ -358,7 +436,7 @@ List saveCloud(vector<HoughCenters>* coordinates){
 /////////////////////////////////////////////////////////////
 
 // [[Rcpp::export]]
-List singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float min_den=0.1){
+List singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float min_den=0.1, unsigned int min_votes = 3){
 
     vector<HoughCenters> treeMap;
     Raster ras;
@@ -367,7 +445,7 @@ List singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float
     ras = getCounts(las, pixel);
 
     cout << "# extracting center candidates" << endl;
-    treeMap = getCenters(&ras);
+    treeMap = getCenters(&ras, rad_max, min_den, min_votes);
 
     cout << "# assigning tree IDs" << endl;
     assignTreeId(treeMap, rad_max, min_den, 1);
@@ -376,4 +454,19 @@ List singleStack(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float
 
     return saveCloud(&treeMap);
 
+}
+
+// [[Rcpp::export]]
+List getCircle(NumericMatrix& las, float pixel=0.05, float rad_max=0.25, float min_den=0.1, unsigned int min_votes = 3){
+
+  Raster ras = getCounts(las, pixel);
+  HoughCenters circle = getSingleCenter(&ras, rad_max, min_den, min_votes);
+
+  List out;
+  out["x"] = circle.main_circle->x_center;
+  out["y"] = circle.main_circle->y_center;
+  out["rad"] = circle.main_circle->radius;
+  out["votes"] = circle.main_circle->n_votes;
+
+  return out;
 }
