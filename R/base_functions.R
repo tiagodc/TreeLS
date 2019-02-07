@@ -218,7 +218,7 @@ clip.XY = function(cloud, rad = 1.5, center = c(0,0)) {
   } else {
     dists = sqrt(((cloud[,1]-center[1])^2 + (cloud[,2]-center[2])^2))
     out=cloud[dists<=rad, ]
-  }  
+  }
   return (out)
 }
 
@@ -236,111 +236,111 @@ rglAXES = function(xyz = c(1,1,1), cols = c('red','green','blue'), ...){
   rgl.lines(c(0,0), c(0,0), c(0,xyz[3]), col=cols[3], ...)
 }
 
-#' Plotting a stem model
-#' @description plots a stem model of stacked cylinders or circles, depending on the \emph{fitting} routine used to calculate the stem segments
-#' @param stem.out output from a stem fitting function - \code{\link{fit_RANSAC_circle}}, \code{\link{fit_RANSAC_cylinder}} or \code{\link{fit_IRTLS}}
-#' @param cyl.len optional - cylinder length for all stem segments
-#' @param col color pallete function or color string name to use to color the cylinders
-#' @param bg background color of the rgl environemnt
-#' @param alpha alpha value passed on to the \code{\link{ashape3d}} function
-#' @examples
-#'\dontrun{
-#' trunk <- pref_HT(spruce)
-#' stem <- fit_RANSAC_circle(trunk)
-#' obj3d <- stem.model(stem)
-#' rgl.points(spruce, size=1)
-#'}
-#' @return 3D stem model of stacked cylinders/circles
-#' @import alphashape3d
-#' @export
-stem.model = function(stem.out, cyl.len=NA, col=rainbow, bg='black', alpha=.5){
-
-  #require(alphashape3d)
-
-  st = stem.out[[1]]
-  ft = stem.out[[2]]
-
-  if(ncol(ft) == 8){
-
-    cln = if(is.na(cyl.len)) ft[,2]-ft[,1] else rep(cyl.len, nrow(ft))
-    cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
-
-    abs = list()
-    pts = list()
-    for(i in 1:nrow(ft)){
-
-      tp = st[st[,3] <= ft[i,'z2'] & st[,3] >= ft[i,'z1'],]
-
-      vcs = cyl.vectors(ft[i,3:7])
-      d = ft[i,'r']*2
-
-      a = vcs$a
-      #h = if(a[3] < 0) ft[i,'z1'] else ft[i,'z1']
-
-      zang = angle(a, c(0,0,1))
-      xang = angle(c(vcs$n[-3],0), c(1,0,0))
-
-      rot = xyz.rotation.matrix(0,zang,xang)
-
-      cl = cyl(n=1000, len=cln[i], d=d)
-
-      go = change.coords(cl, rot, shift = vcs$Q)
-      ed = sqrt(sum((colMeans(tp) - colMeans(go))^2))
-      if(a[3]<0) ed = -ed
-      go = t(apply(go, 1, function(x) x+a*ed))
-
-      #go[,3] = go[,3] + abs(h)-min(go[,3])
-
-      acl = ashape3d(go, alpha = alpha)
-
-      abs[[i]] = acl
-      pts[[i]] = tp
-
-    }
-
-} else {
-
-  if(ncol(ft) == 6){
-
-  if(is.na(cyl.len)) cln = .02 else cln = cyl.len
-  cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
-
-  abs = list()
-  pts = list()
-  for(i in 1:nrow(ft)){
-
-    tp = st[st[,3] <= ft[i,'z2'] & st[,3] >= ft[i,'z1'],]
-
-    xy = ft[i,3:4]
-    d = ft[i,'r']*2
-
-    if(d == 0 | d > 2) next
-
-    cl = cyl(n=1000, len=cln, d=d)
-
-    h = mean(ft[i,1:2])
-
-    go = t(apply(cl, 1, function(u) u + c(xy,h)))
-
-    acl = ashape3d(go, alpha = alpha)
-
-    abs[[i]] = acl
-    pts[[i]] = tp
-
-  }
-
-  }}
-
-  nulls = sapply(abs, is.null)
-  nl2 = sapply(pts, is.null)
-
-    bg3d(bg)
-    lapply(1:length(abs), function(u) if(!nulls[u]) plot.ashape3d(abs[[u]], clear=F, edges=F, vertices=F, col=cols[[u]]))
-    lapply(1:length(pts), function(u) if(!nl2[u]) rgl.points(pts[[u]], col=cols[[u]]) )
-
-    return(abs[!nulls])
-
-}
+## ## Plotting a stem model
+## ## @description plots a stem model of stacked cylinders or circles, depending on the \emph{fitting} routine used to calculate the stem segments
+## ## @param stem.out output from a stem fitting function - \code{\link{fit_RANSAC_circle}}, \code{\link{fit_RANSAC_cylinder}} or \code{\link{fit_IRTLS}}
+## ## @param cyl.len optional - cylinder length for all stem segments
+## ## @param col color pallete function or color string name to use to color the cylinders
+## ## @param bg background color of the rgl environemnt
+## ## @param alpha alpha value passed on to the \code{\link{ashape3d}} function
+## ## @examples
+## ##\dontrun{
+## ## trunk <- pref_HT(spruce)
+## ## stem <- fit_RANSAC_circle(trunk)
+## ## obj3d <- stem.model(stem)
+## ## rgl.points(spruce, size=1)
+## ##}
+## ## @return 3D stem model of stacked cylinders/circles
+## ## @import alphashape3d
+## ## @export
+## stem.model = function(stem.out, cyl.len=NA, col=rainbow, bg='black', alpha=.5){
+##
+##   #require(alphashape3d)
+##
+##   st = stem.out[[1]]
+##   ft = stem.out[[2]]
+##
+##   if(ncol(ft) == 8){
+##
+##     cln = if(is.na(cyl.len)) ft[,2]-ft[,1] else rep(cyl.len, nrow(ft))
+##     cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
+##
+##     abs = list()
+##     pts = list()
+##     for(i in 1:nrow(ft)){
+##
+##       tp = st[st[,3] <= ft[i,'z2'] & st[,3] >= ft[i,'z1'],]
+##
+##       vcs = cyl.vectors(ft[i,3:7])
+##       d = ft[i,'r']*2
+##
+##       a = vcs$a
+##       #h = if(a[3] < 0) ft[i,'z1'] else ft[i,'z1']
+##
+##       zang = angle(a, c(0,0,1))
+##       xang = angle(c(vcs$n[-3],0), c(1,0,0))
+##
+##       rot = xyz.rotation.matrix(0,zang,xang)
+##
+##       cl = cyl(n=1000, len=cln[i], d=d)
+##
+##       go = change.coords(cl, rot, shift = vcs$Q)
+##       ed = sqrt(sum((colMeans(tp) - colMeans(go))^2))
+##       if(a[3]<0) ed = -ed
+##       go = t(apply(go, 1, function(x) x+a*ed))
+##
+##       #go[,3] = go[,3] + abs(h)-min(go[,3])
+##
+##       acl = ashape3d(go, alpha = alpha)
+##
+##       abs[[i]] = acl
+##       pts[[i]] = tp
+##
+##     }
+##
+## } else {
+##
+##   if(ncol(ft) == 6){
+##
+##   if(is.na(cyl.len)) cln = .02 else cln = cyl.len
+##   cols = if(class(col)=='function') col(nrow(ft)) else rep(col, nrow(ft))
+##
+##   abs = list()
+##   pts = list()
+##   for(i in 1:nrow(ft)){
+##
+##     tp = st[st[,3] <= ft[i,'z2'] & st[,3] >= ft[i,'z1'],]
+##
+##     xy = ft[i,3:4]
+##     d = ft[i,'r']*2
+##
+##     if(d == 0 | d > 2) next
+##
+##     cl = cyl(n=1000, len=cln, d=d)
+##
+##     h = mean(ft[i,1:2])
+##
+##     go = t(apply(cl, 1, function(u) u + c(xy,h)))
+##
+##     acl = ashape3d(go, alpha = alpha)
+##
+##     abs[[i]] = acl
+##     pts[[i]] = tp
+##
+##   }
+##
+##   }}
+##
+##   nulls = sapply(abs, is.null)
+##   nl2 = sapply(pts, is.null)
+##
+##     bg3d(bg)
+##     lapply(1:length(abs), function(u) if(!nulls[u]) plot.ashape3d(abs[[u]], clear=F, edges=F, vertices=F, col=cols[[u]]))
+##     lapply(1:length(pts), function(u) if(!nl2[u]) rgl.points(pts[[u]], col=cols[[u]]) )
+##
+##     return(abs[!nulls])
+##
+## }
 
 #' Height-based point cloud filter
 #' @description reduces a point cloud's density processing different height intervals individually
@@ -682,7 +682,7 @@ RANSAC.circle = function(stem.sec, n=15, p=.8, P=.99){
     b = tryCatch(circlefit(slc[a,1], slc[a,2]),
                  error = function(con){ return('next') },
                  warning = function(con) return('next'))
-				 
+
 	if(b == 'next') next
 
     #if(class(try(circlefit(slc[a,1], slc[a,2]), silent = T)) == "try-error") next
