@@ -4,8 +4,6 @@
 using namespace Rcpp;
 using namespace std;
 
-#define _DEBUG
-
 vector<vector<double*> > rmatrix2cpp(NumericMatrix& cloud){
 
   NumericMatrix::Column xcol = cloud( _, 0);
@@ -293,7 +291,7 @@ HoughCenters getSingleCenter(Raster* raster, double max_radius=0.25, double min_
 
 }
 
-void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensity, unsigned minLayers=1){
+void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensity, unsigned int minLayers=1){
 
     unsigned maxCount = 0;
     for(auto& i : disks){
@@ -500,13 +498,17 @@ List singleStack(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, dou
 }
 
 // [[Rcpp::export]]
-List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
+List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5, double pixel=0.025, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
 
   vector<HoughCenters> treeMap;
 
   vector<vector<vector<double*> > > fullStack = getSlices(las, hmin, hmax, hstep);
 
   for(auto& stack : fullStack){
+
+    if(stack[0].empty())
+      continue;
+
     Raster ras = getCounts(stack, pixel);
     vector<HoughCenters> tempMap = getCenters(&ras, rad_max, min_den, min_votes);
     treeMap.insert(treeMap.end(), tempMap.begin(), tempMap.end());
