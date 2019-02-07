@@ -6,6 +6,7 @@
 
 #include <boost/functional/hash.hpp>
 #include <math.h>
+#include <memory>
 #include <Rcpp.h>
 #include <vector>
 
@@ -19,42 +20,42 @@ class Raster{
     unsigned int x_dim;
     unsigned int y_dim;
     unsigned int max_count;
-    float pixel_size;
-    float thickness;
-    float min_x;
-    float max_x;
-    float min_y;
-    float max_y;
-    float min_z;
-    float max_z;
+    double pixel_size;
+    double thickness;
+    double min_x;
+    double max_x;
+    double min_y;
+    double max_y;
+    double min_z;
+    double max_z;
 
     void setMatrixSize(){
       matrix.resize(x_dim, vector<unsigned int>(y_dim));
     }
 
-    vector<float> absCenter(unsigned int x, unsigned int y){
-      float x_cen = ( min_x + (pixel_size/2) ) + ( x * pixel_size );
-      float y_cen = ( min_y + (pixel_size/2) ) + ( y * pixel_size );
-      vector<float> xy = {x_cen, y_cen};
+    vector<double> absCenter(unsigned int x, unsigned int y){
+      double x_cen = ( min_x + (pixel_size/2) ) + ( x * pixel_size );
+      double y_cen = ( min_y + (pixel_size/2) ) + ( y * pixel_size );
+      vector<double> xy = {x_cen, y_cen};
       return xy;
     }
 
-    vector<unsigned int> pixPosition(float x, float y){
+    vector<unsigned int> pixPosition(double x, double y){
       unsigned int x_pix = floor( (x - min_x) / pixel_size );
       unsigned int y_pix = floor( (y - min_y) / pixel_size );
       vector<unsigned int> xy = {x_pix, y_pix};
       return xy;
     }
 
-    PixelSet rasterCircle(float radius, float cx, float cy){
+    PixelSet rasterCircle(double radius, double cx, double cy){
 
       int n_points = ceil( (2 * PI * radius) / pixel_size );
-      float angle_dist = 2 * PI / n_points;
+      double angle_dist = 2 * PI / n_points;
       PixelSet pixels;
 
-      for(float i = 0; i < 2*PI; i += angle_dist){
-        float x = cos(i)*radius + cx;
-        float y = sin(i)*radius + cy;
+      for(double i = 0; i < 2*PI; i += angle_dist){
+        double x = cos(i)*radius + cx;
+        double y = sin(i)*radius + cy;
 
         vector<unsigned int> pxy = pixPosition(x, y);
         pixels.insert({pxy[0], pxy[1]});
@@ -73,34 +74,34 @@ class Raster{
 
 class HoughCircle{
   public:
-    float x_center;
-    float y_center;
-    float radius;
+    double x_center;
+    double y_center;
+    double radius;
     int n_votes;
 };
 
 class HoughCenters{
   public:
     vector<HoughCircle> circles;
-    HoughCircle* main_circle;
-    float avg_x;
-    float avg_y;
-    float aggregate_radius;
-    float low_z;
-    float up_z;
+    HoughCircle main_circle;
+    double avg_x;
+    double avg_y;
+    double aggregate_radius;
+    double low_z;
+    double up_z;
     unsigned int tree_id = 0;
 
     void getCenters(){
-      float ax = 0;
-      float ay = 0;
-      main_circle = &circles[0];
+      double ax = 0;
+      double ay = 0;
+      main_circle = circles[0];
 
       for(auto& i : circles){
         ax += i.x_center;
         ay += i.y_center;
 
-        if(i.n_votes > main_circle->n_votes){
-          main_circle = &i;
+        if(i.n_votes > main_circle.n_votes){
+          main_circle = i;
         }
       }
       avg_x = ax / circles.size();

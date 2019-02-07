@@ -2,13 +2,19 @@ require(magrittr)
 require(lidR)
 require(rgl)
 
-las = 'd:/Projects/TLStools/sample_data/square.las'
+las = 'd:/Projects/TLStools/test_clouds/gerdau.laz'
 
-las %<>% readLAS(select='XYZ', filter='-keep_z 2 3 -thin_with_voxel 0.01')
+las %<>% readLAS(select='XYZ', filter='-thin_with_voxel 0.025')
 
-plot(las)
+# plot(las)
 
-m = singleStack(las@data %>% as.matrix, 0.025) %>% do.call(what=cbind) %>% as.data.frame %>% LAS
+m = treeMap(las@data %>% as.matrix, pixel = 0.025, min_den = 0.05, min_votes = 3, hstep = 0.5, hmin = 0, hmax = 3) %>% do.call(what=cbind) %>% as.data.frame
+m$Intensity %<>% as.integer
+m$Keypoint_flag %<>% as.logical
+m$PointSourceID %<>% as.integer
+m %<>% LAS
+
+plot(m, color='Radii', clear_artifacts=F, size=3)
 
 clear3d()
 rgl.points(las@data, size=.5)
