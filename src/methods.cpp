@@ -500,7 +500,7 @@ List singleStack(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, dou
 }
 
 // [[Rcpp::export]]
-List treeMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
+List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
 
   vector<HoughCenters> treeMap;
 

@@ -86,3 +86,23 @@ las2xyz = function(las){
   las = las@data[,1:3] %>% as.matrix
   return(las)
 }
+
+treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max = 0.25, min_den = 0.1, min_votes = 3){
+
+  if(hmax <= hmin)
+    stop('hmax must be larger than hmin')
+
+  if("Classification" %in% names(las@data))
+    las %<>% lasfilter(Classification != 2)
+
+  map = stackMap(las@data %>% as.matrix, hmin, hmax, hstep, pixel, rad_max, min_den, min_votes) %>%
+    do.call(what=cbind) %>% as.data.frame
+
+  map$Intensity %<>% as.integer
+  map$Keypoint_flag %<>% as.logical
+  map$PointSourceID %<>% as.integer
+  map %<>% LAS %>% setHeaderTLS
+
+  return(map)
+}
+
