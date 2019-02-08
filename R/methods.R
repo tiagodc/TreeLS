@@ -201,6 +201,7 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 #' @param min_votes ...
 #' @return \code{LAS} object
 #' @export
+#' @useDynLib TreeLS, .registration = TRUE
 treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max = 0.25, min_den = 0.1, min_votes = 3){
 
   if(class(las)[1] != 'LAS')

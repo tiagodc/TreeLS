@@ -5,8 +5,8 @@ Version: 1.1
 Authors@R: c(person("Tiago", "de Conto", email = "ti@forlidar.com.br", role = c("aut", "cre")))
 Description: Algorithms for tree detection, point cloud denoising, stem modelling, 3D visualization of terrestrial LiDAR (but not only) point clouds, currently focusing on dendrometry and forest inventory high performance applications - thanks to 'Rcpp', 'rlas' and 'lidR' integrations.
 URL: https://github.com/tiagodc/TreeLS    
-Depends: R (>= 3.3.1), lidR (>= 2.0.0), magrittr (>= 1.5)
-Imports: Rcpp, magrittr, lidR, rgl
+Depends: R (>= 3.3.1), Rcpp (>= 1.0.0), lidR (>= 2.0.0), magrittr (>= 1.5)
+Imports: Rcpp, magrittr, lidR, raster, rgl
 License: GNU GENERAL PUBLIC LICENSE
 Encoding: UTF-8
 LazyData: true

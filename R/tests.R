@@ -34,3 +34,16 @@
 # b = a %>% makeRaster(cell.size = px) %>% hough(pixel_size = px)
 # b$centers[ which.max(b$centers[,4]), ] %>% as.double
 #
+#
+# require(TreeLS)
+#
+# las %<>% tlsNormalize()
+#
+# plot(las, color='Classification')
+# axes3d(col='white')
+#
+# stc = treeMap(las)
+#
+# stc@data %>% head
+#
+# rgl.points(stc@data, color='red')

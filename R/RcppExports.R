@@ -2,14 +2,14 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 getCircle <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
-    .Call('_TreeLS_getCircle', PACKAGE = 'TreeLS', las, pixel, rad_max, min_den, min_votes)
+    .Call(`_TreeLS_getCircle`, las, pixel, rad_max, min_den, min_votes)
 }
 
 singleStack <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
-    .Call('_TreeLS_singleStack', PACKAGE = 'TreeLS', las, pixel, rad_max, min_den, min_votes)
+    .Call(`_TreeLS_singleStack`, las, pixel, rad_max, min_den, min_votes)
 }
 
 stackMap <- function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
-    .Call('_TreeLS_stackMap', PACKAGE = 'TreeLS', las, hmin, hmax, hstep, pixel, rad_max, min_den, min_votes)
+    .Call(`_TreeLS_stackMap`, las, hmin, hmax, hstep, pixel, rad_max, min_den, min_votes)
 }
 
