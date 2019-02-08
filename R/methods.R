@@ -156,6 +156,39 @@ las2xyz = function(las){
   return(las)
 }
 
+#' Normalize a TLS point cloud
+#' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{lidR::csf}} algorithm is applied internally.
+#' @param las \code{LAS} object
+#' @param res resolution of the DTM used for normalization
+#' @param keepGround default = \code{TRUE} - if \code{FALSE}, returns a point cloud with ground points removed
+#' @return \code{LAS} object
+#' @export
+tlsNormalize = function(las, res=.5, keepGround=T){
+
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object')
+
+  if(res <= 0)
+    stop('res must be a positive number')
+
+  if(!any(las$Classification == 2)){
+    warning('no ground points found, performing ground segmentation')
+    las %<>% lasground(csf(class_threshold = 0.2, cloth_resolution = 0.1), last_returns = F)
+  }
+
+  grid = las %>% extent %>% raster
+  res(grid) = res
+
+  dtm = grid_terrain(las, res = grid, algorithm = knnidw())
+
+  las %<>% lasnormalize(dtm)
+
+  if(!keepGround) las %<>% lasfilter(Classification != 2)
+
+  return(las)
+
+}
+
 #' Map tree occurrences from TLS data
 #' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search
 #' @param las \code{LAS} object
@@ -240,4 +273,3 @@ treePositions = function(las){
 
   return(pos)
 }
-
