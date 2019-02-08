@@ -16,7 +16,7 @@ preCheck = function(las){
     if(!hasGround){
       warning('ground points not classified')
     }else{
-      meanGround = las@data[ las$Classification == 2 , 'Z'] %>% mean %>% abs
+      meanGround = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
       if(meanGround > 0.2)
         warning("point cloud apparently not normalized")
     }
