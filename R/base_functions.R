@@ -104,7 +104,7 @@ FL = function(XYZplane){
 }
 
 #' Tukey's biweight function
-#' @describe calculates weights for a dataset based on Tukey's biweight function
+#' @description calculates weights for a dataset based on Tukey's biweight function
 #' @param errors residuals from a fitted model
 #' @param b efficiency constant (5 == 95\%)
 #' @return list of length 2: \describe{\item{$Y}{residuals / MAD} \item{$weights}{weights}}

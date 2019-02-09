@@ -4,6 +4,7 @@
 using namespace Rcpp;
 using namespace std;
 
+// convert r matrix to std::vector
 vector<vector<double*> > rmatrix2cpp(NumericMatrix& cloud){
 
   NumericMatrix::Column xcol = cloud( _, 0);
@@ -21,6 +22,7 @@ vector<vector<double*> > rmatrix2cpp(NumericMatrix& cloud){
   return xyz;
 }
 
+// get min values from XYZ point cloud
 vector<double> getMinMax(vector<vector<double*> >& xyz){
 
   vector<double> minmax(6);
@@ -43,6 +45,31 @@ vector<double> getMinMax(vector<vector<double*> >& xyz){
 
 }
 
+// systematic voxel grid point filter (-thin_with_voxel)
+vector<bool> voxelFilter(vector<vector<double*> >& cloud, double voxel_spacing = 0.025){
+
+  double& xoffset = *cloud[0][0];
+  double& yoffset = *cloud[1][0];
+  double& zoffset = *cloud[2][0];
+
+  VoxelSet ledger;
+  vector<bool> filter(cloud[0].size());
+
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+
+   int nx = floor( (*cloud[0][i] - xoffset) / voxel_spacing);
+   int ny = floor( (*cloud[1][i] - yoffset) / voxel_spacing);
+   int nz = floor( (*cloud[2][i] - zoffset) / voxel_spacing);
+
+   array<int,3> voxel = {nx, ny, nz};
+   filter[i] = ledger.insert(voxel).second;
+  }
+
+  return filter;
+
+}
+
+// split point cloud into horizontal slices
 vector<vector<vector<double*> > > getSlices(NumericMatrix& cloud, double zmin = 1, double zmax=3, double zstep = 0.5){
 
   NumericMatrix::Column xcol = cloud( _, 0);
@@ -69,6 +96,33 @@ vector<vector<vector<double*> > > getSlices(NumericMatrix& cloud, double zmin = 
 
 }
 
+vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, double zmin = 1, double zmax=3, double zstep = 0.5){
+
+  vector<double*> xcol = cloud[0];
+  vector<double*> ycol = cloud[1];
+  vector<double*> zcol = cloud[2];
+
+  unsigned int nlayers = ceil((zmax - zmin) / zstep);
+  vector<vector<vector<double*> > > store(nlayers, vector<vector<double*> >(3));
+
+  for(unsigned int i = 0; i < xcol.size(); ++i){
+
+    double z = *zcol[i];
+    if(z < zmin || z >= zmax)
+      continue;
+
+    unsigned int n = floor((z - zmin) / zstep);
+
+    store[n][0].push_back(xcol[i]);
+    store[n][1].push_back(ycol[i]);
+    store[n][2].push_back(zcol[i]);
+  }
+
+  return store;
+
+}
+
+// convert point cloud slice to raster of point count
 Raster getCounts(vector<vector<double*> >& slice , double pixel_size){
 
   vector<double*>& xcol = slice[0];
@@ -90,30 +144,15 @@ Raster getCounts(vector<vector<double*> >& slice , double pixel_size){
   ras.setMatrixSize();
   ras.max_count = 0;
 
-  double x,y;
-  unsigned int xCell;
-  unsigned int yCell;
-
   for(unsigned int i = 0; i < xcol.size(); ++i){
-
-    x = *xcol[i];
-    y = *ycol[i];
-
-    xCell = abs( floor( (x - ras.min_x) / pixel_size ) );
-    yCell = abs( floor( (y - ras.min_y) / pixel_size ) );
-
-    if(xCell >= ras.x_dim) xCell = ras.x_dim-1;
-    if(yCell >= ras.y_dim) yCell = ras.y_dim-1;
-
-    ras.matrix[xCell][yCell]++;
-
-    if(ras.matrix[xCell][yCell] > ras.max_count) ras.max_count = ras.matrix[xCell][yCell];
+    ras.updateMatrix(*xcol[i], *ycol[i]);
   }
 
   return ras;
 
 }
 
+// apply hough transform on Raster object
 vector<HoughCenters> getCenters(Raster* raster, double max_radius=0.25, double min_den=0.1, unsigned int min_votes=3){
 
   //count raster properties (&raster)
@@ -213,6 +252,7 @@ vector<HoughCenters> getCenters(Raster* raster, double max_radius=0.25, double m
 
 }
 
+// hough transform for a single cylinder's point cloud
 HoughCenters getSingleCenter(Raster* raster, double max_radius=0.25, double min_den=0.1, unsigned int min_votes=3){
 
   //count raster properties (&raster)
@@ -291,6 +331,7 @@ HoughCenters getSingleCenter(Raster* raster, double max_radius=0.25, double min_
 
 }
 
+// assign tree IDs to tree position point (from Raster) stacks
 void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensity, unsigned int minLayers=1){
 
     unsigned maxCount = 0;
@@ -356,6 +397,7 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
 
 };
 
+// export tree positions point stack
 List exportTreeMap(vector<HoughCenters>& coordinates){
 
   vector<double> xout;
@@ -367,7 +409,7 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
   vector<unsigned short int> votes;
   vector<unsigned int> treeId;
   vector<unsigned int> discId;
-  vector<unsigned int> nPoints;
+  // vector<unsigned int> nPoints;
 
 
   unsigned int diskCounter = 1;
@@ -391,7 +433,7 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
     radii.push_back(point.main_circle.radius);
     votes.push_back(point.main_circle.n_votes);
     treeId.push_back(point.tree_id);
-    nPoints.push_back(point.circles.size());
+    // nPoints.push_back(point.circles.size());
     discId.push_back(diskCounter);
     keyFlag.push_back(true);
     treeFlag.push_back(false);
@@ -406,7 +448,7 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
       radii.push_back(c_point.radius);
       votes.push_back(c_point.n_votes);
       treeId.push_back(point.tree_id);
-      nPoints.push_back(point.circles.size());
+      // nPoints.push_back(point.circles.size());
       discId.push_back(diskCounter);
       keyFlag.push_back(false);
       treeFlag.push_back(false);
@@ -443,7 +485,7 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
     radii.push_back(0);
     votes.push_back(0);
     treeId.push_back(i+1);
-    nPoints.push_back(0);
+    // nPoints.push_back(0);
     discId.push_back(0);
     keyFlag.push_back(true);
     treeFlag.push_back(true);
@@ -459,12 +501,20 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
   out["Radii"] = radii;
   out["TreeID"] = treeId;
   out["TreePosition"] = treeFlag;
-  out["n"] = nPoints;
+  // out["n"] = nPoints;
 
   return out;
 }
 
+
 /////////////////////////////////////////////////////////////
+
+
+// [[Rcpp::export]]
+LogicalVector thinCloud(NumericMatrix& las, double voxel = 0.025){
+  vector<vector<double*> > xyz = rmatrix2cpp(las);
+  return wrap(voxelFilter(xyz, voxel));
+}
 
 // [[Rcpp::export]]
 List getCircle(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
@@ -520,3 +570,115 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
   return exportTreeMap(treeMap);
 
 }
+
+
+/////////////////////////////////////////////////////////////
+
+
+// [[Rcpp::export]]
+void temp(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5,
+          double pixel=0.025, double radius=0.25, double density=0.1, unsigned int votes=3){
+
+  vector<vector<double*> > cppCloud = rmatrix2cpp(las);
+  vector<double> bbox = getMinMax(cppCloud);
+
+  vector<vector<double*> > cloudSegment = getSlices(cppCloud, h1, h2, h2-h1)[0];
+  Raster raster = getCounts(cloudSegment, pixel);
+  HoughCircle circle = getSingleCenter(&raster, radius, density, votes).main_circle;
+
+  cloudSegment.clear();
+  cloudSegment.shrink_to_fit();
+
+  Raster startLayer;
+  startLayer.min_x = bbox[0];
+  startLayer.max_x = bbox[1];
+  startLayer.min_y = bbox[2];
+  startLayer.max_y = bbox[3];
+  startLayer.pixel_size = pixel;
+  startLayer.max_count = 0;
+  startLayer.setDims();
+  startLayer.setMatrixSize();
+
+  unsigned int nLayers = ceil(bbox[5] / hstep);
+  vector<Raster> treeRasters(nLayers, startLayer);
+
+  for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
+
+    double x = *cppCloud[0][i];
+    double y = *cppCloud[1][i];
+    double z = *cppCloud[2][i];
+
+    if(z < 0) continue;
+
+    unsigned int ptLayer = floor(z / hstep);
+    Raster* alias = &treeRasters[ptLayer];
+
+    if(alias->max_count == 0)
+      alias->min_z = alias->max_z = z;
+    else if(z < alias->min_x)
+      alias->min_z = z;
+    else if(z > alias->max_z)
+      alias->max_z = z;
+
+    alias->updateMatrix(x,y);
+  }
+
+  vector<HoughCenters> treeEstimates;
+  for(auto i : treeRasters){
+    HoughCenters temp = getSingleCenter(&i, radius, density, votes);
+    treeEstimates.push_back(temp);
+    cout << "r: " << temp.main_circle.radius << endl;
+  }
+
+}
+
+// vector<HoughCylinder> stemPoints(StemSegment& base, vector<Slice>& pieces, CommandLine global, unsigned tree_id, bool ransac){
+//
+//   float xt = base.model_circle.x_center;
+//   float yt = base.model_circle.y_center;
+//   float dt = base.model_circle.radius + global.pixel_size*4;
+//   vector<StemSegment> stem_sections = {};
+//
+//   for(unsigned i = 0; i < pieces.size(); ++i){
+//
+//     Slice* temp = &pieces[i];
+//
+//     Raster ras = getCounts(temp, global.pixel_size);
+//
+//     vector<HoughCenters> hough = getCenters(&ras, dt, global.min_density, global.min_votes);
+//
+//     getPreciseCenters(hough);
+//
+//     if(hough.size() < 1) continue;
+//
+//     int nCircle = 0;
+//     int nVotes  = -1;
+//     for(int j = 0; j < hough.size(); ++j){
+//       HoughCenters* it = &hough[j];
+//       int nv = it->circles[it->main_circle].n_votes;
+//       if(nv > nVotes){
+//         nVotes  = nv;
+//         nCircle = j;
+//       }
+//     }
+//
+//     int id = hough[nCircle].main_circle;
+//
+//     if(ras.max_z > base.z_max){
+//       dt = hough[nCircle].circles[id].radius + global.pixel_size*1;
+//     }
+//
+//     StemSegment mainBolePiece;
+//     mainBolePiece.tree_id = tree_id;
+//     mainBolePiece.model_circle = hough[nCircle].circles[id];
+//     mainBolePiece.n_points     = temp->slice.size();
+//     mainBolePiece.z_max        = ras.max_z;
+//     mainBolePiece.z_min        = ras.min_z;
+//
+//     stem_sections.push_back(mainBolePiece);
+//
+//   }
+//
+//   return stem_sections;
+//
+// }

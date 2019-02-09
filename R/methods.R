@@ -1,6 +1,10 @@
 require(magrittr)
 require(lidR)
 
+#' @import magrittr
+#' @import lidR
+#' @useDynLib TreeLS, .registration = TRUE
+
 preCheck = function(las){
 
   if(class(las)[1] != 'LAS')
@@ -10,17 +14,23 @@ preCheck = function(las){
 
   if( !hasClass ){
     warning('no Classification field found in the dataset')
+
   }else{
+
     hasGround = any(las$Classification == 2)
 
     if(!hasGround){
       warning('ground points not classified')
+
     }else{
+
       meanGround = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
+
       if(meanGround > 0.2)
         warning("point cloud apparently not normalized")
     }
   }
+
 }
 
 #' Set LAS Header to TLS applications
@@ -119,7 +129,7 @@ setLAS = function(cloud, ...){
 }
 
 #' Wrapper to read point clouds straight to LAS objects suitable for TLS applications
-#' @description Reads \emph{las} or \emph{laz} files with \code{\link{lidR::readLAS}}, or tries to read other file formats with \code{\link{read.table}}
+#' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}}, or tries to read other file formats with \code{\link{read.table}}
 #' @param file object to be converted or reset
 #' @param colNames parameter passed to \code{\link{toLAS}} whenever reading table-like files - default = \code{NULL}
 #' @param ... further arguments passed to either \code{readLAS} or \code{read.table}
@@ -156,8 +166,47 @@ las2xyz = function(las){
   return(las)
 }
 
+#' Samples a point cloud randomly or systematically
+#' @description Applies a random sample or voxel thinning algorithm te keep a fraction of the point cloud.
+#' @param las \code{LAS} object
+#' @param by sampling method: \emph{voxel} for systematic 3D sampling or \emph{random} for random sampling
+#' @param val Sampling parameter value. For \code{by = 'voxel'}, \code{val} must be the voxel side length. For \code{bu = 'random'}, it must be the proportion of points to be kept - between 0 and 1.
+#' @return \code{LAS} object
+#' @export
+tlsSample = function(las, by='voxel', val=0.05){
+
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object')
+
+  methods = c('voxel', 'random')
+
+  if(!(by %in% methods))
+    stop('choose a valid method: voxel or random')
+
+  if(val <= 0)
+    stop('val must be a positive number')
+
+  if(by == methods[1]){
+
+    keep = las@data[,1:3] %>% as.matrix %>% thinCloud(val)
+
+  }else if(by == methods[2]){
+
+    if(val >= 1)
+      stop('val must be a number between 0 and 1 for random sampling')
+
+    n = nrow(las@data)
+    keep = rbinom(n, 1, val) == 1
+
+  }
+
+  las %<>% lasfilter(keep)
+  return(las)
+
+}
+
 #' Normalize a TLS point cloud
-#' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{lidR::csf}} algorithm is applied internally.
+#' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{csf}} algorithm is applied internally.
 #' @param las \code{LAS} object
 #' @param res resolution of the DTM used for normalization
 #' @param keepGround default = \code{TRUE} - if \code{FALSE}, returns a point cloud with ground points removed
@@ -201,7 +250,6 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 #' @param min_votes ...
 #' @return \code{LAS} object
 #' @export
-#' @useDynLib TreeLS, .registration = TRUE
 treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max = 0.25, min_den = 0.1, min_votes = 3){
 
   if(class(las)[1] != 'LAS')

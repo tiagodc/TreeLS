@@ -15,5 +15,5 @@ tukey.estimator(errors, b = 5)
 list of length 2: \describe{\item{$Y}{residuals / MAD} \item{$weights}{weights}}
 }
 \description{
-Tukey's biweight function
+calculates weights for a dataset based on Tukey's biweight function
 }

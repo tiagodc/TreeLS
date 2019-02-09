@@ -17,5 +17,5 @@ tlsNormalize(las, res = 0.5, keepGround = T)
 \code{LAS} object
 }
 \description{
-Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{lidR::csf}} algorithm is applied internally.
+Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{csf}} algorithm is applied internally.
 }

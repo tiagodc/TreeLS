@@ -5,6 +5,18 @@
 
 using namespace Rcpp;
 
+// thinCloud
+LogicalVector thinCloud(NumericMatrix& las, double voxel);
+RcppExport SEXP _TreeLS_thinCloud(SEXP lasSEXP, SEXP voxelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< double >::type voxel(voxelSEXP);
+    rcpp_result_gen = Rcpp::wrap(thinCloud(las, voxel));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getCircle
 List getCircle(NumericMatrix& las, double pixel, double rad_max, double min_den, unsigned int min_votes);
 RcppExport SEXP _TreeLS_getCircle(SEXP lasSEXP, SEXP pixelSEXP, SEXP rad_maxSEXP, SEXP min_denSEXP, SEXP min_votesSEXP) {
@@ -55,6 +67,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_TreeLS_thinCloud", (DL_FUNC) &_TreeLS_thinCloud, 2},
     {"_TreeLS_getCircle", (DL_FUNC) &_TreeLS_getCircle, 5},
     {"_TreeLS_singleStack", (DL_FUNC) &_TreeLS_singleStack, 5},
     {"_TreeLS_stackMap", (DL_FUNC) &_TreeLS_stackMap, 8},

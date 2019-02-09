@@ -17,5 +17,5 @@ readTLS(file, colNames = NULL, ...)
 \code{LAS} object
 }
 \description{
-Reads \emph{las} or \emph{laz} files with \code{\link{lidR::readLAS}}, or tries to read other file formats with \code{\link{read.table}}
+Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}}, or tries to read other file formats with \code{\link{read.table}}
 }

@@ -13,6 +13,7 @@
 using namespace std;
 
 typedef unordered_set<array<unsigned int, 2>, boost::hash< array<unsigned int, 2> > > PixelSet;
+typedef unordered_set<array<int, 3>, boost::hash< array<int, 3> > > VoxelSet;
 
 class Raster{
   public:
@@ -70,6 +71,15 @@ class Raster{
       y_dim = abs( ceil( (max_y - min_y) / pixel_size ) );
     }
 
+    void updateMatrix(double x, double y){
+      vector<unsigned int> xy = pixPosition(x,y);
+
+      if(xy[0] >= x_dim) xy[0] = x_dim-1;
+      if(xy[1] >= y_dim) xy[1] = y_dim-1;
+
+      if(++matrix[ xy[0] ][ xy[1] ] > max_count) max_count = matrix[ xy[0] ][ xy[1] ];
+    }
+
 };
 
 class HoughCircle{
@@ -78,6 +88,12 @@ class HoughCircle{
     double y_center;
     double radius;
     int n_votes;
+};
+
+class HoughCylinder : public HoughCircle{
+  public:
+    double z_min;
+    double z_max;
 };
 
 class HoughCenters{
