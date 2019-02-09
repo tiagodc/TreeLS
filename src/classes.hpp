@@ -15,6 +15,23 @@ using namespace std;
 typedef unordered_set<array<unsigned int, 2>, boost::hash< array<unsigned int, 2> > > PixelSet;
 typedef unordered_set<array<int, 3>, boost::hash< array<int, 3> > > VoxelSet;
 
+class tempContainer{
+  public:
+    vector<bool> filter;
+    vector<unsigned int> counts;
+    vector<double> values;
+
+    tempContainer(unsigned int n){
+      setSizes(n);
+    };
+
+    void setSizes(unsigned int n){
+      filter.resize(n, false);
+      counts.resize(n, 0);
+      values.resize(n, 0);
+    }
+};
+
 class Raster{
   public:
     vector< vector<unsigned int> > matrix;

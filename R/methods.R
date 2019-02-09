@@ -387,12 +387,13 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
   if(min(las$Z) > 5)
     warning("point cloud doesn't look normalized - Z values too high")
 
-  bool = houghStemPoints(las %>% las2xyz, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+  results = houghStemPoints(las %>% las2xyz, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
 
-  if(any(names(las@data) == "Stem"))
-    las@data$Stem = bool
-  else
-    las %<>% lasadddata(bool, "Stem")
+  las@data$Stem = results$Stem
+  las@data$Radius = results$Radius
+  las@data$Votes = results$Votes
+
+  las %<>% resetLAS
 
   return(las)
 

@@ -407,7 +407,7 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
 };
 
 // single tree stem points detection
-vector<bool> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5,
+tempContainer treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5,
                        double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
 
   vector<double> bbox = getMinMax(cppCloud);
@@ -473,7 +473,7 @@ vector<bool> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double
 
   }
 
-  vector<bool> isStem(cppCloud[0].size(), false);
+  tempContainer isStem(cppCloud[0].size());
   for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
 
     double& x = *cppCloud[0][i];
@@ -488,9 +488,11 @@ vector<bool> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double
 
     double dist = sqrt( pow(x - alias->x_center, 2) + pow(y - alias->y_center, 2) );
 
-    if(dist < alias->radius + pixel && dist > alias->radius - pixel)
-      isStem[i] = true;
-
+    if(dist < alias->radius + pixel*2 && dist > alias->radius - pixel*2){
+      isStem.filter[i] = true;
+      isStem.values[i] = alias->radius;
+      isStem.counts[i] = alias->n_votes;
+    }
   }
 
   return isStem;
@@ -672,8 +674,14 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
 }
 
 // [[Rcpp::export]]
-LogicalVector houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5,
+List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5,
                          double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
   vector<vector<double*> > cloud = rmatrix2cpp(las);
-  return wrap( treeHough(cloud, h1, h2, hstep, radius, pixel, density, votes) );
+  tempContainer newInfo = treeHough(cloud, h1, h2, hstep, radius, pixel, density, votes);
+
+  List output;
+  output["Stem"] = newInfo.filter;
+  output["Radius"] = newInfo.values;
+  output["Votes"] = newInfo.counts;
+  return output;
 }
