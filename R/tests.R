@@ -1,32 +1,40 @@
 # require(magrittr)
 # require(lidR)
 # require(rgl)
-# require(TreeLS)
+require(TreeLS)
+las = 'd:/Projects/TLStools/test_clouds/gerdau.laz'
+las %<>% readTLS
+las %<>% tlsSample(val = 0.025, by = 'voxel')
+las %<>% tlsNormalize()
+stc = treeMap(las, pixel = 0.025)
+map = treePositions(stc)
+
+i = 12
+tree = map %$% lasclipCircle(las, X[i], Y[i], 1) %>% lasfilter(Classification != 2)
+
+tree %<>% stemPoints()
+plot(tree, color='Stem', size=2)
+
+a = lasfilter(tree, Stem)
+plot(a)
+
+# plot(las), color='Classification')
+# axes3d(col='white')
 #
-# las = 'd:/Projects/TLStools/test_clouds/gerdau.laz'
+# plot(stc)
 #
-# las %<>% readTLS
-# #
-# # dim(las@data)
-# las %<>% tlsSample(val = 0.1, by = 'voxel')
-# # dim(las@data)
-# #
-# # las@data %>% nrow
-# # las %<>% lasfilter(a)
-# # las@data %>% nrow
-# #
-# las %<>% tlsNormalize()
-# #
-# # plot(las), color='Classification')
-# # axes3d(col='white')
-# #
-# stc = treeMap(las)
-# # plot(stc)
-# #
-# # stc@data %>% head
-# #
-# # rgl.points(stc@data, color='red')
-# #
-# # a = stc@data %>% as.matrix
+# stc@data %>% head
 #
-# las = system.file("extdata", "pine.laz", package="TreeLS")
+# rgl.points(stc@data, color='red')
+#
+# a = stc@data %>% as.matrix
+#
+require(TreeLS)
+las = system.file("extdata", "spruce.laz", package="TreeLS") %>% readTLS
+
+las %<>% stemPoints()
+
+plot(las, color='Stem')
+
+
+

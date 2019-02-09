@@ -35,8 +35,8 @@ class Raster{
     }
 
     vector<double> absCenter(unsigned int x, unsigned int y){
-      double x_cen = ( min_x + (pixel_size/2) ) + ( x * pixel_size );
-      double y_cen = ( min_y + (pixel_size/2) ) + ( y * pixel_size );
+      double x_cen = min_x + (pixel_size/2) + ( x * pixel_size );
+      double y_cen = min_y + (pixel_size/2) + ( y * pixel_size );
       vector<double> xy = {x_cen, y_cen};
       return xy;
     }
@@ -80,6 +80,37 @@ class Raster{
       if(++matrix[ xy[0] ][ xy[1] ] > max_count) max_count = matrix[ xy[0] ][ xy[1] ];
     }
 
+    void cleanRadius(double x, double y, double radius){
+
+      max_count = 0;
+
+      if(x < min_x || x > max_x || y < min_y || y > max_y)
+        return;
+
+      vector<unsigned int> pix = pixPosition(x,y);
+      vector<double> pixCenter = absCenter(pix[0], pix[1]);
+      x = pixCenter[0];
+      y = pixCenter[1];
+
+      for(unsigned int i = 0; i < matrix.size(); ++i){
+        for(unsigned int j = 0; j < matrix[i].size(); ++j){
+
+          unsigned int* ct = &matrix[i][j];
+
+          if(*ct == 0) continue;
+
+          vector<double> pxy = absCenter(i, j);
+          double dist = sqrt( pow( pxy[0] - x ,2) + pow( pxy[1] - y ,2) );
+
+          if(dist > radius)
+            *ct = 0;
+          else if(*ct > max_count)
+            max_count = *ct;
+
+        }
+      }
+    }
+
 };
 
 class HoughCircle{
@@ -88,12 +119,6 @@ class HoughCircle{
     double y_center;
     double radius;
     int n_votes;
-};
-
-class HoughCylinder : public HoughCircle{
-  public:
-    double z_min;
-    double z_max;
 };
 
 class HoughCenters{
@@ -108,6 +133,10 @@ class HoughCenters{
     unsigned int tree_id = 0;
 
     void getCenters(){
+
+      if(circles.empty())
+        return;
+
       double ax = 0;
       double ay = 0;
       main_circle = circles[0];

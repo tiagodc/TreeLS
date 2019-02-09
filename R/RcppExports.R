@@ -17,3 +17,7 @@ stackMap <- function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_ma
     .Call(`_TreeLS_stackMap`, las, hmin, hmax, hstep, pixel, rad_max, min_den, min_votes)
 }
 
+houghStemPoints <- function(las, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pixel = 0.025, density = 0.1, votes = 3L) {
+    .Call(`_TreeLS_houghStemPoints`, las, h1, h2, hstep, radius, pixel, density, votes)
+}
+

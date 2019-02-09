@@ -4,6 +4,15 @@
 using namespace Rcpp;
 using namespace std;
 
+template <typename AnyType>
+void debugMsg(AnyType container){
+  cout << " ... ";
+  for(auto& i : container){
+    cout << i << " ; ";
+  }
+  cout << endl;
+}
+
 // convert r matrix to std::vector
 vector<vector<double*> > rmatrix2cpp(NumericMatrix& cloud){
 
@@ -397,6 +406,101 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
 
 };
 
+// single tree stem points detection
+vector<bool> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5,
+                       double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+
+  vector<double> bbox = getMinMax(cppCloud);
+
+  vector<vector<double*> > cloudSegment = getSlices(cppCloud, h1, h2, h2-h1)[0];
+  Raster raster = getCounts(cloudSegment, pixel);
+  HoughCircle circle = getSingleCenter(&raster, radius, density, votes).main_circle;
+
+  cloudSegment.clear();
+  cloudSegment.shrink_to_fit();
+
+  Raster startLayer;
+  startLayer.min_x = bbox[0];
+  startLayer.max_x = bbox[1];
+  startLayer.min_y = bbox[2];
+  startLayer.max_y = bbox[3];
+  startLayer.pixel_size = pixel;
+  startLayer.max_count = 0;
+  startLayer.setDims();
+  startLayer.setMatrixSize();
+
+  unsigned int nLayers = ceil(bbox[5] / hstep);
+  vector<Raster> treeRasters(nLayers, startLayer);
+
+  for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
+
+    double x = *cppCloud[0][i];
+    double y = *cppCloud[1][i];
+    double z = *cppCloud[2][i];
+
+    if(z < 0) continue;
+
+    unsigned int ptLayer = floor(z / hstep);
+    Raster* alias = &treeRasters[ptLayer];
+
+    if(alias->max_count == 0)
+      alias->min_z = alias->max_z = z;
+    else if(z < alias->min_x)
+      alias->min_z = z;
+    else if(z > alias->max_z)
+      alias->max_z = z;
+
+    alias->updateMatrix(x,y);
+  }
+
+  vector<HoughCenters> treeEstimates( treeRasters.size() );
+  for(unsigned int i = 0; i < treeRasters.size(); ++i){
+
+    Raster* alias = &treeRasters[i];
+
+    alias->cleanRadius(circle.x_center, circle.y_center, circle.radius + pixel*2);
+
+    if(alias->max_count <= 1 && i > 0){
+      if(i == 0)
+        treeEstimates[i].main_circle = circle;
+      else
+        treeEstimates[i] = treeEstimates[i-1];
+    }else
+      treeEstimates[i] = getSingleCenter(alias, circle.radius + pixel*2, density , votes);
+
+    if(alias->min_z > h2)
+      circle = treeEstimates[i].main_circle;
+
+  }
+
+  vector<bool> isStem(cppCloud[0].size(), false);
+  for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
+
+    double& x = *cppCloud[0][i];
+    double& y = *cppCloud[1][i];
+    double& z = *cppCloud[2][i];
+
+    if(z < 0) continue;
+
+    unsigned int ptLayer = floor(z / hstep);
+
+    HoughCircle* alias = &treeEstimates[ptLayer].main_circle;
+
+    double dist = sqrt( pow(x - alias->x_center, 2) + pow(y - alias->y_center, 2) );
+
+    if(dist < alias->radius + pixel && dist > alias->radius - pixel)
+      isStem[i] = true;
+
+  }
+
+  return isStem;
+
+}
+
+
+/////////////////////////////////////////////////////////////
+
+
 // export tree positions point stack
 List exportTreeMap(vector<HoughCenters>& coordinates){
 
@@ -506,10 +610,6 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
   return out;
 }
 
-
-/////////////////////////////////////////////////////////////
-
-
 // [[Rcpp::export]]
 LogicalVector thinCloud(NumericMatrix& las, double voxel = 0.025){
   vector<vector<double*> > xyz = rmatrix2cpp(las);
@@ -571,114 +671,9 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
 
 }
 
-
-/////////////////////////////////////////////////////////////
-
-
 // [[Rcpp::export]]
-void temp(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5,
-          double pixel=0.025, double radius=0.25, double density=0.1, unsigned int votes=3){
-
-  vector<vector<double*> > cppCloud = rmatrix2cpp(las);
-  vector<double> bbox = getMinMax(cppCloud);
-
-  vector<vector<double*> > cloudSegment = getSlices(cppCloud, h1, h2, h2-h1)[0];
-  Raster raster = getCounts(cloudSegment, pixel);
-  HoughCircle circle = getSingleCenter(&raster, radius, density, votes).main_circle;
-
-  cloudSegment.clear();
-  cloudSegment.shrink_to_fit();
-
-  Raster startLayer;
-  startLayer.min_x = bbox[0];
-  startLayer.max_x = bbox[1];
-  startLayer.min_y = bbox[2];
-  startLayer.max_y = bbox[3];
-  startLayer.pixel_size = pixel;
-  startLayer.max_count = 0;
-  startLayer.setDims();
-  startLayer.setMatrixSize();
-
-  unsigned int nLayers = ceil(bbox[5] / hstep);
-  vector<Raster> treeRasters(nLayers, startLayer);
-
-  for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
-
-    double x = *cppCloud[0][i];
-    double y = *cppCloud[1][i];
-    double z = *cppCloud[2][i];
-
-    if(z < 0) continue;
-
-    unsigned int ptLayer = floor(z / hstep);
-    Raster* alias = &treeRasters[ptLayer];
-
-    if(alias->max_count == 0)
-      alias->min_z = alias->max_z = z;
-    else if(z < alias->min_x)
-      alias->min_z = z;
-    else if(z > alias->max_z)
-      alias->max_z = z;
-
-    alias->updateMatrix(x,y);
-  }
-
-  vector<HoughCenters> treeEstimates;
-  for(auto i : treeRasters){
-    HoughCenters temp = getSingleCenter(&i, radius, density, votes);
-    treeEstimates.push_back(temp);
-    cout << "r: " << temp.main_circle.radius << endl;
-  }
-
+LogicalVector houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5,
+                         double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  return wrap( treeHough(cloud, h1, h2, hstep, radius, pixel, density, votes) );
 }
-
-// vector<HoughCylinder> stemPoints(StemSegment& base, vector<Slice>& pieces, CommandLine global, unsigned tree_id, bool ransac){
-//
-//   float xt = base.model_circle.x_center;
-//   float yt = base.model_circle.y_center;
-//   float dt = base.model_circle.radius + global.pixel_size*4;
-//   vector<StemSegment> stem_sections = {};
-//
-//   for(unsigned i = 0; i < pieces.size(); ++i){
-//
-//     Slice* temp = &pieces[i];
-//
-//     Raster ras = getCounts(temp, global.pixel_size);
-//
-//     vector<HoughCenters> hough = getCenters(&ras, dt, global.min_density, global.min_votes);
-//
-//     getPreciseCenters(hough);
-//
-//     if(hough.size() < 1) continue;
-//
-//     int nCircle = 0;
-//     int nVotes  = -1;
-//     for(int j = 0; j < hough.size(); ++j){
-//       HoughCenters* it = &hough[j];
-//       int nv = it->circles[it->main_circle].n_votes;
-//       if(nv > nVotes){
-//         nVotes  = nv;
-//         nCircle = j;
-//       }
-//     }
-//
-//     int id = hough[nCircle].main_circle;
-//
-//     if(ras.max_z > base.z_max){
-//       dt = hough[nCircle].circles[id].radius + global.pixel_size*1;
-//     }
-//
-//     StemSegment mainBolePiece;
-//     mainBolePiece.tree_id = tree_id;
-//     mainBolePiece.model_circle = hough[nCircle].circles[id];
-//     mainBolePiece.n_points     = temp->slice.size();
-//     mainBolePiece.z_max        = ras.max_z;
-//     mainBolePiece.z_min        = ras.min_z;
-//
-//     stem_sections.push_back(mainBolePiece);
-//
-//   }
-//
-//   return stem_sections;
-//
-// }

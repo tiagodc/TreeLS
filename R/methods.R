@@ -268,6 +268,10 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max 
 
   for(i in names(params)){
     val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
     if(length(val) > 1)
       stop( i %>% paste('must be of length 1') )
 
@@ -322,3 +326,76 @@ treePositions = function(las){
 
   return(pos)
 }
+
+#' Single tree stem point classification
+#' @description Classify stem points through the Hough Transform algorithm - it searches for only \emph{one} stem
+#' @param las \code{LAS} object
+#' @param hstep ...
+#' @param max_radius ...
+#' @param hbase ...
+#' @param pixel_size ...
+#' @param min_density ...
+#' @param min_votes ...
+#' @return \code{LAS} object
+#' @export
+stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
+
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object')
+
+  if(length(hbase) != 2)
+    stop('hbase must be a numeric vector of length 2')
+
+  if(diff(hbase) <= 0)
+    stop('hbase[2] must be larger than hbase[1]')
+
+  params = list(
+    hstep = hstep,
+    max_radius = max_radius,
+    pixel_size = pixel_size,
+    min_density = min_density,
+    min_votes = min_votes
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(min_density > 1)
+    stop('min_density must be between 0 and 1')
+
+  if(max(las$Z) < 0)
+    stop('input Z coordinates are all negative')
+
+  rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
+
+  if(any(rg > 10))
+    warning("point cloud doesn't look like a single tree - XY extents are too large")
+
+  if(min(las$Z) < 0)
+    warning("points with Z below 0 will be ignored")
+
+  if(min(las$Z) > 5)
+    warning("point cloud doesn't look normalized - Z values too high")
+
+  bool = houghStemPoints(las %>% las2xyz, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+
+  if(any(names(las@data) == "Stem"))
+    las@data$Stem = bool
+  else
+    las %<>% lasadddata(bool, "Stem")
+
+  return(las)
+
+}
+
+
