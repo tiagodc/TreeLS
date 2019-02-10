@@ -129,7 +129,7 @@ setLAS = function(cloud, ...){
 }
 
 #' Wrapper to read point clouds straight to LAS objects suitable for TLS applications
-#' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}}, or tries to read other file formats with \code{\link{read.table}}
+#' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link{read.table}}
 #' @param file object to be converted or reset
 #' @param colNames parameter passed to \code{\link{toLAS}} whenever reading table-like files - default = \code{NULL}
 #' @param ... further arguments passed to either \code{readLAS} or \code{read.table}

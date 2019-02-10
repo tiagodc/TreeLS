@@ -66,7 +66,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // houghStemPoints
-LogicalVector houghStemPoints(NumericMatrix& las, double h1, double h2, double hstep, double radius, double pixel, double density, unsigned int votes);
+List houghStemPoints(NumericMatrix& las, double h1, double h2, double hstep, double radius, double pixel, double density, unsigned int votes);
 RcppExport SEXP _TreeLS_houghStemPoints(SEXP lasSEXP, SEXP h1SEXP, SEXP h2SEXP, SEXP hstepSEXP, SEXP radiusSEXP, SEXP pixelSEXP, SEXP densitySEXP, SEXP votesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

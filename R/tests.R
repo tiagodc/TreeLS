@@ -30,4 +30,3 @@
 # rgl.points(stc@data, color='red')
 #
 # a = stc@data %>% as.matrix
-
