@@ -399,4 +399,110 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
 
 }
 
+#' Plot-wise stem point classification
+#' @description Classify stem points through the Hough Transform algorithm - it searches for one stem per tree in a point cloud
+#' @param las \code{LAS} object
+#' @param map map of tree positions - output from \code{\link{treeMap}} or \code{\link{treePositions}}
+#' @param hstep ...
+#' @param max_radius ...
+#' @param hbase ...
+#' @param pixel_size ...
+#' @param min_density ...
+#' @param min_votes ...
+#' @return \code{LAS} object
+#' @export
+stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
+
+  if(class(las)[1] != 'LAS')
+    stop('input las must be a LAS object')
+
+  mapNames = c('X', 'Y', 'TreeID')
+  if(class(map)[1] == 'LAS'){
+
+    if( !all(mapNames %in% names(map@data)) ){
+      stop('input map must be the output from treeMap or treePositions')
+    }
+
+    map %<>% treePositions()
+
+  }else if( !all(mapNames %in% names(map)) ){
+
+    stop('input map must be the output from treeMap or treePositions')
+
+  }
+
+  if( any(map$TreeID %>% duplicated) )
+    stop('input map must have unique TreeIDs')
+
+  if(length(hbase) != 2)
+    stop('hbase must be a numeric vector of length 2')
+
+  if(diff(hbase) <= 0)
+    stop('hbase[2] must be larger than hbase[1]')
+
+  params = list(
+    hstep = hstep,
+    max_radius = max_radius,
+    pixel_size = pixel_size,
+    min_density = min_density,
+    min_votes = min_votes
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(min_density > 1)
+    stop('min_density must be between 0 and 1')
+
+  if(max(las$Z) < 0)
+    stop('input Z coordinates are all negative')
+
+  rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
+
+  if(min(las$Z) < 0)
+    warning("points with Z below 0 will be ignored")
+
+  if(min(las$Z) > 5)
+    warning("point cloud doesn't look normalized - Z values too high")
+
+  hasGround = F
+  if(any(names(las@data) == 'Classification')){
+    if(any(las$Classification == 2)){
+      hasGround = T
+      ground = lasfilterground(las)
+      las %<>% lasfilter(Classification != 2)
+    }
+  }
+
+  results = houghStemPlot(las %>% las2xyz, map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+
+  las@data$TreeID = results$TreeID
+  las@data$Stem = results$Stem
+  las@data$Radius = results$Radius
+  las@data$Votes = results$Votes
+
+  if(hasGround){
+    ground@data$TreeID = 0
+    ground@data$Stem = F
+    ground@data$Radius = 0
+    ground@data$Votes = 0
+
+    las = las@data %>% rbind(ground@data) %>% toLAS(las@data %>% names)
+  }
+
+  las %<>% resetLAS
+
+  return(las)
+
+}
 

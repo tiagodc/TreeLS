@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_map>
 #include "classes.hpp"
 
 using namespace Rcpp;
@@ -51,6 +52,68 @@ vector<double> getMinMax(vector<vector<double*> >& xyz){
   }
 
   return minmax;
+
+}
+
+// crop point cloud
+vector<vector<double*> > cropCloud(vector<vector<double*> > cloud, double xCenter, double yCenter, double len = 1, bool circle = true, bool negative = false){
+
+  vector<vector<double*> > keepCloud(3);
+
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+
+    double& x = *cloud[0][i];
+    double& y = *cloud[1][i];
+    double& z = *cloud[2][i];
+
+    bool keep;
+    if(circle){
+      double dist = sqrt( pow(x - xCenter, 2) + pow(y - yCenter, 2) );
+      keep = dist < len;
+    }else{
+      double dx = abs(x - xCenter);
+      double dy = abs(y - yCenter);
+      keep = dx < (len/2) && dy < (len/2);
+    }
+
+    if(negative) keep = !keep;
+
+    if(keep){
+      keepCloud[0].push_back(&x);
+      keepCloud[1].push_back(&y);
+      keepCloud[2].push_back(&z);
+    }
+
+  }
+
+  return keepCloud;
+
+}
+
+vector<bool> cropCloudFilter(vector<vector<double*> > cloud, double xCenter, double yCenter, double len = 1, bool circle = true, bool negative = false){
+
+  vector<bool> keepCloud( cloud[0].size() );
+
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+
+    double& x = *cloud[0][i];
+    double& y = *cloud[1][i];
+
+    bool keep;
+    if(circle){
+      double dist = sqrt( pow(x - xCenter, 2) + pow(y - yCenter, 2) );
+      keep = dist < len;
+    }else{
+      double dx = abs(x - xCenter);
+      double dy = abs(y - yCenter);
+      keep = dx < (len/2) && dy < (len/2);
+    }
+
+   keepCloud[i] = negative ? !keep : keep;
+
+  }
+
+  return keepCloud;
 
 }
 
@@ -132,7 +195,7 @@ vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, dou
 }
 
 // convert point cloud slice to raster of point count
-Raster getCounts(vector<vector<double*> >& slice , double pixel_size){
+Raster getCounts(vector<vector<double*> >& slice, double pixel_size){
 
   vector<double*>& xcol = slice[0];
   vector<double*>& ycol = slice[1];
@@ -407,8 +470,7 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
 };
 
 // single tree stem points detection
-tempContainer treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5,
-                       double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
 
   vector<double> bbox = getMinMax(cppCloud);
 
@@ -473,29 +535,7 @@ tempContainer treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, doubl
 
   }
 
-  tempContainer isStem(cppCloud[0].size());
-  for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
-
-    double& x = *cppCloud[0][i];
-    double& y = *cppCloud[1][i];
-    double& z = *cppCloud[2][i];
-
-    if(z < 0) continue;
-
-    unsigned int ptLayer = floor(z / hstep);
-
-    HoughCircle* alias = &treeEstimates[ptLayer].main_circle;
-
-    double dist = sqrt( pow(x - alias->x_center, 2) + pow(y - alias->y_center, 2) );
-
-    if(dist < alias->radius + pixel*2 && dist > alias->radius - pixel*2){
-      isStem.filter[i] = true;
-      isStem.values[i] = alias->radius;
-      isStem.counts[i] = alias->n_votes;
-    }
-  }
-
-  return isStem;
+  return treeEstimates;
 
 }
 
@@ -674,14 +714,98 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
 }
 
 // [[Rcpp::export]]
-List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5,
-                         double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
-  vector<vector<double*> > cloud = rmatrix2cpp(las);
-  tempContainer newInfo = treeHough(cloud, h1, h2, hstep, radius, pixel, density, votes);
+List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+
+  vector<vector<double*> > cppCloud = rmatrix2cpp(las);
+  vector<HoughCenters> treeEstimates = treeHough(cppCloud, h1, h2, hstep, radius, pixel, density, votes);
+
+  tempContainer isStem(cppCloud[0].size());
+  for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
+
+    double& x = *cppCloud[0][i];
+    double& y = *cppCloud[1][i];
+    double& z = *cppCloud[2][i];
+
+    if(z < 0) continue;
+
+    unsigned int ptLayer = floor(z / hstep);
+
+    HoughCircle* alias = &treeEstimates[ptLayer].main_circle;
+
+    double dist = sqrt( pow(x - alias->x_center, 2) + pow(y - alias->y_center, 2) );
+
+    if(dist < alias->radius + pixel*2 && dist > alias->radius - pixel*2){
+      isStem.filter[i] = true;
+      isStem.values[i] = alias->radius;
+      isStem.counts[i] = alias->n_votes;
+    }
+  }
 
   List output;
-  output["Stem"] = newInfo.filter;
-  output["Radius"] = newInfo.values;
-  output["Votes"] = newInfo.counts;
+  output["Stem"] = isStem.filter;
+  output["Radius"] = isStem.values;
+  output["Votes"] = isStem.counts;
   return output;
 }
+
+// [[Rcpp::export]]
+List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+
+  NumericMatrix::Column treecol = treePositions( _, 0);
+  NumericMatrix::Column xcol = treePositions( _, 1);
+  NumericMatrix::Column ycol = treePositions( _, 2);
+
+  vector<unsigned int> treeIds;
+  vector<double> xPos;
+  vector<double> yPos;
+
+  treeIds.insert(treeIds.begin(), treecol.begin(), treecol.end());
+  xPos.insert(xPos.begin(), xcol.begin(), xcol.end());
+  yPos.insert(yPos.begin(), ycol.begin(), ycol.end());
+
+  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
+
+  double cropRadius = radius*4;
+  for(unsigned int i = 0; i < treeIds.size(); ++i){
+    vector<vector<double*> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
+    vector<HoughCenters> denoised = treeHough(tree, h1, h2, hstep, radius, pixel, density, votes);
+    denoisedTrees[ treeIds[i] ] = denoised;
+  }
+
+  tempContainer plotInfo( cloud[0].size() );
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+
+    double& x = *cloud[0][i];
+    double& y = *cloud[1][i];
+    double& z = *cloud[2][i];
+
+    if(z < 0) continue;
+
+    unsigned int ptLayer = floor(z / hstep);
+    for(auto& tree : denoisedTrees){
+
+      if(tree.second.size() <= ptLayer) continue;
+
+      HoughCircle* tempCircle = &tree.second[ptLayer].main_circle;
+      double dist = sqrt( pow(x - tempCircle->x_center, 2) + pow(y - tempCircle->y_center, 2) );
+
+      if(dist < tempCircle->radius + pixel*2 && dist > tempCircle->radius - pixel*2){
+        plotInfo.filter[i] = true;
+        plotInfo.values[i] = tempCircle->radius;
+        plotInfo.counts[i] = tempCircle->n_votes;
+        plotInfo.ids[i] = tree.first;
+        break;
+      }
+    }
+  }
+
+  List output;
+  output["TreeID"] = plotInfo.ids;
+  output["Stem"]   = plotInfo.filter;
+  output["Radius"] = plotInfo.values;
+  output["Votes"]  = plotInfo.counts;
+  return output;
+
+}
+

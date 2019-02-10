@@ -83,6 +83,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// houghStemPlot
+List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1, double h2, double hstep, double radius, double pixel, double density, unsigned int votes);
+RcppExport SEXP _TreeLS_houghStemPlot(SEXP lasSEXP, SEXP treePositionsSEXP, SEXP h1SEXP, SEXP h2SEXP, SEXP hstepSEXP, SEXP radiusSEXP, SEXP pixelSEXP, SEXP densitySEXP, SEXP votesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type treePositions(treePositionsSEXP);
+    Rcpp::traits::input_parameter< double >::type h1(h1SEXP);
+    Rcpp::traits::input_parameter< double >::type h2(h2SEXP);
+    Rcpp::traits::input_parameter< double >::type hstep(hstepSEXP);
+    Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
+    Rcpp::traits::input_parameter< double >::type pixel(pixelSEXP);
+    Rcpp::traits::input_parameter< double >::type density(densitySEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type votes(votesSEXP);
+    rcpp_result_gen = Rcpp::wrap(houghStemPlot(las, treePositions, h1, h2, hstep, radius, pixel, density, votes));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_thinCloud", (DL_FUNC) &_TreeLS_thinCloud, 2},
@@ -90,6 +109,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_singleStack", (DL_FUNC) &_TreeLS_singleStack, 5},
     {"_TreeLS_stackMap", (DL_FUNC) &_TreeLS_stackMap, 8},
     {"_TreeLS_houghStemPoints", (DL_FUNC) &_TreeLS_houghStemPoints, 8},
+    {"_TreeLS_houghStemPlot", (DL_FUNC) &_TreeLS_houghStemPlot, 9},
     {NULL, NULL, 0}
 };
 

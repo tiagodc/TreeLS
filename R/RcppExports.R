@@ -21,3 +21,7 @@ houghStemPoints <- function(las, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pix
     .Call(`_TreeLS_houghStemPoints`, las, h1, h2, hstep, radius, pixel, density, votes)
 }
 
+houghStemPlot <- function(las, treePositions, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pixel = 0.025, density = 0.1, votes = 3L) {
+    .Call(`_TreeLS_houghStemPlot`, las, treePositions, h1, h2, hstep, radius, pixel, density, votes)
+}
+
