@@ -91,10 +91,12 @@ class Raster{
     }
 
     void updateMatrix(double x, double y){
-      if(x < min_x || x > max_x || y < min_y || y > max_y)
-        return;
+      if(x < min_x || x > max_x || y < min_y || y > max_y) return;
 
       vector<unsigned int> xy = pixPosition(x,y);
+
+      if(xy[0] >= x_dim || xy[1] >= y_dim) return;
+
       if(++matrix[ xy[0] ][ xy[1] ] > max_count) max_count = matrix[ xy[0] ][ xy[1] ];
     }
 
@@ -102,8 +104,7 @@ class Raster{
 
       max_count = 0;
 
-      if(x < min_x || x > max_x || y < min_y || y > max_y)
-        return;
+      if(x < min_x || x > max_x || y < min_y || y > max_y) return;
 
       vector<unsigned int> pix = pixPosition(x,y);
       vector<double> pixCenter = absCenter(pix[0], pix[1]);
@@ -136,7 +137,7 @@ class HoughCircle{
     double x_center;
     double y_center;
     double radius;
-    int n_votes;
+    unsigned int n_votes;
 };
 
 class HoughCenters{

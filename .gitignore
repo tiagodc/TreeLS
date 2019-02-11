@@ -2,5 +2,7 @@
 .Rhistory
 .RData
 ./data
+test_data
+./test_data/*
 *.o
 *.pdf

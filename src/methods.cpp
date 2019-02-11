@@ -473,16 +473,14 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
 vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
 
   vector<double> bbox = getMinMax(cppCloud);
-
-  cout << "... ... ... baseline" << endl;
   vector<vector<double*> > cloudSegment = getSlices(cppCloud, h1, h2, h2-h1)[0];
   Raster raster = getCounts(cloudSegment, pixel);
+
   HoughCircle circle = getSingleCenter(&raster, radius, density, votes).main_circle;
 
   cloudSegment.clear();
   cloudSegment.shrink_to_fit();
 
-  cout << "... ... ... votes matrix" << endl;
   Raster startLayer;
   startLayer.min_x = bbox[0];
   startLayer.max_x = bbox[1];
@@ -493,7 +491,6 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
   startLayer.setDims();
   startLayer.setMatrixSize();
 
-  cout << "... ... ... rasterizing: " << circle.radius << " : " << circle.n_votes << endl;
   unsigned int nLayers = ceil(bbox[5] / hstep);
   vector<Raster> treeRasters(nLayers, startLayer);
 
@@ -518,9 +515,10 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
     alias->updateMatrix(x,y);
   }
 
-  cout << "... ... ... estimating" << endl;
   vector<HoughCenters> treeEstimates( treeRasters.size() );
   for(unsigned int i = 0; i < treeRasters.size(); ++i){
+
+    if(circle.n_votes < votes) break;
 
     Raster* alias = &treeRasters[i];
 
@@ -736,6 +734,8 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
 
     HoughCircle* alias = &treeEstimates[ptLayer].main_circle;
 
+    if(alias->n_votes < votes) continue;
+
     double dist = sqrt( pow(x - alias->x_center, 2) + pow(y - alias->y_center, 2) );
 
     if(dist < alias->radius + pixel*2 && dist > alias->radius - pixel*2){
@@ -770,19 +770,13 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
   vector<vector<double*> > cloud = rmatrix2cpp(las);
   unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
 
-  cout << "... denoising" << endl;
   double cropRadius = radius*4;
   for(unsigned int i = 0; i < treeIds.size(); ++i){
-
-    cout << "... ... croping" << endl;
     vector<vector<double*> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
-
-    cout << "... ... estimating" << endl;
     vector<HoughCenters> denoised = treeHough(tree, h1, h2, hstep, radius, pixel, density, votes);
     denoisedTrees[ treeIds[i] ] = denoised;
   }
 
-  cout << "... assigning" << endl;
   tempContainer plotInfo( cloud[0].size() );
   for(unsigned int i = 0; i < cloud[0].size(); ++i){
 
@@ -798,6 +792,9 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
       if(tree.second.size() <= ptLayer) continue;
 
       HoughCircle* tempCircle = &tree.second[ptLayer].main_circle;
+
+      if(tempCircle->n_votes < votes) continue;
+
       double dist = sqrt( pow(x - tempCircle->x_center, 2) + pow(y - tempCircle->y_center, 2) );
 
       if(dist < tempCircle->radius + pixel*2 && dist > tempCircle->radius - pixel*2){
