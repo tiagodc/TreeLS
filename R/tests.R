@@ -2,14 +2,17 @@
 # require(magrittr)
 # require(lidR)
 # require(rgl)
-# las = 'd:/Projects/TLStools/test_clouds/gerdau.laz'
+# las = 'inst/extdata/model_boles.laz'
 # las %<>% readTLS
+#
 # las %<>% tlsSample(val = 0.025, by = 'voxel')
 # las %<>% tlsNormalize()
-# stc = treeMap(las, pixel = 0.025)
+# stc = treeMap(las, min_den = 0.05)
 # las %<>% stemPoints_plot(stc)
 #
-# plot(las, color='TreeID')
+# plot(stc)
+# plot(las, color='Stem')
+#
 #
 # for(i in 1:nrow(map)){
 #   print(i)

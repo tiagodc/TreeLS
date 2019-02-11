@@ -91,11 +91,10 @@ class Raster{
     }
 
     void updateMatrix(double x, double y){
+      if(x < min_x || x > max_x || y < min_y || y > max_y)
+        return;
+
       vector<unsigned int> xy = pixPosition(x,y);
-
-      if(xy[0] >= x_dim) xy[0] = x_dim-1;
-      if(xy[1] >= y_dim) xy[1] = y_dim-1;
-
       if(++matrix[ xy[0] ][ xy[1] ] > max_count) max_count = matrix[ xy[0] ][ xy[1] ];
     }
 

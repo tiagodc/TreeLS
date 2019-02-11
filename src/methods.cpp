@@ -474,6 +474,7 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
 
   vector<double> bbox = getMinMax(cppCloud);
 
+  cout << "... ... ... baseline" << endl;
   vector<vector<double*> > cloudSegment = getSlices(cppCloud, h1, h2, h2-h1)[0];
   Raster raster = getCounts(cloudSegment, pixel);
   HoughCircle circle = getSingleCenter(&raster, radius, density, votes).main_circle;
@@ -481,6 +482,7 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
   cloudSegment.clear();
   cloudSegment.shrink_to_fit();
 
+  cout << "... ... ... votes matrix" << endl;
   Raster startLayer;
   startLayer.min_x = bbox[0];
   startLayer.max_x = bbox[1];
@@ -491,6 +493,7 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
   startLayer.setDims();
   startLayer.setMatrixSize();
 
+  cout << "... ... ... rasterizing: " << circle.radius << " : " << circle.n_votes << endl;
   unsigned int nLayers = ceil(bbox[5] / hstep);
   vector<Raster> treeRasters(nLayers, startLayer);
 
@@ -515,6 +518,7 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
     alias->updateMatrix(x,y);
   }
 
+  cout << "... ... ... estimating" << endl;
   vector<HoughCenters> treeEstimates( treeRasters.size() );
   for(unsigned int i = 0; i < treeRasters.size(); ++i){
 
@@ -766,13 +770,19 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
   vector<vector<double*> > cloud = rmatrix2cpp(las);
   unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
 
+  cout << "... denoising" << endl;
   double cropRadius = radius*4;
   for(unsigned int i = 0; i < treeIds.size(); ++i){
+
+    cout << "... ... croping" << endl;
     vector<vector<double*> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
+
+    cout << "... ... estimating" << endl;
     vector<HoughCenters> denoised = treeHough(tree, h1, h2, hstep, radius, pixel, density, votes);
     denoisedTrees[ treeIds[i] ] = denoised;
   }
 
+  cout << "... assigning" << endl;
   tempContainer plotInfo( cloud[0].size() );
   for(unsigned int i = 0; i < cloud[0].size(); ++i){
 
