@@ -2,8 +2,14 @@
 # require(magrittr)
 # require(lidR)
 # require(rgl)
-# las = 'inst/extdata/model_boles.laz'
+# las = 'test_data/cema01_52_16_u45_norm_plot.laz'
 # las %<>% readTLS
+#
+# a = las@data[,1:3] %>% as.matrix
+# bool = RCropCloud(a, 10, -10, 2.5, T, T)
+#
+# las %<>% lasfilter(bool)
+# plot(las)
 #
 # las %<>% tlsSample(val = 0.025, by = 'voxel')
 # las %<>% tlsNormalize()

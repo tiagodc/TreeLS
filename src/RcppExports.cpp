@@ -17,6 +17,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// RCropCloud
+LogicalVector RCropCloud(NumericMatrix& las, double xCenter, double yCenter, double len, bool circle, bool negative);
+RcppExport SEXP _TreeLS_RCropCloud(SEXP lasSEXP, SEXP xCenterSEXP, SEXP yCenterSEXP, SEXP lenSEXP, SEXP circleSEXP, SEXP negativeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< double >::type xCenter(xCenterSEXP);
+    Rcpp::traits::input_parameter< double >::type yCenter(yCenterSEXP);
+    Rcpp::traits::input_parameter< double >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< bool >::type circle(circleSEXP);
+    Rcpp::traits::input_parameter< bool >::type negative(negativeSEXP);
+    rcpp_result_gen = Rcpp::wrap(RCropCloud(las, xCenter, yCenter, len, circle, negative));
+    return rcpp_result_gen;
+END_RCPP
+}
 // getCircle
 List getCircle(NumericMatrix& las, double pixel, double rad_max, double min_den, unsigned int min_votes);
 RcppExport SEXP _TreeLS_getCircle(SEXP lasSEXP, SEXP pixelSEXP, SEXP rad_maxSEXP, SEXP min_denSEXP, SEXP min_votesSEXP) {
@@ -105,6 +121,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_thinCloud", (DL_FUNC) &_TreeLS_thinCloud, 2},
+    {"_TreeLS_RCropCloud", (DL_FUNC) &_TreeLS_RCropCloud, 6},
     {"_TreeLS_getCircle", (DL_FUNC) &_TreeLS_getCircle, 5},
     {"_TreeLS_singleStack", (DL_FUNC) &_TreeLS_singleStack, 5},
     {"_TreeLS_stackMap", (DL_FUNC) &_TreeLS_stackMap, 8},

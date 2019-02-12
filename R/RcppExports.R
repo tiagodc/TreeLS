@@ -5,6 +5,10 @@ thinCloud <- function(las, voxel = 0.025) {
     .Call(`_TreeLS_thinCloud`, las, voxel)
 }
 
+RCropCloud <- function(las, xCenter, yCenter, len, circle, negative) {
+    .Call(`_TreeLS_RCropCloud`, las, xCenter, yCenter, len, circle, negative)
+}
+
 getCircle <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
     .Call(`_TreeLS_getCircle`, las, pixel, rad_max, min_den, min_votes)
 }

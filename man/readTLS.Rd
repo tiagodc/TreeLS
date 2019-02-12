@@ -9,7 +9,7 @@ readTLS(file, colNames = NULL, ...)
 \arguments{
 \item{file}{object to be converted or reset}
 
-\item{colNames}{parameter passed to \code{\link{toLAS}} whenever reading table-like files - default = \code{NULL}}
+\item{colNames}{optional - only used for table-like files. It states the \code{file}'s column names - if not set, only the 3 first columns will be imported as XYZ}
 
 \item{...}{further arguments passed to either \code{readLAS} or \code{read.table}}
 }

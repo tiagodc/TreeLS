@@ -1,7 +1,8 @@
 PKG_CPPFLAGS = -DNDEBUG -DUNORDERED -I. -I../inst/include/
 
 SOURCES = ./methods.cpp \
-		  ./RcppExports.cpp
+					./r_interface.cpp \
+		  		./RcppExports.cpp
 
 TEMP1   =  $(SOURCES:.cpp=.o)
 OBJECTS =  $(TEMP1:.c=.o)

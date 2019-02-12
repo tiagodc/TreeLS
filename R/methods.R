@@ -1,8 +1,29 @@
-require(magrittr)
-require(lidR)
+# ===============================================================================
+#
+# Developers:
+#
+# Tiago de Conto - ti@forlidar.com.br -  https://github.com/tiagodc/
+#
+# COPYRIGHT: Tiago de Conto, 2019
+#
+# This piece of software is open and free to use, redistribution and modifications
+# should be done in accordance to the GNU General Public License >= 3
+#
+# Use this software as you wish, but no warranty is provided whatsoever. For any
+# comments or questions on TreeLS, please contact the developer (prefereably through my github account)
+#
+# If publishing any work/study/research that used the tools in TreeLS,
+# please don't forget to cite the proper sources!
+#
+# Enjoy!
+#
+# ===============================================================================
 
+#' @import Rcpp
 #' @import magrittr
 #' @import lidR
+#' @importFrom utils read.table
+#' @importFrom stats rbinom
 #' @useDynLib TreeLS, .registration = TRUE
 
 preCheck = function(las){
@@ -33,34 +54,6 @@ preCheck = function(las){
 
 }
 
-#' Set LAS Header to TLS applications
-#' @description Alters the header of an input \code{LAS} object by increasing the precision of XYZ scale factors when suitable
-#' @param las \code{LAS} object
-#' @param xfac,yfac,zfac scale factor of XYZ axes
-#' @return copy of \code{las} with the altered header
-#' @export
-setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
-
-  if(class(las)[1] != "LAS")
-    stop("las must be a LAS object")
-
-  if(las@header@PHB$`X scale factor` > xfac)
-    las@header@PHB$`X scale factor` = xfac
-
-  if(las@header@PHB$`Y scale factor` > yfac)
-    las@header@PHB$`Y scale factor` = yfac
-
-  if(las@header@PHB$`Z scale factor` > xfac)
-    las@header@PHB$`Z scale factor` = zfac
-
-  return(las)
-}
-
-#' Reset the properties of a \code{LAS} object
-#' @description Rebuilds the \code{LAS} object based on its data table only - all header params are recalculated
-#' @param las \code{LAS} object
-#' @return newly assigned \code{LAS} object
-#' @export
 resetLAS = function(las){
 
   if(class(las)[1] != "LAS")
@@ -71,13 +64,6 @@ resetLAS = function(las){
   return(las)
 }
 
-#' Convert a table-like object to \code{LAS}
-#' @description Generates a \code{LAS} object from a \code{matrix}, \code{data.frame} or similar structure
-#' @param dataMatrix object to be converted to \code{LAS}
-#' @param namesVector \code{colnames} of the variables in the \code{data} compartment of the \code{LAS} otput.
-#' If \code{NULL} it ignores any names, considering the first 3 columns as XYZ data and nothing else.
-#' @return \code{LAS} object
-#' @export
 toLAS = function(dataMatrix, namesVector=NULL){
 
   if(ncol(dataMatrix) < 3)
@@ -95,15 +81,15 @@ toLAS = function(dataMatrix, namesVector=NULL){
     if(!all(checkXYZ))
       stop('X, Y and Z must be declared explicitly in namesVector (in uppercase)')
 
-    names(dataMatrix) = namesVector
+    colnames(dataMatrix) = namesVector
 
   } else {
 
     if(ncol(dataMatrix) > 3)
-      warning('only the first three columns are being converted (assumed XYZ coordinates)')
+      warning('only the first three columns were converted (assumed XYZ coordinates)')
 
     dataMatrix = dataMatrix[,1:3]
-    names(dataMatrix) = c('X', 'Y', 'Z')
+    colnames(dataMatrix) = c('X', 'Y', 'Z')
 
   }
 
@@ -111,18 +97,44 @@ toLAS = function(dataMatrix, namesVector=NULL){
   return(dataMatrix)
 }
 
+las2xyz = function(las){
+
+  if(class(las)[1] != "LAS")
+    stop("las must be a LAS object")
+
+  las = las@data[,1:3] %>% as.matrix
+  return(las)
+}
+
+setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
+
+  if(class(las)[1] != "LAS")
+    stop("las must be a LAS object")
+
+  if(las@header@PHB$`X scale factor` > xfac)
+    las@header@PHB$`X scale factor` = xfac
+
+  if(las@header@PHB$`Y scale factor` > yfac)
+    las@header@PHB$`Y scale factor` = yfac
+
+  if(las@header@PHB$`Z scale factor` > xfac)
+    las@header@PHB$`Z scale factor` = zfac
+
+  return(las)
+}
+
 #' Resets or creates a \code{LAS} object depending on the input's type
 #' @description Resets the input whenever it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input
 #' @param cloud object to be converted or reset
-#' @param ... further arguments passed to \code{\link{toLAS}} for table-like inputs
+#' @param colNames optional - only used for non-LAS objects. It states the \code{file}'s column names - if not set, only the 3 first columns will be converted to \code{LAS}
 #' @return \code{LAS} object
 #' @export
-setLAS = function(cloud, ...){
+setTLS = function(cloud, colNames=NULL){
 
   if(class(cloud)[1] == 'LAS'){
     cloud %<>% resetLAS
   }else{
-    cloud %<>% toLAS(vars, ...)
+    cloud %<>% toLAS(colNames)
   }
 
   return(cloud)
@@ -131,7 +143,7 @@ setLAS = function(cloud, ...){
 #' Wrapper to read point clouds straight to LAS objects suitable for TLS applications
 #' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link{read.table}}
 #' @param file object to be converted or reset
-#' @param colNames parameter passed to \code{\link{toLAS}} whenever reading table-like files - default = \code{NULL}
+#' @param colNames optional - only used for table-like files. It states the \code{file}'s column names - if not set, only the 3 first columns will be imported as XYZ
 #' @param ... further arguments passed to either \code{readLAS} or \code{read.table}
 #' @return \code{LAS} object
 #' @export
@@ -149,20 +161,6 @@ readTLS = function(file, colNames=NULL, ...){
 
   }
 
-  return(las)
-}
-
-#' Extracts XYZ data from \code{LAS}
-#' @description Extracts the XYZ slots from a \code{LAS} object into a \code{matrix}
-#' @param las \code{LAS} object
-#' @return XYZ \code{matrix} object
-#' @export
-las2xyz = function(las){
-
-  if(class(las)[1] != "LAS")
-    stop("las must be a LAS object")
-
-  las = las@data[,1:3] %>% as.matrix
   return(las)
 }
 
@@ -205,6 +203,60 @@ tlsSample = function(las, by='voxel', val=0.05){
 
 }
 
+#' Crops a point cloud using a circle or square
+#' @description Returns a cropped point cloud of all points inside or outside specified boundaries.
+#' @param las \code{LAS} object
+#' @param x,y X and Y center coordinates of the area to be cropped
+#' @param len if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square
+#' @param circle if \code{TRUE}, crops a circle, otherwise a square
+#' @param negative if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square
+#' @return \code{LAS} object
+#' @export
+tlsCrop = function(las, x, y, len, circle=T, negative=F){
+
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object')
+
+  if(!is.numeric(x))
+    stop('x must be Numeric')
+
+  if(!is.numeric(y))
+    stop('y must be Numeric')
+
+  if(length(x) != 1)
+    stop('x must of length 1')
+
+  if(length(y) != 1)
+    stop('y must of length 1')
+
+  if(!is.numeric(len))
+    stop('len must be Numeric')
+
+  if(len <= 0)
+    stop('len must be a positive number')
+
+  if(length(len) != 1)
+    stop('len must of length 1')
+
+  if(!is.logical(circle))
+    stop('circle must be Logical')
+
+  if(length(circle) != 1)
+    stop('circle must of length 1')
+
+  if(!is.logical(negative))
+    stop('negative must be Logical')
+
+  if(length(negative) != 1)
+    stop('negative must of length 1')
+
+  bool = RCropCloud(las %>% las2xyz, x, y, len, circle, negative)
+  las %<>% lasfilter(bool)
+
+  return(las)
+
+}
+
 #' Normalize a TLS point cloud
 #' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{csf}} algorithm is applied internally.
 #' @param las \code{LAS} object
@@ -221,7 +273,7 @@ tlsNormalize = function(las, res=.5, keepGround=T){
     stop('res must be a positive number')
 
   if(!any(las$Classification == 2)){
-    warning('no ground points found, performing ground segmentation')
+    warning('no ground points found initially, ground segmentation was performed internally')
     las %<>% lasground(csf(class_threshold = 0.2, cloth_resolution = 0.1), last_returns = F)
   }
 
@@ -379,13 +431,13 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
   rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
 
   if(any(rg > 10))
-    warning("point cloud doesn't look like a single tree - XY extents are too large")
+    warning("point cloud unlikely a single tree - XY extents too large")
 
   if(min(las$Z) < 0)
-    warning("points with Z below 0 will be ignored")
+    warning("points with Z below 0 were be ignored")
 
   if(min(las$Z) > 5)
-    warning("point cloud doesn't look normalized - Z values too high")
+    warning("point cloud didn't look normalized - Z values too high")
 
   results = houghStemPoints(las %>% las2xyz, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
 
@@ -470,10 +522,10 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
 
   if(min(las$Z) < 0)
-    warning("points with Z below 0 will be ignored")
+    warning("points with Z below 0 were be ignored")
 
   if(min(las$Z) > 5)
-    warning("point cloud doesn't look normalized - Z values too high")
+    warning("point cloud didn't look normalized - Z values too high")
 
   hasGround = F
   if(any(names(las@data) == 'Classification')){
