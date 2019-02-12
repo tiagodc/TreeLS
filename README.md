@@ -19,7 +19,7 @@ This is an ongoing project and new features will be introduced often. For any qu
 - RANSAC based individual tree modelling
 - RANSAC plot-wise tree modelling
 - `lidR` wrappers for writing TLS data with extra header fields
-- Specific 3D visualization functions for TLS specific outputs
+- 3D visualization functions for TLS specific outputs
 - Eigen decomposition feature detection for trees and stems
 - Tree modelling based on robust cylinder fitting
 - 3D interactive point cloud manipulation
@@ -29,7 +29,7 @@ This is an ongoing project and new features will be introduced often. For any qu
 ### Requirements
 - `devtools`: run `install.packages('devtools', dependencies = TRUE)` from the R console
 - Rcpp compiler:
-    - on Windows: install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your installed R version - make sure to add it to your system's *path*
+    - on Windows: install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your R version - make sure to add it to your system's *path*
     - on Mac: install Xcode
     - on Linux: be sure to have `r-base-dev` installed
 
@@ -42,11 +42,11 @@ devtools::install_github('tiagodc/TreeLS', ref='devel')
 
 #### Legacy code
 
-For anyone still interested in the old implementations (fully developed in R code, slow but suitable for research) of this library, you can still use it. In order to do it, uninstall any recent instances of `TreeLS` and reinstall the legacy version:
+For anyone still interested in the old implementations of this library (fully developed in R, slow but suitable for research), you can still use it. In order to do it, uninstall any recent instances of `TreeLS` and reinstall the legacy version:
 ```
 devtools::install_github('tiagodc/TreeLS', ref='old')
 ```
-Not all features from the old package were reimplemented in `Rcpp`, but I'm gonna get there eventually.
+Not all features from the old package were reimplemented in `Rcpp`, but I'll get there.
 
 ## Examples
 
