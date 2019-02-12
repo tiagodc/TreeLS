@@ -1,2 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^man-roxygen$
+^LICENSE\.txt$
+^Rcpp-quickref\.pdf$
+^\.vscode$
+^test_data$

@@ -4,14 +4,27 @@
 \alias{treePositions}
 \title{Get tree XY positions from a TLS-tree map}
 \usage{
-treePositions(las)
+treePositions(las, plot = T)
 }
 \arguments{
-\item{las}{\code{LAS} object - \code{treeMap}'s output}
+\item{las}{\code{LAS} object - output from \code{\link{treeMap}}.}
+
+\item{plot}{\code{logical} - plot the tree map?}
 }
 \value{
-\code{data.frame} of tree IDs and XY coordinates
+\code{data.frame} of tree IDs and XY coordinates.
 }
 \description{
-Estimates tree probability regions from a point cloud based on a Hough Transform circle search
+Extracts the tree positions from a \code{LAS} object tree map
+}
+\examples{
+file = system.file("extdata", "model_boles.laz", package="TreeLS")
+tls = readTLS(file)
+plot(tls)
+
+map = treeMap(tls)
+plot(map, color='Radii')
+
+xymap = treePositions(map)
+head(xymap)
 }

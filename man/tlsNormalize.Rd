@@ -7,17 +7,17 @@
 tlsNormalize(las, res = 0.5, keepGround = T)
 }
 \arguments{
-\item{las}{\code{LAS} object}
+\item{las}{\code{LAS} object.}
 
-\item{res}{\code{numeric} - resolution of the DTM used for normalization}
+\item{res}{\code{numeric} - resolution of the DTM used for normalization.}
 
-\item{keepGround}{\code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points}
+\item{keepGround}{\code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points.}
 }
 \value{
-\code{LAS} object
+\code{LAS} object.
 }
 \description{
-Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{csf}} algorithm is applied internally.
+Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

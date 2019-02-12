@@ -227,11 +227,13 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
       isStem.filter[i] = true;
       isStem.values[i] = alias->radius;
       isStem.counts[i] = alias->n_votes;
+      isStem.sections[i] = ptLayer + 1;
     }
   }
 
   List output;
   output["Stem"] = isStem.filter;
+  output["Segment"] = isStem.sections;
   output["Radius"] = isStem.values;
   output["Votes"] = isStem.counts;
   return output;
@@ -287,14 +289,16 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
         plotInfo.values[i] = tempCircle->radius;
         plotInfo.counts[i] = tempCircle->n_votes;
         plotInfo.ids[i] = tree.first;
+        plotInfo.sections[i] = ptLayer + 1;
         break;
       }
     }
   }
 
   List output;
-  output["TreeID"] = plotInfo.ids;
   output["Stem"]   = plotInfo.filter;
+  output["TreeID"] = plotInfo.ids;
+  output["Segment"] = plotInfo.sections;
   output["Radius"] = plotInfo.values;
   output["Votes"]  = plotInfo.counts;
   return output;

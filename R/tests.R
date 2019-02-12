@@ -2,40 +2,25 @@
 # require(magrittr)
 # require(lidR)
 # require(rgl)
-# las = 'test_data/cema01_52_16_u45_norm_plot.laz'
-# las %<>% readTLS
+# # open artificial sample file
+# file = 'test_data/Parcela.las'
+# tls = readTLS(file, filter='-thin_with_voxel 0.025')
 #
-# las %<>% tlsCrop(10, -10, 5, F, T)
+# # normalize the point cloud
+# tls = tlsNormalize(tls, keepGround = T)
 #
-# las %<>% lasfilter(bool)
-# plot(las)
+# # extract the tree map from a systematically sampled point cloud
+# thin = tlsSample(tls, 'voxel', 0.025)
+# map = treeMap(thin)
 #
-# las %<>% tlsSample(val = 0.025, by = 'voxel')
-# las %<>% tlsNormalize()
-# stc = treeMap(las, min_den = 0.05)
-# las %<>% stemPoints_plot(stc)
+# # visualize the tree map in 2D and 3D
+# xymap = treePositions(map, TRUE)
+# plot(map, color='Radii')
 #
-# plot(stc)
-# plot(las, color='Stem')
+# # classify the stem points
+# tls = stemPoints_plot(tls, map)
 #
+# a = lasfilter(tls, Stem)
 #
-# for(i in 1:nrow(map)){
-#   print(i)
-#   tree = map %$% lasclipCircle(las, X[i], Y[i], 1) %>% lasfilter(Classification != 2)
-#   tree %<>% stemPoints()
-#   stem = lasfilter(tree, Stem)
-#   rgl.points(stem@data[,1:3], color='red', size=2)
-#   # rgl.points(tree@data[,1:3], color='green', size=.5)
-# }
-#
-# rgl.points(las@data[,1:3], size=.5, color='gray')
-# # plot(tree, color='Stem', size=2)
-#
-# a = las %>% lasfilter(Classification != 2)
-# a = las@data[,1:3] %>% as.matrix
-#
-# b = houghStemPlot(a, map %>% as.matrix, h2 = 2.5) %>% as.data.frame
-# las = las@data %>% cbind(b) %>% LAS
-#
-# plot(las, color='Stem', clear_artifacts=F, size=.5, colorPalette = c('gray','red'))
-# # rgl.points(stc@data[,1:3], color='green')
+# plot(tls, color='Stem', size=.5)
+# plot(a, color='TreeID', clear_artifacts=F)

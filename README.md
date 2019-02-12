@@ -50,4 +50,27 @@ Not all features from the old package were reimplemented in `Rcpp`, but I'll get
 
 ## Examples
 
-...
+Example of stem detection plot-wise:
+```
+# open artificial sample file
+file = system.file("extdata", "model_boles.laz", package="TreeLS")
+tls = readTLS(file)
+
+# normalize the point cloud
+tls = tlsNormalize(tls, keepGround = T)
+
+# extract the tree map from a systematically sampled point cloud
+thin = tlsSample(tls, 'voxel', 0.025)
+map = treeMap(thin)
+
+# visualize the tree map in 2D and 3D
+xymap = treePositions(map, TRUE)
+plot(map, color='Radii')
+
+# classify the stem points
+tls = stemPoints_plot(tls, map)
+
+plot(tls, color='Stem')
+plot(tls, color='TreeID')
+
+```

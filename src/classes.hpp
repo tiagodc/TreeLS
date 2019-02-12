@@ -39,6 +39,7 @@ class tempContainer{
     vector<bool> filter;
     vector<unsigned int> counts;
     vector<unsigned int> ids;
+    vector<unsigned int> sections;
     vector<double> values;
 
     tempContainer(unsigned int n){
@@ -50,6 +51,7 @@ class tempContainer{
       counts.resize(n, 0);
       values.resize(n, 0);
       ids.resize(n, 0);
+      sections.resize(n, 0);
     };
 };
 

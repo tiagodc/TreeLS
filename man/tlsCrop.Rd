@@ -7,18 +7,18 @@
 tlsCrop(las, x, y, len, circle = T, negative = F)
 }
 \arguments{
-\item{las}{\code{LAS} object}
+\item{las}{\code{LAS} object.}
 
-\item{x, y}{\code{numeric} -  X and Y center coordinates of the area to be cropped}
+\item{x, y}{\code{numeric} -  X and Y center coordinates of the area to be cropped.}
 
-\item{len}{\code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square}
+\item{len}{\code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square.}
 
-\item{circle}{\code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square}
+\item{circle}{\code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square.}
 
-\item{negative}{\code{logical} - if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square (default)}
+\item{negative}{\code{logical} - if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square (default).}
 }
 \value{
-\code{LAS} object
+\code{LAS} object.
 }
 \description{
 Returns a cropped point cloud of all points inside or outside specified boundaries.

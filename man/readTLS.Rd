@@ -7,17 +7,17 @@
 readTLS(file, colNames = NULL, ...)
 }
 \arguments{
-\item{file}{file path}
+\item{file}{file path.}
 
-\item{colNames}{optional - \code{character} vector. Only used for table-like files. It states the \code{file}'s column names - if not set, only the 3 first columns will be imported as XYZ}
+\item{colNames}{optional - \code{character} vector. Only used for table-like files. It states the column names - if not set, only the 3 first columns will be converted to XYZ.}
 
-\item{...}{further arguments passed to either \code{readLAS} or \code{read.table}}
+\item{...}{further arguments passed to either \code{readLAS} or \code{read.table}.}
 }
 \value{
-\code{LAS} object
+\code{LAS} object.
 }
 \description{
-Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link{read.table}}.
+Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link[utils:read.table]{read.table}}.
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

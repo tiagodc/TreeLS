@@ -8,23 +8,68 @@ stemPoints(las, hstep = 0.5, max_radius = 0.25, hbase = c(1, 2.5),
   pixel_size = 0.025, min_density = 0.1, min_votes = 3)
 }
 \arguments{
-\item{las}{\code{LAS} object}
+\item{las}{\code{LAS} object.}
 
-\item{hstep}{\code{numeric} - ...}
+\item{hstep}{\code{numeric} - height interval to perform circle search.}
 
-\item{max_radius}{\code{numeric} - ...}
+\item{max_radius}{\code{numeric} - approximately the largest stem cross section radius expected in the point cloud.}
 
-\item{hbase}{\code{numeric} vector of length 2 - ...}
+\item{hbase}{\code{numeric} vector of length 2 - tree base height interval to initiate the circle search.}
 
-\item{pixel_size}{\code{numeric} - ...}
+\item{pixel_size}{\code{numeric} - pixel side length to discretize the point cloud layers while performing the Hough Transform circle search.}
 
-\item{min_density}{\code{numeric} between 0 and 1 - ...}
+\item{min_density}{\code{numeric} - between 0 and 1 - minimum point density within a pixel evaluated on the Hough Transform - i.e. only \emph{dense} point clousters will undergo circle search.}
 
-\item{min_votes}{\code{integer} - ...}
+\item{min_votes}{\code{integer} - Hough Transform parameter - minimum number of circle intersections over a pixel to assign it as a circle center candidate.}
 }
 \value{
-\code{LAS} object
+\code{LAS} object.
 }
 \description{
-Classify stem points through the Hough Transform algorithm - it searches for only \emph{one} stem
+Detect stem points through the Hough Transform algorithm - it searches for only \emph{one} stem.
+}
+\section{Output Header}{
+
+
+Meaninful fields in the output:
+
+\itemize{
+\item \code{Stem}: \code{TRUE} for estimated stem points
+\item \code{Segment}: stem segment number (from bottom to top) the point belongs to
+\item \code{Radius}: approximate radius of the point's stem segment estimated by the
+Hough Transform - always a multiple of the \code{pixel_size}
+\item \code{Votes}: votes received by the stem segment's center during the Hough Transform
+}
+}
+
+\section{Adapted Hough Transform}{
+
+
+The Hough Transform circle search algorithm used in
+TreeLS applies a constrained circle search on discretized 
+point cloud layers. Tree-wise, the circle search is  
+recursive, in which the search for circle parameters 
+of a stem section is constrained to the 
+\emph{feature space} of the stem section underneath it.
+Initial estimates of the stem's \emph{feature space} 
+are performed on a \emph{baselise} stem segment - i.e.
+a low height interval where a tree's bole is expected  
+to be clearly visible in the point cloud.
+The algorithm is described in detail by Conto et al. (2017).
+
+This adapted version of the algorithm is very robust against outliers, 
+but not against forked or leaning stems.
+}
+
+\examples{
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file)
+plot(tls)
+
+tls = stemPoints(tls)
+plot(tls, color='Stem')
+
+}
+\references{
+CONTO, T. ; OLOFSSON, K. ; GORGENS, E. B. ; RODRIGUEZ, LUIZ CARLOS ESTRAVIZ ; ALMEIDA, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. COMPUTERS AND ELECTRONICS IN AGRICULTURE, v. 143, p. 165-176, 2017.
 }

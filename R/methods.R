@@ -22,6 +22,7 @@
 #' @import Rcpp
 #' @import magrittr
 #' @import lidR
+#' @import rgl
 
 preCheck = function(las){
 
@@ -37,10 +38,7 @@ preCheck = function(las){
 
     hasGround = any(las$Classification == 2)
 
-    if(!hasGround){
-      warning('ground points not classified')
-
-    }else{
+    if(hasGround){
 
       meanGround = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
 
@@ -123,9 +121,9 @@ setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
 
 #' Resets or creates a \code{LAS} object depending on the input's type
 #' @description Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.
-#' @param cloud \code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted or reset
-#' @param colNames  optional - \code{character} vector. Only used for non-LAS objects. It states the \code{file}'s column names - if not set, only the 3 first columns will be converted to \code{LAS}
-#' @return \code{LAS} object
+#' @param cloud \code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted or reset.
+#' @template param-colnames
+#' @template return-las
 #' @examples
 #' cld = runif(300, 0, 10) %>% matrix(ncol=3)
 #' cld = setTLS(cld)
@@ -144,11 +142,11 @@ setTLS = function(cloud, colNames=NULL){
 
 
 #' Wrapper to read point clouds straight to LAS objects suitable for TLS applications
-#' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link{read.table}}.
-#' @param file file path
-#' @param colNames optional - \code{character} vector. Only used for table-like files. It states the \code{file}'s column names - if not set, only the 3 first columns will be imported as XYZ
-#' @param ... further arguments passed to either \code{readLAS} or \code{read.table}
-#' @return \code{LAS} object
+#' @description Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link[utils:read.table]{read.table}}.
+#' @param file file path.
+#' @template param-colnames
+#' @param ... further arguments passed to either \code{readLAS} or \code{read.table}.
+#' @template return-las
 #' @examples
 #' file = system.file("extdata", "model_boles.laz", package="TreeLS")
 #' tls = readTLS(file)
@@ -175,16 +173,16 @@ readTLS = function(file, colNames=NULL, ...){
 
 #' Samples a point cloud randomly or systematically
 #' @description Applies a random sample or voxel thinning algorithm te keep a fraction of the point cloud.
-#' @param las \code{LAS} object
-#' @param by \code{character} - sampling method: \emph{"voxel"} for systematic 3D sampling or \emph{"random"} for random sampling
+#' @template param-las
+#' @param by \code{character} - sampling method: \emph{"voxel"} for systematic 3D sampling or \emph{"random"} for random sampling.
 #' @param val \code{numeric} - sampling parameter value. For \code{by = 'voxel'}, \code{val} must be the voxel side length. For \code{by = 'random'}, it must be the proportion of points to be kept (between 0 and 1).
-#' @return \code{LAS} object
+#' @template return-las
 #' @examples
-#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' summary(tls)
 #'
-#' tls = tlsSample(tls, by='voxel', val=0.1)
+#' tls = tlsSample(tls, by='voxel', val=0.05)
 #' summary(tls)
 #'
 #' tls = tlsSample(tls, by='random', val=0.5)
@@ -227,12 +225,12 @@ tlsSample = function(las, by='voxel', val=0.05){
 
 #' Crops a point cloud using a circle or square
 #' @description Returns a cropped point cloud of all points inside or outside specified boundaries.
-#' @param las \code{LAS} object
-#' @param x,y \code{numeric} -  X and Y center coordinates of the area to be cropped
-#' @param len \code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square
-#' @param circle \code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square
-#' @param negative \code{logical} - if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square (default)
-#' @return \code{LAS} object
+#' @template param-las
+#' @param x,y \code{numeric} -  X and Y center coordinates of the area to be cropped.
+#' @param len \code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square.
+#' @param circle \code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square.
+#' @param negative \code{logical} - if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square (default).
+#' @template return-las
 #' @examples
 #' file = system.file("extdata", "model_boles.laz", package="TreeLS")
 #' tls = readTLS(file)
@@ -292,11 +290,11 @@ tlsCrop = function(las, x, y, len, circle=T, negative=F){
 
 
 #' Normalize a TLS point cloud
-#' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{csf}} algorithm is applied internally.
-#' @param las \code{LAS} object
-#' @param res \code{numeric} - resolution of the DTM used for normalization
-#' @param keepGround \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points
-#' @return \code{LAS} object
+#' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
+#' @template param-las
+#' @param res \code{numeric} - resolution of the DTM used for normalization.
+#' @param keepGround \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points.
+#' @template return-las
 #' @examples
 #' file = system.file("extdata", "model_boles.laz", package="TreeLS")
 #' tls = readTLS(file)
@@ -333,19 +331,48 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 
 
 #' Map tree occurrences from TLS data
-#' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search.
-#' @param las \code{LAS} object
-#' @param hmin \code{numeric} - ...
-#' @param hmax \code{numeric} - ...
-#' @param hstep \code{numeric} - ...
-#' @param pixel \code{numeric} - ...
-#' @param rad_max \code{numeric} - ...
-#' @param min_den \code{numeric} between 0 and 1 - ...
-#' @param min_votes \code{integer} - ...
-#' @return \code{LAS} object
+#' @description Estimates tree occurrence regions from a \strong{normalized} point cloud based on the Hough Transform circle search.
+#' @template param-las
+#' @template param-hmin-hmax
+#' @template param-hstep
+#' @template param-pixel-size
+#' @template param-max-radius
+#' @template param-min-density
+#' @template param-min-votes
+#' @template return-las
+#' @section Output Header:
+#'
+#' Each point in the \code{LAS} object output represents a pixel center that is
+#' \emph{possibly} also stem cross-section center.
+#'
+#' The variables describing each point in the output are:
+#'
+#' \itemize{
+#' \item \code{Intensity}: number of votes received by that point
+#' \item \code{PointSourceID}: stem segment ID (among all trees)
+#' \item \code{Keypoint_flag}: if \code{TRUE}, the point is the most likely circle center
+#' of its stem segment (\code{PointSourceID})
+#' \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
+#' \item \code{TreeID}: (possible) unique tree ID to which the point belongs to
+#' \item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
+#' }
+#'
+#' @template section-hough-transform
+#' @section Tree Selection:
+#'
+#' An initial tree filter is used to select \emph{probable} trees in the input point
+#' cloud. Parallel stacked layers, each one as thick as \code{hstep}, undergo the
+#' circle search within the \code{hmin}/\code{hmax} limits. On every layer, pixels
+#' above the \code{min_votes} criterion are clustered, forming
+#' \emph{probability zones}. \emph{Probability zones} vertically aligned
+#' on at least 3/4 of the stacked layers are assigned as \emph{tree occurrence regions}
+#' and exported in the output map.
+#'
+#' @template reference-thesis
+#' @template example-tree-map
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
-treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max = 0.25, min_den = 0.1, min_votes = 3){
+treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_radius = 0.25, min_density = 0.1, min_votes = 3){
 
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
@@ -355,9 +382,9 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max 
 
   params = list(
     hstep = hstep,
-    pixel = pixel,
-    rad_max = rad_max,
-    min_den = min_den,
+    pixel_size = pixel_size,
+    max_radius = max_radius,
+    min_density = min_density,
     min_votes = min_votes
   )
 
@@ -374,7 +401,7 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max 
       stop( i %>% paste('must be positive') )
   }
 
-  if(min_den > 1)
+  if(min_density > 1)
     stop('min_den must be between 0 and 1')
 
   rgz = las$Z %>% range
@@ -390,7 +417,7 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max 
   if("Classification" %in% names(las@data))
     las %<>% lasfilter(Classification != 2)
 
-  map = stackMap(las %>% las2xyz, hmin, hmax, hstep, pixel, rad_max, min_den, min_votes) %>%
+  map = stackMap(las %>% las2xyz, hmin, hmax, hstep, pixel_size, max_radius, min_density, min_votes) %>%
     do.call(what=cbind) %>% as.data.frame
 
   map$Intensity %<>% as.integer
@@ -404,11 +431,13 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max 
 
 
 #' Get tree XY positions from a TLS-tree map
-#' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search.
-#' @param las \code{LAS} object - \code{treeMap}'s output
-#' @return \code{data.frame} of tree IDs and XY coordinates
+#' @description Extracts the tree positions from a \code{LAS} object tree map
+#' @param las \code{LAS} object - output from \code{\link{treeMap}}.
+#' @param plot \code{logical} - plot the tree map?
+#' @return \code{data.frame} of tree IDs and XY coordinates.
+#' @template example-tree-map
 #' @export
-treePositions = function(las){
+treePositions = function(las, plot=T){
 
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
@@ -420,20 +449,46 @@ treePositions = function(las){
 
   pos = las@data[,c('TreeID', 'X', 'Y')] %>% as.data.frame
 
+  if(plot){
+    pos %$% plot(Y ~ X, cex=3, pch=20, main='tree map', xlab='X', ylab='Y')
+  }
+
   return(pos)
 }
 
 
 #' Single tree stem point classification
-#' @description Classify stem points through the Hough Transform algorithm - it searches for only \emph{one} stem.
-#' @param las \code{LAS} object
-#' @param hstep \code{numeric} - ...
-#' @param max_radius \code{numeric} - ...
-#' @param hbase \code{numeric} vector of length 2 - ...
-#' @param pixel_size \code{numeric} - ...
-#' @param min_density \code{numeric} between 0 and 1 - ...
-#' @param min_votes \code{integer} - ...
-#' @return \code{LAS} object
+#' @description Detect stem points through the Hough Transform algorithm - it searches for only \emph{one} stem.
+#' @template param-las
+#' @template param-hstep
+#' @template param-max-radius
+#' @template param-hbase
+#' @template param-pixel-size
+#' @template param-min-density
+#' @template param-min-votes
+#' @template return-las
+#' @section Output Header:
+#'
+#' Meaninful fields in the output:
+#'
+#' \itemize{
+#' \item \code{Stem}: \code{TRUE} for estimated stem points
+#' \item \code{Segment}: stem segment number (from bottom to top) the point belongs to
+#' \item \code{Radius}: approximate radius of the point's stem segment estimated by the
+#' Hough Transform - always a multiple of the \code{pixel_size}
+#' \item \code{Votes}: votes received by the stem segment's center during the Hough Transform
+#' }
+#'
+#' @template section-hough-transform
+#' @template reference-thesis
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' plot(tls)
+#'
+#' tls = stemPoints(tls)
+#' plot(tls, color='Stem')
+#'
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
 stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
@@ -488,6 +543,7 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
   results = houghStemPoints(las %>% las2xyz, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
 
   las@data$Stem = results$Stem
+  las@data$Segment = results$Segment
   las@data$Radius = results$Radius
   las@data$Votes = results$Votes
 
@@ -499,16 +555,42 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
 
 
 #' Plot-wise stem point classification
-#' @description Classify stem points through the Hough Transform algorithm - it searches for one stem per tree in a point cloud.
-#' @param las \code{LAS} object
-#' @param map map of tree positions - output from \code{\link{treeMap}} or \code{\link{treePositions}}
-#' @param hstep \code{numeric} - ...
-#' @param max_radius \code{numeric} - ...
-#' @param hbase \code{numeric} vector of length 2 - ...
-#' @param pixel_size \code{numeric} - ...
-#' @param min_density \code{numeric} between 0 and 1 - ...
-#' @param min_votes \code{integer} - ...
-#' @return \code{LAS} object
+#' @description Classify stem points from a \strong{normalized} point cloud through the Hough Transform algorithm - detecting one stem per tree.
+#' @template param-las
+#' @param map map of tree positions - output from \code{\link{treeMap}} or \code{\link{treePositions}}.
+#' @template param-hstep
+#' @template param-max-radius
+#' @template param-hbase
+#' @template param-pixel-size
+#' @template param-min-density
+#' @template param-min-votes
+#' @template return-las
+#' @section Output Header:
+#'
+#' Meaninful fields in the output:
+#'
+#' \itemize{
+#' \item \code{Stem}: \code{TRUE} for estimated stem points
+#' \item \code{TreeID}:  (possible) unique tree ID to which the point belongs to
+#' \item \code{Segment}: stem segment number (from bottom to top) the point belongs to
+#' \item \code{Radius}: approximate radius of the point's stem segment estimated by the
+#' Hough Transform - always a multiple of the \code{pixel_size}
+#' \item \code{Votes}: votes received by the stem segment's center during the Hough Transform
+#' }
+#'
+#' @template section-hough-transform
+#' @template reference-thesis
+#' @examples
+#' file = system.file("extdata", "square.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' # map the trees on a resampled point cloud so all trees have approximately the same point density
+#' thin = tlsSample(tls, 'voxel', 0.02)
+#' map = treeMap(thin, min_density = 0.05)
+#'
+#' tls = stemPoints_plot(tls, map)
+#' plot(tls, color='Stem')
+#'
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
 stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
@@ -523,7 +605,7 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
       stop('input map must be the output from treeMap or treePositions')
     }
 
-    map %<>% treePositions()
+    map %<>% treePositions(F)
 
   }else if( !all(mapNames %in% names(map)) ){
 
@@ -586,14 +668,16 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
 
   results = houghStemPlot(las %>% las2xyz, map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
 
-  las@data$TreeID = results$TreeID
   las@data$Stem = results$Stem
+  las@data$TreeID = results$TreeID
+  las@data$Segment = results$Segment
   las@data$Radius = results$Radius
   las@data$Votes = results$Votes
 
   if(hasGround){
-    ground@data$TreeID = 0
     ground@data$Stem = F
+    ground@data$TreeID = 0
+    ground@data$Segment = 0
     ground@data$Radius = 0
     ground@data$Votes = 0
 
