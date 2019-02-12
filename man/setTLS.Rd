@@ -7,13 +7,18 @@
 setTLS(cloud, colNames = NULL)
 }
 \arguments{
-\item{cloud}{object to be converted or reset}
+\item{cloud}{\code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted or reset}
 
-\item{colNames}{optional - only used for non-LAS objects. It states the \code{file}'s column names - if not set, only the 3 first columns will be converted to \code{LAS}}
+\item{colNames}{optional - \code{character} vector. Only used for non-LAS objects. It states the \code{file}'s column names - if not set, only the 3 first columns will be converted to \code{LAS}}
 }
 \value{
 \code{LAS} object
 }
 \description{
-Resets the input whenever it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input
+Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.
+}
+\examples{
+cld = runif(300, 0, 10) \%>\% matrix(ncol=3)
+cld = setTLS(cld)
+summary(cld)
 }

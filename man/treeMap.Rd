@@ -10,19 +10,19 @@ treeMap(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025,
 \arguments{
 \item{las}{\code{LAS} object}
 
-\item{hmin}{...}
+\item{hmin}{\code{numeric} - ...}
 
-\item{hmax}{...}
+\item{hmax}{\code{numeric} - ...}
 
-\item{hstep}{...}
+\item{hstep}{\code{numeric} - ...}
 
-\item{pixel}{...}
+\item{pixel}{\code{numeric} - ...}
 
-\item{rad_max}{...}
+\item{rad_max}{\code{numeric} - ...}
 
-\item{min_den}{...}
+\item{min_den}{\code{numeric} between 0 and 1 - ...}
 
-\item{min_votes}{...}
+\item{min_votes}{\code{integer} - ...}
 }
 \value{
 \code{LAS} object

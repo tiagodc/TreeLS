@@ -22,9 +22,6 @@
 #' @import Rcpp
 #' @import magrittr
 #' @import lidR
-#' @importFrom utils read.table
-#' @importFrom stats rbinom
-#' @useDynLib TreeLS, .registration = TRUE
 
 preCheck = function(las){
 
@@ -123,11 +120,16 @@ setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
   return(las)
 }
 
+
 #' Resets or creates a \code{LAS} object depending on the input's type
-#' @description Resets the input whenever it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input
-#' @param cloud object to be converted or reset
-#' @param colNames optional - only used for non-LAS objects. It states the \code{file}'s column names - if not set, only the 3 first columns will be converted to \code{LAS}
+#' @description Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.
+#' @param cloud \code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted or reset
+#' @param colNames  optional - \code{character} vector. Only used for non-LAS objects. It states the \code{file}'s column names - if not set, only the 3 first columns will be converted to \code{LAS}
 #' @return \code{LAS} object
+#' @examples
+#' cld = runif(300, 0, 10) %>% matrix(ncol=3)
+#' cld = setTLS(cld)
+#' summary(cld)
 #' @export
 setTLS = function(cloud, colNames=NULL){
 
@@ -140,12 +142,18 @@ setTLS = function(cloud, colNames=NULL){
   return(cloud)
 }
 
+
 #' Wrapper to read point clouds straight to LAS objects suitable for TLS applications
-#' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link{read.table}}
-#' @param file object to be converted or reset
-#' @param colNames optional - only used for table-like files. It states the \code{file}'s column names - if not set, only the 3 first columns will be imported as XYZ
+#' @description Reads \emph{las} or \emph{laz} files with \code{\link{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link{read.table}}.
+#' @param file file path
+#' @param colNames optional - \code{character} vector. Only used for table-like files. It states the \code{file}'s column names - if not set, only the 3 first columns will be imported as XYZ
 #' @param ... further arguments passed to either \code{readLAS} or \code{read.table}
 #' @return \code{LAS} object
+#' @examples
+#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' summary(tls)
+#' @importFrom utils read.table
 #' @export
 readTLS = function(file, colNames=NULL, ...){
 
@@ -164,12 +172,25 @@ readTLS = function(file, colNames=NULL, ...){
   return(las)
 }
 
+
 #' Samples a point cloud randomly or systematically
 #' @description Applies a random sample or voxel thinning algorithm te keep a fraction of the point cloud.
 #' @param las \code{LAS} object
-#' @param by sampling method: \emph{voxel} for systematic 3D sampling or \emph{random} for random sampling
-#' @param val Sampling parameter value. For \code{by = 'voxel'}, \code{val} must be the voxel side length. For \code{bu = 'random'}, it must be the proportion of points to be kept - between 0 and 1.
+#' @param by \code{character} - sampling method: \emph{"voxel"} for systematic 3D sampling or \emph{"random"} for random sampling
+#' @param val \code{numeric} - sampling parameter value. For \code{by = 'voxel'}, \code{val} must be the voxel side length. For \code{by = 'random'}, it must be the proportion of points to be kept (between 0 and 1).
 #' @return \code{LAS} object
+#' @examples
+#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' summary(tls)
+#'
+#' tls = tlsSample(tls, by='voxel', val=0.1)
+#' summary(tls)
+#'
+#' tls = tlsSample(tls, by='random', val=0.5)
+#' summary(tls)
+#' @importFrom stats rbinom
+#' @useDynLib TreeLS, .registration = TRUE
 #' @export
 tlsSample = function(las, by='voxel', val=0.05){
 
@@ -203,14 +224,26 @@ tlsSample = function(las, by='voxel', val=0.05){
 
 }
 
+
 #' Crops a point cloud using a circle or square
 #' @description Returns a cropped point cloud of all points inside or outside specified boundaries.
 #' @param las \code{LAS} object
-#' @param x,y X and Y center coordinates of the area to be cropped
-#' @param len if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square
-#' @param circle if \code{TRUE}, crops a circle, otherwise a square
-#' @param negative if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square
+#' @param x,y \code{numeric} -  X and Y center coordinates of the area to be cropped
+#' @param len \code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square
+#' @param circle \code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square
+#' @param negative \code{logical} - if \code{TRUE}, returns all points outside the specified circle/square, otherwise returns all points inside the circle/square (default)
 #' @return \code{LAS} object
+#' @examples
+#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' plot(tls)
+#'
+#' tls = tlsCrop(tls, 2, 3, 1.5, TRUE, TRUE)
+#' plot(tls)
+#'
+#' tls = tlsCrop(tls, 15, 10, 3, FALSE, FALSE)
+#' plot(tls)
+#' @useDynLib TreeLS, .registration = TRUE
 #' @export
 tlsCrop = function(las, x, y, len, circle=T, negative=F){
 
@@ -257,12 +290,20 @@ tlsCrop = function(las, x, y, len, circle=T, negative=F){
 
 }
 
+
 #' Normalize a TLS point cloud
 #' @description Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link{csf}} algorithm is applied internally.
 #' @param las \code{LAS} object
-#' @param res resolution of the DTM used for normalization
-#' @param keepGround default = \code{TRUE} - if \code{FALSE}, returns a point cloud with ground points removed
+#' @param res \code{numeric} - resolution of the DTM used for normalization
+#' @param keepGround \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points
 #' @return \code{LAS} object
+#' @examples
+#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' plot(tls)
+#'
+#' tls = tlsNormalize(tls, 0.5, FALSE)
+#' plot(tls)
 #' @export
 tlsNormalize = function(las, res=.5, keepGround=T){
 
@@ -290,17 +331,19 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 
 }
 
+
 #' Map tree occurrences from TLS data
-#' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search
+#' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search.
 #' @param las \code{LAS} object
-#' @param hmin ...
-#' @param hmax ...
-#' @param hstep ...
-#' @param pixel ...
-#' @param rad_max ...
-#' @param min_den ...
-#' @param min_votes ...
+#' @param hmin \code{numeric} - ...
+#' @param hmax \code{numeric} - ...
+#' @param hstep \code{numeric} - ...
+#' @param pixel \code{numeric} - ...
+#' @param rad_max \code{numeric} - ...
+#' @param min_den \code{numeric} between 0 and 1 - ...
+#' @param min_votes \code{integer} - ...
 #' @return \code{LAS} object
+#' @useDynLib TreeLS, .registration = TRUE
 #' @export
 treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max = 0.25, min_den = 0.1, min_votes = 3){
 
@@ -359,8 +402,9 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel = 0.025, rad_max 
   return(map)
 }
 
+
 #' Get tree XY positions from a TLS-tree map
-#' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search
+#' @description Estimates tree probability regions from a point cloud based on a Hough Transform circle search.
 #' @param las \code{LAS} object - \code{treeMap}'s output
 #' @return \code{data.frame} of tree IDs and XY coordinates
 #' @export
@@ -379,16 +423,18 @@ treePositions = function(las){
   return(pos)
 }
 
+
 #' Single tree stem point classification
-#' @description Classify stem points through the Hough Transform algorithm - it searches for only \emph{one} stem
+#' @description Classify stem points through the Hough Transform algorithm - it searches for only \emph{one} stem.
 #' @param las \code{LAS} object
-#' @param hstep ...
-#' @param max_radius ...
-#' @param hbase ...
-#' @param pixel_size ...
-#' @param min_density ...
-#' @param min_votes ...
+#' @param hstep \code{numeric} - ...
+#' @param max_radius \code{numeric} - ...
+#' @param hbase \code{numeric} vector of length 2 - ...
+#' @param pixel_size \code{numeric} - ...
+#' @param min_density \code{numeric} between 0 and 1 - ...
+#' @param min_votes \code{integer} - ...
 #' @return \code{LAS} object
+#' @useDynLib TreeLS, .registration = TRUE
 #' @export
 stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
@@ -434,7 +480,7 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
     warning("point cloud unlikely a single tree - XY extents too large")
 
   if(min(las$Z) < 0)
-    warning("points with Z below 0 were be ignored")
+    warning("points with Z below 0 were ignored")
 
   if(min(las$Z) > 5)
     warning("point cloud didn't look normalized - Z values too high")
@@ -451,17 +497,19 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
 
 }
 
+
 #' Plot-wise stem point classification
-#' @description Classify stem points through the Hough Transform algorithm - it searches for one stem per tree in a point cloud
+#' @description Classify stem points through the Hough Transform algorithm - it searches for one stem per tree in a point cloud.
 #' @param las \code{LAS} object
 #' @param map map of tree positions - output from \code{\link{treeMap}} or \code{\link{treePositions}}
-#' @param hstep ...
-#' @param max_radius ...
-#' @param hbase ...
-#' @param pixel_size ...
-#' @param min_density ...
-#' @param min_votes ...
+#' @param hstep \code{numeric} - ...
+#' @param max_radius \code{numeric} - ...
+#' @param hbase \code{numeric} vector of length 2 - ...
+#' @param pixel_size \code{numeric} - ...
+#' @param min_density \code{numeric} between 0 and 1 - ...
+#' @param min_votes \code{integer} - ...
 #' @return \code{LAS} object
+#' @useDynLib TreeLS, .registration = TRUE
 #' @export
 stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
@@ -522,7 +570,7 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
 
   if(min(las$Z) < 0)
-    warning("points with Z below 0 were be ignored")
+    warning("points with Z below 0 were ignored")
 
   if(min(las$Z) > 5)
     warning("point cloud didn't look normalized - Z values too high")

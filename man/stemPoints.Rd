@@ -10,17 +10,17 @@ stemPoints(las, hstep = 0.5, max_radius = 0.25, hbase = c(1, 2.5),
 \arguments{
 \item{las}{\code{LAS} object}
 
-\item{hstep}{...}
+\item{hstep}{\code{numeric} - ...}
 
-\item{max_radius}{...}
+\item{max_radius}{\code{numeric} - ...}
 
-\item{hbase}{...}
+\item{hbase}{\code{numeric} vector of length 2 - ...}
 
-\item{pixel_size}{...}
+\item{pixel_size}{\code{numeric} - ...}
 
-\item{min_density}{...}
+\item{min_density}{\code{numeric} between 0 and 1 - ...}
 
-\item{min_votes}{...}
+\item{min_votes}{\code{integer} - ...}
 }
 \value{
 \code{LAS} object
