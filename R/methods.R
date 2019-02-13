@@ -397,11 +397,11 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max
   for(i in names(params)){
     val = params[[i]]
 
+    if(length(val) != 1)
+      stop( i %>% paste('must be of length 1') )
+
     if(!is.numeric(val))
       stop( i %>% paste('must be Numeric') )
-
-    if(length(val) > 1)
-      stop( i %>% paste('must be of length 1') )
 
     if(val <= 0)
       stop( i %>% paste('must be positive') )
@@ -639,11 +639,11 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   for(i in names(params)){
     val = params[[i]]
 
+    if(length(val) != 1)
+      stop( i %>% paste('must be of length 1') )
+
     if(!is.numeric(val))
       stop( i %>% paste('must be Numeric') )
-
-    if(length(val) > 1)
-      stop( i %>% paste('must be of length 1') )
 
     if(val <= 0)
       stop( i %>% paste('must be positive') )
