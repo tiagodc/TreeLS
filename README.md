@@ -61,8 +61,8 @@ tls = tlsNormalize(tls, keepGround = T)
 plot(tls, color='Classification')
 
 # extract the tree map from a systematically sampled point cloud
-thin = tlsSample(tls, 'voxel', 0.025)
-map = treeMap(thin)
+thin = tlsSample(tls, 'voxel', 0.05)
+map = treeMap(thin, min_density = 0.03)
 
 # visualize the tree map in 2D and 3D
 xymap = treePositions(map, TRUE)
