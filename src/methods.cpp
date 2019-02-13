@@ -540,7 +540,7 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1, do
 
     alias->cleanRadius(circle.x_center, circle.y_center, circle.radius + pixel*2);
 
-    if(alias->max_count <= 1 && i > 0){
+    if(alias->max_count <= 1){
       if(i == 0)
         treeEstimates[i].main_circle = circle;
       else
