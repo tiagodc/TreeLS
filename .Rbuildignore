@@ -5,3 +5,4 @@
 ^Rcpp-quickref\.pdf$
 ^\.vscode$
 ^test_data$
+^tests\.R$

@@ -54,7 +54,13 @@ resetLAS = function(las){
   if(class(las)[1] != "LAS")
     stop("las must be a LAS object")
 
+  prj4 = las@proj4string
+  vlr = las@header@VLR
+
   las = las@data %>% LAS %>% setHeaderTLS
+
+  las@proj4string = prj4
+  las@header@VLR = vlr
 
   return(las)
 }
@@ -353,7 +359,7 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 #' \item \code{Keypoint_flag}: if \code{TRUE}, the point is the most likely circle center
 #' of its stem segment (\code{PointSourceID})
 #' \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
-#' \item \code{TreeID}: (possible) unique tree ID to which the point belongs to
+#' \item \code{TreeID}: (possible) unique tree ID of the point
 #' \item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
 #' }
 #'
@@ -571,7 +577,7 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
 #'
 #' \itemize{
 #' \item \code{Stem}: \code{TRUE} for estimated stem points
-#' \item \code{TreeID}:  (possible) unique tree ID to which the point belongs to
+#' \item \code{TreeID}:  (possible) unique tree ID of the point
 #' \item \code{Segment}: stem segment number (from bottom to top) the point belongs to
 #' \item \code{Radius}: approximate radius of the point's stem segment estimated by the
 #' Hough Transform - always a multiple of the \code{pixel_size}

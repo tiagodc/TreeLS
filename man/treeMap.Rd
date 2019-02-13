@@ -42,7 +42,7 @@ The variables describing each point in the output are:
 \item \code{Keypoint_flag}: if \code{TRUE}, the point is the most likely circle center
 of its stem segment (\code{PointSourceID})
 \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
-\item \code{TreeID}: (possible) unique tree ID to which the point belongs to
+\item \code{TreeID}: (possible) unique tree ID of the point
 \item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
 }
 }

@@ -53,11 +53,12 @@ Not all features from the old package were reimplemented in `Rcpp`, but I'll get
 Example of stem detection plot-wise:
 ```
 # open artificial sample file
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
 
 # normalize the point cloud
 tls = tlsNormalize(tls, keepGround = T)
+plot(tls, color='Classification')
 
 # extract the tree map from a systematically sampled point cloud
 thin = tlsSample(tls, 'voxel', 0.025)

@@ -38,7 +38,7 @@ Meaninful fields in the output:
 
 \itemize{
 \item \code{Stem}: \code{TRUE} for estimated stem points
-\item \code{TreeID}:  (possible) unique tree ID to which the point belongs to
+\item \code{TreeID}:  (possible) unique tree ID of the point
 \item \code{Segment}: stem segment number (from bottom to top) the point belongs to
 \item \code{Radius}: approximate radius of the point's stem segment estimated by the
 Hough Transform - always a multiple of the \code{pixel_size}
