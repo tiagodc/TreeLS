@@ -587,7 +587,7 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
 
       tempMatrix(i, 0) = *cloud[0][n];
       tempMatrix(i, 1) = *cloud[1][n];
-      tempMatrix(i, 2) = *cloud[2][n];
+      tempMatrix(i, 2) = 1;
       rhsVector(i,0) = pow( tempMatrix(i,0), 2) + pow( tempMatrix(i,1), 2);
     }
 
@@ -596,7 +596,7 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
     Eigen::Matrix<double, 3, 1> xyr;
     xyr(0,0) =  qrDecompose(0,0) / 2;
     xyr(1,0) =  qrDecompose(1,0) / 2;
-    xyr(2,0) =  sqrt( ((pow( qrDecompose(0,0) ,2) + pow( qrDecompose(1,0) ,2)) / 4) + qrDecompose(2,0) ) / 2;
+    xyr(2,0) =  sqrt( ((pow( qrDecompose(0,0) ,2) + pow( qrDecompose(1,0) ,2)) / 4) + qrDecompose(2,0) );
 
     double sumOfSquares = 0;
     for(unsigned int i = 0; i < cloud[0].size(); ++i){
