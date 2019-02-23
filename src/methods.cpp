@@ -556,3 +556,69 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1, do
   return treeEstimates;
 
 }
+
+// fit ransac circle
+vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSamples, double pConfidence, double pInliers){
+
+  unsigned int kIterations = ceil(5 * log(1 - pConfidence) / log(1 - pow( pInliers, nSamples)));
+  vector< vector<double> > allCircles( 4, vector<double>(kIterations) );
+  unsigned int best = 0;
+
+  for(unsigned int k = 0; k < kIterations; ++k){
+
+    Eigen::Matrix<double, Eigen::Dynamic, 3> tempMatrix;
+    tempMatrix.resize(nSamples, 3);
+
+    Eigen::Matrix<double, Eigen::Dynamic, 1> rhsVector;
+    rhsVector.resize(nSamples, 3);
+
+    vector<unsigned int> random(nSamples);
+
+    for(unsigned int i = 0; i < random.size(); ++i){
+      unsigned int n;
+      bool exists;
+
+      do{
+        n = floor( R::runif(0, cloud[0].size()) );
+        exists = find(begin(random), end(random), n) != end(random);
+      }while(exists);
+
+      random[i] = n;
+
+      tempMatrix(i, 0) = *cloud[0][n];
+      tempMatrix(i, 1) = *cloud[1][n];
+      tempMatrix(i, 2) = *cloud[2][n];
+      rhsVector(i,0) = pow( tempMatrix(i,0), 2) + pow( tempMatrix(i,1), 2);
+    }
+
+    Eigen::Matrix<double, 3, 1> qrDecompose = tempMatrix.colPivHouseholderQr().solve(rhsVector);
+
+    Eigen::Matrix<double, 3, 1> xyr;
+    xyr(0,0) =  qrDecompose(0,0) / 2;
+    xyr(1,0) =  qrDecompose(1,0) / 2;
+    xyr(2,0) =  sqrt( ((pow( qrDecompose(0,0) ,2) + pow( qrDecompose(1,0) ,2)) / 4) + qrDecompose(2,0) ) / 2;
+
+    double sumOfSquares = 0;
+    for(unsigned int i = 0; i < cloud[0].size(); ++i){
+      double tempX = pow( *cloud[0][i] - xyr(0,0) , 2);
+      double tempY = pow( *cloud[1][i] - xyr(1,0) , 2);
+      sumOfSquares += pow( sqrt( tempX + tempY ) - xyr(2,0) , 2);
+    }
+
+    double circleError = sqrt(sumOfSquares / cloud[0].size());
+
+    allCircles[0][k] = xyr(0,0);
+    allCircles[1][k] = xyr(1,0);
+    allCircles[2][k] = xyr(2,0);
+    allCircles[3][k] = circleError;
+
+    if(allCircles[3][k] < allCircles[3][best])
+      best = k;
+
+  }
+
+  vector<double> bestFit = { allCircles[0][best] , allCircles[1][best] , allCircles[2][best] , allCircles[3][best] };
+
+  return bestFit;
+
+}

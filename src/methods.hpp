@@ -22,6 +22,10 @@
 #ifndef METHODS_HPP
 #define METHODS_HPP
 
+// [[Rcpp::plugins("cpp11")]]
+// [[Rcpp::depends(RcppEigen)]]
+
+#include <Eigen/Dense>
 #include <iostream>
 #include <unordered_map>
 #include "classes.hpp"
@@ -54,5 +58,7 @@ HoughCenters getSingleCenter(Raster* raster, double max_radius=0.25, double min_
 void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensity, unsigned int minLayers=1);
 
 vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3);
+
+vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
 
 #endif // METHODS_HPP

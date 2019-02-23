@@ -23,6 +23,7 @@
 
 // [[Rcpp::plugins("cpp11")]]
 
+
 // export tree positions point stack
 List exportTreeMap(vector<HoughCenters>& coordinates){
 
@@ -303,4 +304,10 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
   output["Votes"]  = plotInfo.counts;
   return output;
 
+}
+
+// [[Rcpp::export]]
+NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
+  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  return wrap(ransacCircle(cloud, nSamples, pConfidence, pInliers));
 }
