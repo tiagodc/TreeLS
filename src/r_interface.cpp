@@ -312,13 +312,8 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
   return wrap(ransacCircle(cloud, nSamples, pConfidence, pInliers));
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-
-
-// get ransac estimatios for single stem
 // [[Rcpp::export]]
-vector< vector<double> > ransacStem(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii){
+vector< vector<double> > ransacStem(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
 
   vector<vector<double*> > cloud = rmatrix2cpp(las);
   vector<vector<vector<double*> > > stemSlices = getSlices(cloud, segments);
@@ -331,12 +326,19 @@ vector< vector<double> > ransacStem(NumericMatrix& las, vector<unsigned int>& se
     uniqueIds.insert(i);
   }
 
-  vector< vector<double> > estimates; //(uniqueIds.size(), vector<double>(4));
+  vector< vector<double> > estimates;
 
-  for(auto& i : stemSlices){
-    if(i.empty()) continue;
-    if(i[0].size() < 5) continue;
-    vector<double> temp = ransacCircle(i);
+  for(unsigned int i = 0;  i < stemSlices.size(); ++i){
+
+    vector<vector<double*> > slice = stemSlices[i];
+
+    if(slice.empty()) continue;
+    if(slice[0].size() <= nSamples) continue;
+
+    vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
+
+    unsigned int id = *next(uniqueIds.begin(), i);
+    temp.push_back(id);
     estimates.push_back(temp);
   }
 

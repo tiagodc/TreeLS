@@ -137,6 +137,60 @@ tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
   return(cbind(x,y,z) %>% toLAS)
 }
 
+stemMeasure = function(las, n = 5, conf = 0.99, inliers = 0.8){
+
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object')
+
+  params = list(
+    n = n,
+    conf = conf,
+    inliers = inliers
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(n < 3)
+    stop('n must be at least 3')
+
+  if(conf >= 1)
+    stop('conf must be between 0 and 1')
+
+  if(inliers >= 1)
+    stop('inliers must be between 0 and 1')
+
+  stemIndicators = c("Stem", "Segment", "Radius", "Votes")
+
+  if( any( !(stemIndicators %in% names(las@data)) ) )
+    stop('stem points not identified - check out the stemPoints function')
+
+  las %<>% lasfilter(Stem)
+
+  estimates = ransacStem(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers) %>% do.call(what = rbind) %>% as.data.frame
+  names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment')
+
+  z = tapply(las@data$Z, las@data$Segment, mean)
+  z = cbind(AvgHeight = z, Segment = z %>% names %>% as.double)
+
+  n = table(las@data$Segment)
+  n = cbind(N = n, Segment = n %>% names %>% as.double)
+
+  estimates %<>% base::merge(z, by='Segment') %>% base::merge(n, by='Segment')
+
+  return(estimates)
+
+}
 
 #' Resets or creates a \code{LAS} object depending on the input's type
 #' @description Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.

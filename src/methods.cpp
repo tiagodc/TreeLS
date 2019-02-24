@@ -647,3 +647,4 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
   return bestFit;
 
 }
+
