@@ -187,9 +187,9 @@ vector<vector<vector<double*> > > getSlices(NumericMatrix& cloud, double zmin, d
 
 vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, double zmin, double zmax, double zstep){
 
-  vector<double*> xcol = cloud[0];
-  vector<double*> ycol = cloud[1];
-  vector<double*> zcol = cloud[2];
+  vector<double*>& xcol = cloud[0];
+  vector<double*>& ycol = cloud[1];
+  vector<double*>& zcol = cloud[2];
 
   unsigned int nlayers = ceil((zmax - zmin) / zstep);
   vector<vector<vector<double*> > > store(nlayers, vector<vector<double*> >(3));
@@ -201,6 +201,31 @@ vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, dou
       continue;
 
     unsigned int n = floor((z - zmin) / zstep);
+
+    store[n][0].push_back(xcol[i]);
+    store[n][1].push_back(ycol[i]);
+    store[n][2].push_back(zcol[i]);
+  }
+
+  return store;
+
+}
+
+vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, vector<unsigned int>& identifier){
+
+  vector<double*>& xcol = cloud[0];
+  vector<double*>& ycol = cloud[1];
+  vector<double*>& zcol = cloud[2];
+
+  unsigned int minIndex = *min_element(identifier.begin(), identifier.end());
+  unsigned int maxIndex = *max_element(identifier.begin(), identifier.end());
+  unsigned int nlayers =  maxIndex - minIndex + 1;
+
+  vector<vector<vector<double*> > > store(nlayers, vector<vector<double*> >(3));
+
+  for(unsigned int i = 0; i < xcol.size(); ++i){
+
+    unsigned int n = identifier[i] - minIndex;
 
     store[n][0].push_back(xcol[i]);
     store[n][1].push_back(ycol[i]);
@@ -564,13 +589,13 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
   vector< vector<double> > allCircles( 4, vector<double>(kIterations) );
   unsigned int best = 0;
 
+  Eigen::Matrix<double, Eigen::Dynamic, 3> tempMatrix;
+  tempMatrix.resize(nSamples, 3);
+
+  Eigen::Matrix<double, Eigen::Dynamic, 1> rhsVector;
+  rhsVector.resize(nSamples, 3);
+
   for(unsigned int k = 0; k < kIterations; ++k){
-
-    Eigen::Matrix<double, Eigen::Dynamic, 3> tempMatrix;
-    tempMatrix.resize(nSamples, 3);
-
-    Eigen::Matrix<double, Eigen::Dynamic, 1> rhsVector;
-    rhsVector.resize(nSamples, 3);
 
     vector<unsigned int> random(nSamples);
 

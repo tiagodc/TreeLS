@@ -124,6 +124,19 @@ setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
   return(las)
 }
 
+tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
+
+  rad = runif(n, rad-dev, rad+dev)
+
+  z=runif(n = n, min = 0, max = h)
+
+  angs = runif(n, 0, 2*pi)
+  x = sin(angs)*rad
+  y = cos(angs)*rad
+
+  return(cbind(x,y,z) %>% toLAS)
+}
+
 
 #' Resets or creates a \code{LAS} object depending on the input's type
 #' @description Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.
@@ -695,4 +708,3 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   return(las)
 
 }
-

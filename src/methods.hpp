@@ -49,6 +49,8 @@ vector<vector<vector<double*> > > getSlices(NumericMatrix& cloud, double zmin = 
 
 vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, double zmin = 1, double zmax=3, double zstep = 0.5);
 
+vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, vector<unsigned int>& identifier);
+
 Raster getCounts(vector<vector<double*> >& slice, double pixel_size);
 
 vector<HoughCenters> getCenters(Raster* raster, double max_radius=0.25, double min_den=0.1, unsigned int min_votes=3);

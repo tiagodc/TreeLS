@@ -311,3 +311,37 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
   vector<vector<double*> > cloud = rmatrix2cpp(las);
   return wrap(ransacCircle(cloud, nSamples, pConfidence, pInliers));
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+
+
+// get ransac estimatios for single stem
+// [[Rcpp::export]]
+vector< vector<double> > ransacStem(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii){
+
+  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  vector<vector<vector<double*> > > stemSlices = getSlices(cloud, segments);
+
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  set<unsigned int> uniqueIds;
+  for(auto& i : segments){
+    uniqueIds.insert(i);
+  }
+
+  vector< vector<double> > estimates; //(uniqueIds.size(), vector<double>(4));
+
+  for(auto& i : stemSlices){
+    if(i.empty()) continue;
+    if(i[0].size() < 5) continue;
+    vector<double> temp = ransacCircle(i);
+    estimates.push_back(temp);
+  }
+
+  return estimates;
+
+}
+
+
