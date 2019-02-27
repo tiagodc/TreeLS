@@ -10,5 +10,5 @@ Imports: rgl
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-LinkingTo: Rcpp,BH
+LinkingTo: Rcpp,BH,RcppEigen
 RoxygenNote: 6.1.1

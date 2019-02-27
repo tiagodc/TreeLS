@@ -29,3 +29,11 @@ houghStemPlot <- function(las, treePositions, h1 = 1, h2 = 3, hstep = 0.5, radiu
     .Call(`_TreeLS_houghStemPlot`, las, treePositions, h1, h2, hstep, radius, pixel, density, votes)
 }
 
+getCircleRansac <- function(las, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8) {
+    .Call(`_TreeLS_getCircleRansac`, las, nSamples, pConfidence, pInliers)
+}
+
+ransacStem <- function(las, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8) {
+    .Call(`_TreeLS_ransacStem`, las, segments, radii, nSamples, pConfidence, pInliers)
+}
+

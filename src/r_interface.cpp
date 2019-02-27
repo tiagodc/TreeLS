@@ -23,6 +23,7 @@
 
 // [[Rcpp::plugins("cpp11")]]
 
+using namespace std;
 
 // export tree positions point stack
 List exportTreeMap(vector<HoughCenters>& coordinates){
@@ -313,7 +314,7 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
 }
 
 // [[Rcpp::export]]
-vector< vector<double> > ransacStem(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
+std::vector< std::vector<double> > ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
 
   vector<vector<double*> > cloud = rmatrix2cpp(las);
   vector<vector<vector<double*> > > stemSlices = getSlices(cloud, segments);
