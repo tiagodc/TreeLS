@@ -211,7 +211,8 @@ vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, dou
 
 }
 
-vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, vector<unsigned int>& identifier){
+// split point cloud according to some criterion
+vector<vector<vector<double*> > > getChunks(vector<vector<double*> >& cloud, vector<unsigned int>& identifier){
 
   vector<double*>& xcol = cloud[0];
   vector<double*>& ycol = cloud[1];
@@ -230,6 +231,75 @@ vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, vec
     store[n][0].push_back(xcol[i]);
     store[n][1].push_back(ycol[i]);
     store[n][2].push_back(zcol[i]);
+  }
+
+  return store;
+
+}
+
+vector<vector<unsigned int> > partitionIndex(vector<unsigned int>& identifier, vector<unsigned int>& partitioner){
+
+  unsigned int minIndex = *min_element(identifier.begin(), identifier.end());
+  unsigned int maxIndex = *max_element(identifier.begin(), identifier.end());
+  unsigned int nlayers =  maxIndex - minIndex + 1;
+
+  vector< vector<unsigned int> > store(nlayers);
+
+  for(unsigned int i = 0; i < identifier.size(); ++i){
+    unsigned int n = identifier[i] - minIndex;
+    store[n].push_back(partitioner[i]);
+  }
+
+  return store;
+
+}
+
+vector<vector<double> > partitionIndex(vector<unsigned int>& identifier, vector<double>& partitioner){
+
+  unsigned int minIndex = *min_element(identifier.begin(), identifier.end());
+  unsigned int maxIndex = *max_element(identifier.begin(), identifier.end());
+  unsigned int nlayers =  maxIndex - minIndex + 1;
+
+  vector< vector<double> > store(nlayers);
+
+  for(unsigned int i = 0; i < identifier.size(); ++i){
+    unsigned int n = identifier[i] - minIndex;
+    store[n].push_back(partitioner[i]);
+  }
+
+  return store;
+
+}
+
+// get unique values according to an indexer
+vector<unsigned int> idSortUnique(vector<unsigned int>& identifier, vector<unsigned int>& values){
+
+  unsigned int minIndex = *min_element(identifier.begin(), identifier.end());
+  unsigned int maxIndex = *max_element(identifier.begin(), identifier.end());
+  unsigned int nlayers =  maxIndex - minIndex + 1;
+
+  vector<unsigned int> store(nlayers);
+
+  for(unsigned int i = 0; i < identifier.size(); ++i){
+    unsigned int n = identifier[i] - minIndex;
+    store[n] = values[i];
+  }
+
+  return store;
+
+}
+
+vector<double> idSortUnique(vector<unsigned int>& identifier, vector<double>& values){
+
+  unsigned int minIndex = *min_element(identifier.begin(), identifier.end());
+  unsigned int maxIndex = *max_element(identifier.begin(), identifier.end());
+  unsigned int nlayers =  maxIndex - minIndex + 1;
+
+  vector<double> store(nlayers);
+
+  for(unsigned int i = 0; i < identifier.size(); ++i){
+    unsigned int n = identifier[i] - minIndex;
+    store[n] = values[i];
   }
 
   return store;
@@ -648,3 +718,70 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
 
 }
 
+// fit ransac circles on stem cloud
+vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers){
+
+  vector<vector<vector<double*> > > stemSlices = getChunks(cloud, segments);
+
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  set<unsigned int> uniqueIds;
+  for(auto& i : segments){
+    uniqueIds.insert(i);
+  }
+
+  vector< vector<double> > estimates;
+
+  for(unsigned int i = 0;  i < stemSlices.size(); ++i){
+
+    vector<vector<double*> > slice = stemSlices[i];
+
+    // if(slice.empty()) continue;
+    if(slice[0].size() <= nSamples) continue;
+
+    vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
+
+    unsigned int id = *next(uniqueIds.begin(), i);
+    temp.push_back(id);
+    estimates.push_back(temp);
+  }
+
+  return estimates;
+
+}
+
+// fit ransac circles over many stems
+vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers){
+
+  vector<vector<vector<double*> > > trees = getChunks(cloud, treeId);
+
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  vector<unsigned int> uniqId = idSortUnique(treeId, treeId);
+  vector<vector<unsigned int> > indices = partitionIndex(treeId, segments);
+  vector<vector<double> > treeRadii = partitionIndex(treeId, radii);
+
+  vector< vector< vector<double> > > treeEstimates;
+
+  for(unsigned int i = 0; i < trees.size(); ++i){
+
+    vector<unsigned int>& segs = indices[i];
+
+    if(segs.empty()) continue;
+
+    vector< vector<double*> >& tree = trees[i];
+    vector<double>& segsRadii = treeRadii[i];
+
+    vector< vector<double> > temp = ransacStemCircles(tree, segs, segsRadii, nSamples, pConfidence, pInliers);
+
+    for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
+      t->push_back(uniqId[i]);
+
+    treeEstimates.push_back(temp);
+  }
+
+  return treeEstimates;
+
+}

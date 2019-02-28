@@ -49,7 +49,15 @@ vector<vector<vector<double*> > > getSlices(NumericMatrix& cloud, double zmin = 
 
 vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, double zmin = 1, double zmax=3, double zstep = 0.5);
 
-vector<vector<vector<double*> > > getSlices(vector<vector<double*> >& cloud, vector<unsigned int>& identifier);
+vector<vector<vector<double*> > > getChunks(vector<vector<double*> >& cloud, vector<unsigned int>& identifier);
+
+vector<vector<unsigned int> > partitionIndex(vector<unsigned int>& identifier, vector<unsigned int>& partitioner);
+
+vector<vector<double> > partitionIndex(vector<unsigned int>& identifier, vector<double>& partitioner);
+
+vector<unsigned int> idSortUnique(vector<unsigned int>& identifier, vector<unsigned int>& values);
+
+vector<double> idSortUnique(vector<unsigned int>& identifier, vector<double>& values);
 
 Raster getCounts(vector<vector<double*> >& slice, double pixel_size);
 
@@ -62,5 +70,9 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
 vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3);
 
 vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
+
+vector< vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
+
+vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
 
 #endif // METHODS_HPP

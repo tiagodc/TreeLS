@@ -314,37 +314,13 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
 }
 
 // [[Rcpp::export]]
-std::vector< std::vector<double> > ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
-
+List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
   vector<vector<double*> > cloud = rmatrix2cpp(las);
-  vector<vector<vector<double*> > > stemSlices = getSlices(cloud, segments);
-
-  cloud.clear();
-  cloud.shrink_to_fit();
-
-  set<unsigned int> uniqueIds;
-  for(auto& i : segments){
-    uniqueIds.insert(i);
-  }
-
-  vector< vector<double> > estimates;
-
-  for(unsigned int i = 0;  i < stemSlices.size(); ++i){
-
-    vector<vector<double*> > slice = stemSlices[i];
-
-    if(slice.empty()) continue;
-    if(slice[0].size() <= nSamples) continue;
-
-    vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
-
-    unsigned int id = *next(uniqueIds.begin(), i);
-    temp.push_back(id);
-    estimates.push_back(temp);
-  }
-
-  return estimates;
-
+  return wrap(ransacStemCircles(cloud, segments, radii, nSamples, pConfidence, pInliers));
 }
 
-
+// [[Rcpp::export]]
+List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
+  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers));
+}

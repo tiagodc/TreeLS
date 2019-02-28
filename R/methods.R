@@ -762,3 +762,5 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   return(las)
 
 }
+
+
