@@ -24,6 +24,8 @@
 #' @import lidR
 #' @import rgl
 
+tls.marker = 'tlsAttribute'
+
 preCheck = function(las){
 
   if(class(las)[1] != 'LAS')
@@ -499,6 +501,8 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max
   map$TreePosition %<>% as.logical
   map %<>% LAS %>% setHeaderTLS
 
+  attributes(map)[[tls.marker]] = 'tree_map'
+
   return(map)
 }
 
@@ -515,12 +519,15 @@ treePositions = function(las, plot=T){
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
 
-  if(!('TreePosition' %in% names(las@data)))
-    stop('no TreePosition field found in input: check ?treeMap')
+  tlsatt = attributes(las)[[tls.marker]]
+  if(is.null(tlsatt) || tlsatt != 'tree_map')
+    stop('las is not a tree_map object: check ?treeMap')
 
   las %<>% lasfilter(TreePosition)
 
   pos = las@data[,c('TreeID', 'X', 'Y')] %>% as.data.frame
+
+  attributes(pos)[[tls.marker]] = 'tree_map_df'
 
   if(plot){
     pos %$% plot(Y ~ X, cex=3, pch=20, main='tree map', xlab='X', ylab='Y')
@@ -621,6 +628,8 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
   las@data$Votes = results$Votes
 
   las %<>% resetLAS
+
+  attributes(las)[[tls.marker]] = "single_stem_points"
 
   return(las)
 
@@ -758,6 +767,8 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   }
 
   las %<>% resetLAS
+
+  attributes(las)[[tls.marker]] = "multiple_stem_points"
 
   return(las)
 
