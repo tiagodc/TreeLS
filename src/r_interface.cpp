@@ -84,9 +84,9 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
     diskCounter++;
   }
 
-  double xSums[maxId] = {0};
-  double ySums[maxId] = {0};
-  unsigned int counters[maxId] = {0};
+  vector<double> xSums(maxId, 0);
+  vector<double> ySums(maxId, 0);
+  vector<unsigned int> counters(maxId, 0);
 
   for(auto& point : coordinates){
 

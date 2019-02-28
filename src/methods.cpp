@@ -496,7 +496,7 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
       dsk++;
     }
 
-    unsigned treeStacks[id] = {0};
+    vector<unsigned int> treeStacks(id, 0);
     for(auto& i : disks){
       unsigned index = i.tree_id;
       if(index > 0) treeStacks[index]++;
