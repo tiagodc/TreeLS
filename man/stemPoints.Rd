@@ -2,13 +2,16 @@
 % Please edit documentation in R/methods.R
 \name{stemPoints}
 \alias{stemPoints}
-\title{Single tree stem point classification}
+\title{Stem points classification}
 \usage{
-stemPoints(las, hstep = 0.5, max_radius = 0.25, hbase = c(1, 2.5),
-  pixel_size = 0.025, min_density = 0.1, min_votes = 3)
+stemPoints(las, map = NULL, hstep = 0.5, max_radius = 0.25,
+  hbase = c(1, 2.5), pixel_size = 0.025, min_density = 0.1,
+  min_votes = 3)
 }
 \arguments{
 \item{las}{\code{LAS} object.}
+
+\item{map}{\emph{optional} - map of tree positions (output from \code{\link{treeMap}} or \code{\link{treePositions}}). If omitted, the algorithm assumes that \code{las} is a single tree.}
 
 \item{hstep}{\code{numeric} - height interval to perform circle search.}
 
@@ -26,7 +29,7 @@ stemPoints(las, hstep = 0.5, max_radius = 0.25, hbase = c(1, 2.5),
 \code{LAS} object.
 }
 \description{
-Detect stem points through the Hough Transform algorithm - it searches for only \emph{one} stem.
+Classify stem points from a \strong{normalized} point cloud through the Hough Transform algorithm.
 }
 \section{Output Header}{
 
@@ -34,10 +37,10 @@ Detect stem points through the Hough Transform algorithm - it searches for only 
 Meaninful fields in the output:
 
 \itemize{
-\item \code{Stem}: \code{TRUE} for estimated stem points
-\item \code{Segment}: stem segment number (from bottom to top) the point belongs to
-\item \code{Radius}: approximate radius of the point's stem segment estimated by the
-Hough Transform - always a multiple of the \code{pixel_size}
+\item \code{TreeID}:  (possible) unique tree ID of the point - available when a tree \code{map} is provided
+\item \code{Stem}: \code{TRUE} for stem points
+\item \code{Segment}: stem segment number (from bottom to top)
+\item \code{Radius}: approximate radius of the point's stem segment estimated by the Hough Transform - always a multiple of the \code{pixel_size}
 \item \code{Votes}: votes received by the stem segment's center during the Hough Transform
 }
 }
@@ -62,11 +65,21 @@ but not against forked or leaning stems.
 }
 
 \examples{
+### single tree
 file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
-plot(tls)
-
 tls = stemPoints(tls)
+plot(tls, color='Stem')
+
+### forest plot
+file = system.file("extdata", "square.laz", package="TreeLS")
+tls = readTLS(file)
+
+# map the trees on a resampled point cloud so all trees have approximately the same point density
+thin = tlsSample(tls, 'voxel', 0.02)
+map = treeMap(thin, min_density = 0.05)
+
+tls = stemPoints(tls, map)
 plot(tls, color='Stem')
 
 }

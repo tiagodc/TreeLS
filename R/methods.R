@@ -26,6 +26,20 @@
 
 tls.marker = 'tlsAttribute'
 
+plot.cylinder = function(xCenter = 0, yCenter = 0, hBase = 0, hTop = 1, radius = 0.5, col = 'yellow'){
+
+  axis = matrix(c(
+    rep(xCenter, 2),
+    rep(yCenter, 2),
+    seq(hBase, hTop, length.out = 2)
+  ), ncol = 3, byrow = F)
+
+  cyl = cylinder3d(axis, radius = radius)
+
+  mesh = shade3d(addNormals(subdivision3d(cyl, depth = 0)), col = col)
+  # mesh = shade3d(cyl, col=col)
+}
+
 preCheck = function(las){
 
   if(class(las)[1] != 'LAS')
@@ -34,7 +48,7 @@ preCheck = function(las){
   hasClass = "Classification" %in% names(las@data)
 
   if( !hasClass ){
-    warning('no Classification field found in the dataset')
+    message('no Classification field found in the dataset')
 
   }else{
 
@@ -45,7 +59,7 @@ preCheck = function(las){
       meanGround = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
 
       if(meanGround > 0.2)
-        warning("point cloud apparently not normalized")
+        message("point cloud apparently not normalized")
     }
   }
 
@@ -89,7 +103,7 @@ toLAS = function(dataMatrix, namesVector=NULL){
   } else {
 
     if(ncol(dataMatrix) > 3)
-      warning('only the first three columns were converted (assumed XYZ coordinates)')
+      message('converting first three columns only (assumed XYZ coordinates)')
 
     dataMatrix = dataMatrix[,1:3]
     colnames(dataMatrix) = c('X', 'Y', 'Z')
@@ -107,6 +121,10 @@ las2xyz = function(las){
 
   las = las@data[,1:3] %>% as.matrix
   return(las)
+}
+
+hasField = function(las, field){
+  any(names(las@data) == field) %>% return()
 }
 
 setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
@@ -139,60 +157,6 @@ tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
   return(cbind(x,y,z) %>% toLAS)
 }
 
-stemMeasure = function(las, n = 5, conf = 0.99, inliers = 0.8){
-
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
-
-  params = list(
-    n = n,
-    conf = conf,
-    inliers = inliers
-  )
-
-  for(i in names(params)){
-    val = params[[i]]
-
-    if(!is.numeric(val))
-      stop( i %>% paste('must be Numeric') )
-
-    if(length(val) > 1)
-      stop( i %>% paste('must be of length 1') )
-
-    if(val <= 0)
-      stop( i %>% paste('must be positive') )
-  }
-
-  if(n < 3)
-    stop('n must be at least 3')
-
-  if(conf >= 1)
-    stop('conf must be between 0 and 1')
-
-  if(inliers >= 1)
-    stop('inliers must be between 0 and 1')
-
-  stemIndicators = c("Stem", "Segment", "Radius", "Votes")
-
-  if( any( !(stemIndicators %in% names(las@data)) ) )
-    stop('stem points not identified - check out the stemPoints function')
-
-  las %<>% lasfilter(Stem)
-
-  estimates = ransacStem(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers) %>% do.call(what = rbind) %>% as.data.frame
-  names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment')
-
-  z = tapply(las@data$Z, las@data$Segment, mean)
-  z = cbind(AvgHeight = z, Segment = z %>% names %>% as.double)
-
-  n = table(las@data$Segment)
-  n = cbind(N = n, Segment = n %>% names %>% as.double)
-
-  estimates %<>% base::merge(z, by='Segment') %>% base::merge(n, by='Segment')
-
-  return(estimates)
-
-}
 
 #' Resets or creates a \code{LAS} object depending on the input's type
 #' @description Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.
@@ -387,7 +351,7 @@ tlsNormalize = function(las, res=.5, keepGround=T){
     stop('res must be a positive number')
 
   if(!any(las$Classification == 2)){
-    warning('no ground points found initially, ground segmentation was performed internally')
+    message('no ground points found, performing ground segmentation')
     las %<>% lasground(csf(class_threshold = 0.2, cloth_resolution = 0.1), last_returns = F)
   }
 
@@ -537,9 +501,10 @@ treePositions = function(las, plot=T){
 }
 
 
-#' Single tree stem point classification
-#' @description Detect stem points through the Hough Transform algorithm - it searches for only \emph{one} stem.
+#' Stem points classification
+#' @description Classify stem points from a \strong{normalized} point cloud through the Hough Transform algorithm.
 #' @template param-las
+#' @param map \emph{optional} - map of tree positions (output from \code{\link{treeMap}} or \code{\link{treePositions}}). If omitted, the algorithm assumes that \code{las} is a single tree.
 #' @template param-hstep
 #' @template param-max-radius
 #' @template param-hbase
@@ -552,117 +517,23 @@ treePositions = function(las, plot=T){
 #' Meaninful fields in the output:
 #'
 #' \itemize{
-#' \item \code{Stem}: \code{TRUE} for estimated stem points
-#' \item \code{Segment}: stem segment number (from bottom to top) the point belongs to
-#' \item \code{Radius}: approximate radius of the point's stem segment estimated by the
-#' Hough Transform - always a multiple of the \code{pixel_size}
+#' \item \code{TreeID}:  (possible) unique tree ID of the point - available when a tree \code{map} is provided
+#' \item \code{Stem}: \code{TRUE} for stem points
+#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{Radius}: approximate radius of the point's stem segment estimated by the Hough Transform - always a multiple of the \code{pixel_size}
 #' \item \code{Votes}: votes received by the stem segment's center during the Hough Transform
 #' }
 #'
 #' @template section-hough-transform
 #' @template reference-thesis
 #' @examples
+#' ### single tree
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
-#' plot(tls)
-#'
 #' tls = stemPoints(tls)
 #' plot(tls, color='Stem')
 #'
-#' @useDynLib TreeLS, .registration = TRUE
-#' @export
-stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
-
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
-
-  if(length(hbase) != 2)
-    stop('hbase must be a numeric vector of length 2')
-
-  if(diff(hbase) <= 0)
-    stop('hbase[2] must be larger than hbase[1]')
-
-  params = list(
-    hstep = hstep,
-    max_radius = max_radius,
-    pixel_size = pixel_size,
-    min_density = min_density,
-    min_votes = min_votes
-  )
-
-  for(i in names(params)){
-    val = params[[i]]
-
-    if(!is.numeric(val))
-      stop( i %>% paste('must be Numeric') )
-
-    if(length(val) > 1)
-      stop( i %>% paste('must be of length 1') )
-
-    if(val <= 0)
-      stop( i %>% paste('must be positive') )
-  }
-
-  if(min_density > 1)
-    stop('min_density must be between 0 and 1')
-
-  if(max(las$Z) < 0)
-    stop('input Z coordinates are all negative')
-
-  rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
-
-  if(any(rg > 10))
-    warning("point cloud unlikely a single tree - XY extents too large")
-
-  if(min(las$Z) < 0)
-    warning("points with Z below 0 were ignored")
-
-  if(min(las$Z) > 5)
-    warning("point cloud didn't look normalized - Z values too high")
-
-  results = houghStemPoints(las %>% las2xyz, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
-
-  las@data$Stem = results$Stem
-  las@data$Segment = results$Segment
-  las@data$Radius = results$Radius
-  las@data$Votes = results$Votes
-
-  las %<>% resetLAS
-
-  attributes(las)[[tls.marker]] = "single_stem_points"
-
-  return(las)
-
-}
-
-
-#' Plot-wise stem point classification
-#' @description Classify stem points from a \strong{normalized} point cloud through the Hough Transform algorithm - detecting one stem per tree.
-#' @template param-las
-#' @param map map of tree positions - output from \code{\link{treeMap}} or \code{\link{treePositions}}.
-#' @template param-hstep
-#' @template param-max-radius
-#' @template param-hbase
-#' @template param-pixel-size
-#' @template param-min-density
-#' @template param-min-votes
-#' @template return-las
-#' @section Output Header:
-#'
-#' Meaninful fields in the output:
-#'
-#' \itemize{
-#' \item \code{Stem}: \code{TRUE} for estimated stem points
-#' \item \code{TreeID}:  (possible) unique tree ID of the point
-#' \item \code{Segment}: stem segment number (from bottom to top) the point belongs to
-#' \item \code{Radius}: approximate radius of the point's stem segment estimated by the
-#' Hough Transform - always a multiple of the \code{pixel_size}
-#' \item \code{Votes}: votes received by the stem segment's center during the Hough Transform
-#' }
-#'
-#' @template section-hough-transform
-#' @template reference-thesis
-#' @examples
+#' ### forest plot
 #' file = system.file("extdata", "square.laz", package="TreeLS")
 #' tls = readTLS(file)
 #'
@@ -670,33 +541,38 @@ stemPoints = function(las, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_s
 #' thin = tlsSample(tls, 'voxel', 0.02)
 #' map = treeMap(thin, min_density = 0.05)
 #'
-#' tls = stemPoints_plot(tls, map)
+#' tls = stemPoints(tls, map)
 #' plot(tls, color='Stem')
 #'
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
-stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
+stemPoints = function(las, map = NULL, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
   if(class(las)[1] != 'LAS')
     stop('input las must be a LAS object')
 
-  mapNames = c('X', 'Y', 'TreeID')
-  if(class(map)[1] == 'LAS'){
+  if(!is.null(map)){
+    tlsatt = attributes(map)[[tls.marker]]
 
-    if( !all(mapNames %in% names(map@data)) ){
-      stop('input map must be the output from treeMap or treePositions')
+    if(is.null(tlsatt)){
+      stop('las is not a tree_map object: check ?treeMap')
+    }else if(tlsatt == 'tree_map_df'){
+      map %<>% as.data.frame
+    }else if(tlsatt == 'tree_map'){
+      map %<>% treePositions(F)
+    }else{
+      stop('las is not a tree_map object: check ?treeMap')
     }
 
-    map %<>% treePositions(F)
+    if( map$TreeID %>% duplicated %>% any )
+      stop('input map must have unique TreeIDs')
 
-  }else if( !all(mapNames %in% names(map)) ){
+  }else{
+    rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
 
-    stop('input map must be the output from treeMap or treePositions')
-
+    if(any(rg > 10))
+      message("point cloud unlikely a single tree - XY extents too large")
   }
-
-  if( any(map$TreeID %>% duplicated) )
-    stop('input map must have unique TreeIDs')
 
   if(length(hbase) != 2)
     stop('hbase must be a numeric vector of length 2')
@@ -731,47 +607,172 @@ stemPoints_plot = function(las, map, hstep=0.5, max_radius=0.25, hbase = c(1,2.5
   if(max(las$Z) < 0)
     stop('input Z coordinates are all negative')
 
-  rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
-
   if(min(las$Z) < 0)
-    warning("points with Z below 0 were ignored")
+    message("points with Z below 0 will be ignored")
 
   if(min(las$Z) > 5)
-    warning("point cloud didn't look normalized - Z values too high")
+    message("point cloud didn't look normalized - Z values too high")
 
-  hasGround = F
-  if(any(names(las@data) == 'Classification')){
-    if(any(las$Classification == 2)){
-      hasGround = T
-      ground = lasfilterground(las)
-      las %<>% lasfilter(Classification != 2)
-    }
+  groundPts = if(las %>% hasField('Classification')){
+    las$Classification == 2
+  }else{
+    rep(F, las@data %>% nrow)
   }
 
-  results = houghStemPlot(las %>% las2xyz, map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
-
-  las@data$Stem = results$Stem
-  las@data$TreeID = results$TreeID
-  las@data$Segment = results$Segment
-  las@data$Radius = results$Radius
-  las@data$Votes = results$Votes
-
-  if(hasGround){
-    ground@data$Stem = F
-    ground@data$TreeID = 0
-    ground@data$Segment = 0
-    ground@data$Radius = 0
-    ground@data$Votes = 0
-
-    las = las@data %>% rbind(ground@data) %>% toLAS(las@data %>% names)
+  if(map %>% is.null){
+    message('no tree_map provided: performing single stem point classification')
+    results = houghStemPoints(las2xyz(las)[!groundPts,], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+  }else{
+    message('performing point classification on multiple stems')
+    results = houghStemPlot(las2xyz(las)[!groundPts,], map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+    las@data$TreeID = 0
+    las@data$TreeID[!groundPts] = results$TreeID
   }
+
+  las@data$Stem = F
+  las@data$Stem[!groundPts] = results$Stem
+
+  las@data$Segment = 0
+  las@data$Segment[!groundPts] = results$Segment
+
+  las@data$Radius = 0
+  las@data$Radius[!groundPts] = results$Radius
+
+  las@data$Votes = 0
+  las@data$Votes[!groundPts] = results$Votes
 
   las %<>% resetLAS
 
-  attributes(las)[[tls.marker]] = "multiple_stem_points"
+  attributes(las)[[tls.marker]] = ifelse(map %>% is.null, "single_stem_points", "multiple_stem_points")
 
   return(las)
 
 }
 
 
+#' Stem segmentation
+#' @description Measure stem segments from a classified point cloud through least squares circle fit and the RANSAC algorithm.
+#' @template param-las
+#' @param tol \code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.
+#' @param n \code{integer} - number of points selected on every RANSAC iteration.
+#' @param conf \code{numeric} - confidence level.
+#' @param inliers \code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.
+#' @return \code{data.frame} of stem segmetns.
+#' @template reference-thesis
+#' @section Output Fields:
+#'
+#' \itemize{
+#' \item \code{TreeID}:  unique tree IDs - available only for multiple stems
+#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{X}, \code{Y}: circle center coordinate
+#' \item \code{Radius}: estimated circle radius
+#' \item \code{Error}: least squares circle fit error
+#' \item \code{AvgHeight}: average height of stem segment
+#' \item \code{N}: number of points in the segment
+#' }
+#'
+#' @examples
+#' ### single tree
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' tls = stemPoints(tls)
+#' df = stemSegmentation(tls)
+#' head(df)
+#'
+#' ### forest plot
+#' file = system.file("extdata", "square.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' # map the trees on a resampled point cloud so all trees have approximately the same point density
+#' thin = tlsSample(tls, 'voxel', 0.02)
+#' map = treeMap(thin, min_density = 0.05)
+#'
+#' tls = stemPoints(tls, map)
+#' df = stemSegmentation(tls)
+#' head(df)
+#'
+#' @useDynLib TreeLS, .registration = TRUE
+#' @export
+stemSegmentation = function(las, tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
+
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object')
+
+  params = list(
+    tol = tol,
+    n = n,
+    conf = conf,
+    inliers = inliers
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(n < 3)
+    stop('n must be at least 3')
+
+  if(conf >= 1)
+    stop('conf must be between 0 and 1')
+
+  if(inliers >= 1)
+    stop('inliers must be between 0 and 1')
+
+  tlsatt = attributes(las)[[tls.marker]]
+  if(is.null(tlsatt)){
+    stop('stem points identifier missing - check ?stemPoints')
+  }
+
+  las %<>% lasfilter(Stem)
+
+  if(tlsatt == 'single_stem_points'){
+
+    message('performing single stem segmentation')
+
+    estimates = ransacStem(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, tol) %>% do.call(what = rbind) %>% as.data.frame
+    names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment')
+
+    z = tapply(las@data$Z, las@data$Segment, mean)
+    z = cbind(AvgHeight = z, Segment = z %>% names %>% as.double)
+
+    np = table(las@data$Segment)
+    np = cbind(N = np, Segment = np %>% names %>% as.double)
+
+    estimates %<>% base::merge(z, by='Segment') %>% base::merge(np, by='Segment')
+    attributes(estimates)[[tls.marker]] = "single_stem_df"
+
+  }else if(tlsatt == 'multiple_stem_points'){
+
+    message('performing multiple stems segmentation')
+
+    estimates = ransacPlot(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.frame
+
+    names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment', 'TreeID')
+    estimates = estimates[,c('TreeID', 'Segment', 'X', 'Y', 'Radius', 'Error')]
+
+    z = apply(estimates, 1, function(x){
+      temp = las@data$Z[las@data$Segment == x[2] & las@data$TreeID == x[1]]
+      return(data.frame(AvgHeight = mean(temp), N = length(temp)))
+    }) %>% do.call(what = rbind)
+
+    estimates %<>% base::cbind(z)
+    attributes(estimates)[[tls.marker]] = "multiple_stems_df"
+
+  }else{
+    stop('stem points identifier missing - check ?stemPoints')
+  }
+
+  estimates = estimates[ estimates$N > n , ]
+
+  return(estimates)
+
+}

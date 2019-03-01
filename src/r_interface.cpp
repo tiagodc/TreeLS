@@ -314,13 +314,13 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
 }
 
 // [[Rcpp::export]]
-List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
+List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
   vector<vector<double*> > cloud = rmatrix2cpp(las);
-  return wrap(ransacStemCircles(cloud, segments, radii, nSamples, pConfidence, pInliers));
+  return wrap(ransacStemCircles(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
-List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
+List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
   vector<vector<double*> > cloud = rmatrix2cpp(las);
-  return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers));
+  return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }

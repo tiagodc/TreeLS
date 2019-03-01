@@ -33,7 +33,11 @@ getCircleRansac <- function(las, nSamples = 5L, pConfidence = 0.99, pInliers = 0
     .Call(`_TreeLS_getCircleRansac`, las, nSamples, pConfidence, pInliers)
 }
 
-ransacStem <- function(las, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8) {
-    .Call(`_TreeLS_ransacStem`, las, segments, radii, nSamples, pConfidence, pInliers)
+ransacStem <- function(las, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacStem`, las, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+}
+
+ransacPlot <- function(las, treeId, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacPlot`, las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance)
 }
 

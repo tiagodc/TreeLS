@@ -71,8 +71,8 @@ vector<HoughCenters> treeHough(vector<vector<double*> >& cppCloud, double h1 = 1
 
 vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
 
-vector< vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
+vector< vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05);
 
-vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
+vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05);
 
 #endif // METHODS_HPP

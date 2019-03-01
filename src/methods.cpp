@@ -719,12 +719,14 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
 }
 
 // fit ransac circles on stem cloud
-vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers){
+vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
 
   vector<vector<vector<double*> > > stemSlices = getChunks(cloud, segments);
 
   cloud.clear();
   cloud.shrink_to_fit();
+
+  vector<double> segRadii = idSortUnique(segments, radii);
 
   set<unsigned int> uniqueIds;
   for(auto& i : segments){
@@ -733,14 +735,25 @@ vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vecto
 
   vector< vector<double> > estimates;
 
-  for(unsigned int i = 0;  i < stemSlices.size(); ++i){
+  for(unsigned int i = 0; i < stemSlices.size(); ++i){
 
     vector<vector<double*> > slice = stemSlices[i];
 
-    // if(slice.empty()) continue;
     if(slice[0].size() <= nSamples) continue;
 
+    double& hrad = segRadii[i];
     vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
+
+    double rdiff = abs(temp[2] - hrad);
+    if(rdiff > tolerance){
+
+      vector<double> bbox = getMinMax(slice);
+
+      temp[0] = (bbox[1] + bbox[0])/2;
+      temp[1] = (bbox[2] + bbox[3])/2;
+      temp[2] = hrad;
+      temp[3] = 0;
+    }
 
     unsigned int id = *next(uniqueIds.begin(), i);
     temp.push_back(id);
@@ -752,7 +765,7 @@ vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vecto
 }
 
 // fit ransac circles over many stems
-vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers){
+vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
 
   vector<vector<vector<double*> > > trees = getChunks(cloud, treeId);
 
@@ -774,7 +787,7 @@ vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& clo
     vector< vector<double*> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];
 
-    vector< vector<double> > temp = ransacStemCircles(tree, segs, segsRadii, nSamples, pConfidence, pInliers);
+    vector< vector<double> > temp = ransacStemCircles(tree, segs, segsRadii, nSamples, pConfidence, pInliers, tolerance);
 
     for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
       t->push_back(uniqId[i]);

@@ -3,7 +3,7 @@
 export(readTLS)
 export(setTLS)
 export(stemPoints)
-export(stemPoints_plot)
+export(stemSegmentation)
 export(tlsCrop)
 export(tlsNormalize)
 export(tlsSample)

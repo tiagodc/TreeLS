@@ -52,6 +52,8 @@ Not all features from the old package were reimplemented in `Rcpp`, but I'll get
 
 Example of stem detection plot-wise:
 ```
+library(TreeLS)
+
 # open artificial sample file
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
@@ -69,9 +71,14 @@ xymap = treePositions(map, TRUE)
 plot(map, color='Radii')
 
 # classify the stem points
-tls = stemPoints_plot(tls, map)
+tls = stemPoints(tls, map)
 
-plot(tls, color='Stem')
-plot(tls, color='TreeID')
+# segment stems
+seg = stemSegmentation(tls)
+
+# view the results
+plot(tls, color='Stem', size=.5)
+with(seg, spheres3d(X, Y, AvgHeight, Radius, color='yellow'))
+
 
 ```

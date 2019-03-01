@@ -134,8 +134,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // ransacStem
-std::vector< std::vector<double> > ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers);
-RcppExport SEXP _TreeLS_ransacStem(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP) {
+List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
+RcppExport SEXP _TreeLS_ransacStem(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -145,7 +145,26 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
     Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
     Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
-    rcpp_result_gen = Rcpp::wrap(ransacStem(las, segments, radii, nSamples, pConfidence, pInliers));
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(ransacStem(las, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ransacPlot
+List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
+RcppExport SEXP _TreeLS_ransacPlot(SEXP lasSEXP, SEXP treeIdSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< std::vector<unsigned int>& >::type treeId(treeIdSEXP);
+    Rcpp::traits::input_parameter< std::vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
+    Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
+    Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(ransacPlot(las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -159,7 +178,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_houghStemPoints", (DL_FUNC) &_TreeLS_houghStemPoints, 8},
     {"_TreeLS_houghStemPlot", (DL_FUNC) &_TreeLS_houghStemPlot, 9},
     {"_TreeLS_getCircleRansac", (DL_FUNC) &_TreeLS_getCircleRansac, 4},
-    {"_TreeLS_ransacStem", (DL_FUNC) &_TreeLS_ransacStem, 6},
+    {"_TreeLS_ransacStem", (DL_FUNC) &_TreeLS_ransacStem, 7},
+    {"_TreeLS_ransacPlot", (DL_FUNC) &_TreeLS_ransacPlot, 8},
     {NULL, NULL, 0}
 };
 
