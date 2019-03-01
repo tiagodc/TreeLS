@@ -53,6 +53,19 @@ class tempContainer{
       ids.resize(n, 0);
       sections.resize(n, 0);
     };
+
+    void clear(){
+      filter.clear();
+      filter.shrink_to_fit();
+      counts.clear();
+      counts.shrink_to_fit();
+      ids.clear();
+      ids.shrink_to_fit();
+      sections.clear();
+      sections.shrink_to_fit();
+      values.clear();
+      values.shrink_to_fit();
+    }
 };
 
 class Raster{

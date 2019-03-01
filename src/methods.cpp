@@ -21,16 +21,6 @@
 
 #include "methods.hpp"
 
-// quick debug logger
-template <typename AnyType>
-void debugMsg(AnyType container){
-  cout << " ... ";
-  for(auto& i : container){
-    cout << i << " ; ";
-  }
-  cout << endl;
-}
-
 // convert r matrix to std::vector
 vector<vector<double*> > rmatrix2cpp(NumericMatrix& cloud){
 
@@ -130,6 +120,9 @@ vector<bool> cropCloudFilter(vector<vector<double*> > cloud, double xCenter, dou
 
   }
 
+  cloud.clear();
+  cloud.shrink_to_fit();
+
   return keepCloud;
 
 }
@@ -153,6 +146,9 @@ vector<bool> voxelFilter(vector<vector<double*> >& cloud, double voxel_spacing){
    array<int,3> voxel = {nx, ny, nz};
    filter[i] = ledger.insert(voxel).second;
   }
+
+  cloud.clear();
+  cloud.shrink_to_fit();
 
   return filter;
 
@@ -744,16 +740,16 @@ vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vecto
     double& hrad = segRadii[i];
     vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
 
-    double rdiff = abs(temp[2] - hrad);
-    if(rdiff > tolerance){
-
-      vector<double> bbox = getMinMax(slice);
-
-      temp[0] = (bbox[1] + bbox[0])/2;
-      temp[1] = (bbox[2] + bbox[3])/2;
-      temp[2] = hrad;
-      temp[3] = 0;
-    }
+    // double rdiff = abs(temp[2] - hrad);
+    // if(rdiff > tolerance){
+    //
+    //   vector<double> bbox = getMinMax(slice);
+    //
+    //   temp[0] = (bbox[1] + bbox[0])/2;
+    //   temp[1] = (bbox[2] + bbox[3])/2;
+    //   temp[2] = hrad;
+    //   temp[3] = 0;
+    // }
 
     unsigned int id = *next(uniqueIds.begin(), i);
     temp.push_back(id);
@@ -769,14 +765,20 @@ vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& clo
 
   vector<vector<vector<double*> > > trees = getChunks(cloud, treeId);
 
+  cout << "... clearing" << endl;
+
   cloud.clear();
   cloud.shrink_to_fit();
+
+  cout << "... declaring" << endl;
 
   vector<unsigned int> uniqId = idSortUnique(treeId, treeId);
   vector<vector<unsigned int> > indices = partitionIndex(treeId, segments);
   vector<vector<double> > treeRadii = partitionIndex(treeId, radii);
 
   vector< vector< vector<double> > > treeEstimates;
+
+  cout << "... looping" << endl;
 
   for(unsigned int i = 0; i < trees.size(); ++i){
 
@@ -787,7 +789,10 @@ vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double*> >& clo
     vector< vector<double*> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];
 
+    cout << "... ... segmenting: " << i << " : " << segs.size() << " : " << tree[0].size() << endl;
     vector< vector<double> > temp = ransacStemCircles(tree, segs, segsRadii, nSamples, pConfidence, pInliers, tolerance);
+
+    cout << "... ... identifying" << endl;
 
     for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
       t->push_back(uniqId[i]);

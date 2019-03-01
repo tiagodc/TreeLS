@@ -129,6 +129,24 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
   out["Radii"] = radii;
   out["TreeID"] = treeId;
   out["TreePosition"] = treeFlag;
+
+  xout.clear();
+  xout.shrink_to_fit();
+  yout.clear();
+  yout.shrink_to_fit();
+  zout.clear();
+  zout.shrink_to_fit();
+  votes.clear();
+  votes.shrink_to_fit();
+  discId.clear();
+  discId.shrink_to_fit();
+  keyFlag.clear();
+  radii.shrink_to_fit();
+  radii.clear();
+  treeId.shrink_to_fit();
+  treeFlag.clear();
+  treeFlag.shrink_to_fit();
+
   // out["n"] = nPoints;
 
   return out;
@@ -198,6 +216,9 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
   unsigned int nlayers = 0.75 * (hmax - hmin) / hstep;
   assignTreeId(treeMap, rad_max, min_den, nlayers);
 
+  fullStack.clear();
+  fullStack.shrink_to_fit();
+
   return exportTreeMap(treeMap);
 
 }
@@ -233,11 +254,16 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
     }
   }
 
+  cppCloud.clear();
+  cppCloud.shrink_to_fit();
+
   List output;
   output["Stem"] = isStem.filter;
   output["Segment"] = isStem.sections;
   output["Radius"] = isStem.values;
   output["Votes"] = isStem.counts;
+  isStem.clear();
+
   return output;
 }
 
@@ -297,12 +323,17 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
     }
   }
 
+  cloud.clear();
+  cloud.shrink_to_fit();
+
   List output;
   output["Stem"]   = plotInfo.filter;
   output["TreeID"] = plotInfo.ids;
   output["Segment"] = plotInfo.sections;
   output["Radius"] = plotInfo.values;
   output["Votes"]  = plotInfo.counts;
+  plotInfo.clear();
+
   return output;
 
 }

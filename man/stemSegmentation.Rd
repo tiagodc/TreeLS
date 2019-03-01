@@ -8,6 +8,8 @@ stemSegmentation(las, tol = 0.025, n = 10, conf = 0.99,
   inliers = 0.8)
 }
 \arguments{
+\item{las}{\code{LAS} object.}
+
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}
 
 \item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
