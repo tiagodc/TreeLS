@@ -661,9 +661,13 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
   Eigen::Matrix<double, Eigen::Dynamic, 1> rhsVector;
   rhsVector.resize(nSamples, 3);
 
+  cout << "... ... ... ... ... k: " << cloud[0].size() << endl;
+
   for(unsigned int k = 0; k < kIterations; ++k){
 
     vector<unsigned int> random(nSamples);
+
+    cout << "... ... ... ... ... ... i: " << k << endl;
 
     for(unsigned int i = 0; i < random.size(); ++i){
       unsigned int n;
@@ -682,12 +686,18 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
       rhsVector(i,0) = pow( tempMatrix(i,0), 2) + pow( tempMatrix(i,1), 2);
     }
 
+    cout << "... ... ... ... ... ... decomposing" << endl;
+
     Eigen::Matrix<double, 3, 1> qrDecompose = tempMatrix.colPivHouseholderQr().solve(rhsVector);
+
+    cout << "... ... ... ... ... ... calculating" << endl;
 
     Eigen::Matrix<double, 3, 1> xyr;
     xyr(0,0) =  qrDecompose(0,0) / 2;
     xyr(1,0) =  qrDecompose(1,0) / 2;
     xyr(2,0) =  sqrt( ((pow( qrDecompose(0,0) ,2) + pow( qrDecompose(1,0) ,2)) / 4) + qrDecompose(2,0) );
+
+    cout << "... ... ... ... ... ... summing" << endl;
 
     double sumOfSquares = 0;
     for(unsigned int i = 0; i < cloud[0].size(); ++i){
@@ -698,6 +708,8 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
 
     double circleError = sqrt(sumOfSquares / cloud[0].size());
 
+    cout << "... ... ... ... ... ... registering: " << allCircles[0].size() << endl;
+
     allCircles[0][k] = xyr(0,0);
     allCircles[1][k] = xyr(1,0);
     allCircles[2][k] = xyr(2,0);
@@ -707,6 +719,7 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
       best = k;
 
   }
+  cout << "... ... ... ... ... returning" << endl;
 
   vector<double> bestFit = { allCircles[0][best] , allCircles[1][best] , allCircles[2][best] , allCircles[3][best] };
 
@@ -717,12 +730,20 @@ vector<double> ransacCircle(vector<vector<double*> >& cloud, unsigned int nSampl
 // fit ransac circles on stem cloud
 vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
 
+  cout << "... ... ... partitioning" << endl;
+
   vector<vector<vector<double*> > > stemSlices = getChunks(cloud, segments);
+
+  cout << "... ... ... cleaning" << endl;
 
   cloud.clear();
   cloud.shrink_to_fit();
 
+  cout << "... ... ... radii sorting" << endl;
+
   vector<double> segRadii = idSortUnique(segments, radii);
+
+  cout << "... ... ... identifying" << endl;
 
   set<unsigned int> uniqueIds;
   for(auto& i : segments){
@@ -731,30 +752,38 @@ vector<vector<double> > ransacStemCircles(vector<vector<double*> >& cloud, vecto
 
   vector< vector<double> > estimates;
 
+  cout << "... ... ... sampling: " << stemSlices.size() << endl;
+
   for(unsigned int i = 0; i < stemSlices.size(); ++i){
 
     vector<vector<double*> > slice = stemSlices[i];
 
+    cout << "... ... ... ... slicing: " << slice[0].size() << endl;
+
     if(slice[0].size() <= nSamples) continue;
+
+    cout << "... ... ... ... slicing: " << slice[0].size() << endl;
 
     double& hrad = segRadii[i];
     vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
 
-    // double rdiff = abs(temp[2] - hrad);
-    // if(rdiff > tolerance){
-    //
-    //   vector<double> bbox = getMinMax(slice);
-    //
-    //   temp[0] = (bbox[1] + bbox[0])/2;
-    //   temp[1] = (bbox[2] + bbox[3])/2;
-    //   temp[2] = hrad;
-    //   temp[3] = 0;
-    // }
+    double rdiff = abs(temp[2] - hrad);
+    if(rdiff > tolerance){
+
+      vector<double> bbox = getMinMax(slice);
+
+      temp[0] = (bbox[1] + bbox[0])/2;
+      temp[1] = (bbox[2] + bbox[3])/2;
+      temp[2] = hrad;
+      temp[3] = 0;
+    }
 
     unsigned int id = *next(uniqueIds.begin(), i);
     temp.push_back(id);
     estimates.push_back(temp);
   }
+
+  cout << "... ... ... returning" << endl;
 
   return estimates;
 
