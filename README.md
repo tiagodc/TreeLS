@@ -13,11 +13,9 @@ This is an ongoing project and new features will be introduced often. For any qu
 ## Main functionalities
 - Tree detection at plot level
 - Stem points detection at single tree and plot levels
+- Stem segmentation at single tree and plot levels
 
 ## Coming soon:
-- RANSAC circle fitting
-- RANSAC based individual tree modelling
-- RANSAC plot-wise tree modelling
 - `lidR` wrappers for writing TLS data with extra header fields
 - 3D visualization functions for TLS specific outputs
 - Eigen decomposition feature detection for trees and stems
@@ -74,11 +72,10 @@ plot(map, color='Radii')
 tls = stemPoints(tls, map)
 
 # segment stems
-seg = stemSegmentation(tls)
+seg = stemSegmentation(tls, n = 15)
 
 # view the results
-plot(tls, color='Stem', size=.5)
-with(seg, spheres3d(X, Y, AvgHeight, Radius, color='yellow'))
-
+plot(tls, color='Stem', size=.5, clear_artifacts=F)
+with(seg, rgl::spheres3d(X, Y, AvgHeight, Radius, color='yellow'))
 
 ```
