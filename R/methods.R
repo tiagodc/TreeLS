@@ -475,7 +475,7 @@ treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max
 #' @description Extracts the tree positions from a \code{LAS} object tree map
 #' @param las \code{LAS} object - output from \code{\link{treeMap}}.
 #' @param plot \code{logical} - plot the tree map?
-#' @return \code{data.frame} of tree IDs and XY coordinates.
+#' @return \code{data.table} of tree IDs and XY coordinates.
 #' @template example-tree-map
 #' @export
 treePositions = function(las, plot=T){
@@ -489,9 +489,12 @@ treePositions = function(las, plot=T){
 
   las %<>% lasfilter(TreePosition)
 
-  pos = las@data[,c('TreeID', 'X', 'Y')] %>% as.data.frame
+  pos = las@data[,c('TreeID', 'X', 'Y')]
 
-  attributes(pos)[[tls.marker]] = 'tree_map_df'
+  # TreeID = NULL
+  pos = pos[order(TreeID)]
+
+  attributes(pos)[[tls.marker]] = 'tree_map_dt'
 
   if(plot){
     pos %$% plot(Y ~ X, cex=3, pch=20, main='tree map', xlab='X', ylab='Y')
@@ -556,8 +559,8 @@ stemPoints = function(las, map = NULL, hstep=0.5, max_radius=0.25, hbase = c(1,2
 
     if(is.null(tlsatt)){
       stop('las is not a tree_map object: check ?treeMap')
-    }else if(tlsatt == 'tree_map_df'){
-      map %<>% as.data.frame
+    }else if(tlsatt == 'tree_map_dt'){
+      # map = map
     }else if(tlsatt == 'tree_map'){
       map %<>% treePositions(F)
     }else{
@@ -738,40 +741,40 @@ stemSegmentation = function(las, tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
 
     message('performing single stem segmentation')
 
-    estimates = ransacStem(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, tol) %>% do.call(what = rbind) %>% as.data.frame
+    estimates = ransacStem(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, tol) %>% do.call(what = rbind) %>% as.data.table
     names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment')
 
-    z = tapply(las@data$Z, las@data$Segment, mean)
-    z = cbind(AvgHeight = z, Segment = z %>% names %>% as.double)
+    z = las@data[, .(AvgHeight = mean(Z), N = .N), Segment]
 
-    np = table(las@data$Segment)
-    np = cbind(N = np, Segment = np %>% names %>% as.double)
+    estimates %<>% merge(z, by='Segment')
 
-    estimates %<>% base::merge(z, by='Segment') %>% base::merge(np, by='Segment')
-    attributes(estimates)[[tls.marker]] = "single_stem_df"
+    # Segment = NULL
+    estimates = estimates[order(Segment)]
+
+    attributes(estimates)[[tls.marker]] = "single_stem_dt"
 
   }else if(tlsatt == 'multiple_stem_points'){
 
     message('performing multiple stems segmentation')
 
-    estimates = ransacPlot(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.frame
+    estimates = ransacPlot(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
 
     names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment', 'TreeID')
-    estimates = estimates[,c('TreeID', 'Segment', 'X', 'Y', 'Radius', 'Error')]
 
-    z = apply(estimates, 1, function(x){
-      temp = las@data$Z[las@data$Segment == x[2] & las@data$TreeID == x[1]]
-      return(data.frame(AvgHeight = mean(temp), N = length(temp)))
-    }) %>% do.call(what = rbind)
+    z = las@data[, .(AvgHeight = mean(Z), N = .N), .(TreeID, Segment)]
 
-    estimates %<>% base::cbind(z)
-    attributes(estimates)[[tls.marker]] = "multiple_stems_df"
+    estimates %<>% merge(z, by=c('TreeID', 'Segment'))
+
+    # TreeID = Segment = NULL
+    estimates = estimates[order(TreeID, Segment)]
+
+    attributes(estimates)[[tls.marker]] = "multiple_stems_dt"
 
   }else{
     stop('stem points identifier missing - check ?stemPoints')
   }
 
-  estimates = estimates[ estimates$N > n , ]
+  estimates = estimates[ N > n ]
 
   return(estimates)
 

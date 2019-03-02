@@ -12,7 +12,7 @@ treePositions(las, plot = T)
 \item{plot}{\code{logical} - plot the tree map?}
 }
 \value{
-\code{data.frame} of tree IDs and XY coordinates.
+\code{data.table} of tree IDs and XY coordinates.
 }
 \description{
 Extracts the tree positions from a \code{LAS} object tree map
