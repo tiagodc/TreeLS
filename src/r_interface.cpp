@@ -155,20 +155,20 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
 
 // [[Rcpp::export]]
 LogicalVector thinCloud(NumericMatrix& las, double voxel = 0.025){
-  vector<vector<double*> > xyz = rmatrix2cpp(las);
+  vector<vector<double> > xyz = rmatrix2cpp(las);
   return wrap(voxelFilter(xyz, voxel));
 }
 
 // [[Rcpp::export]]
 LogicalVector RCropCloud(NumericMatrix& las, double xCenter, double yCenter, double len, bool circle, bool negative){
-  vector<vector<double*> > xyz = rmatrix2cpp(las);
+  vector<vector<double> > xyz = rmatrix2cpp(las);
   return wrap( cropCloudFilter(xyz, xCenter, yCenter, len, circle, negative) );
 }
 
 // [[Rcpp::export]]
 List getCircle(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
 
-  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  vector<vector<double> > cloud = rmatrix2cpp(las);
   Raster ras = getCounts(cloud, pixel);
   HoughCenters circle = getSingleCenter(&ras, rad_max, min_den, min_votes);
 
@@ -187,7 +187,7 @@ List singleStack(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, dou
   vector<HoughCenters> treeMap;
   Raster ras;
 
-  vector<vector<double*> > stack = rmatrix2cpp(las);
+  vector<vector<double> > stack = rmatrix2cpp(las);
   ras = getCounts(stack, pixel);
   treeMap = getCenters(&ras, rad_max, min_den, min_votes);
   assignTreeId(treeMap, rad_max, min_den);
@@ -201,7 +201,7 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
 
   vector<HoughCenters> treeMap;
 
-  vector<vector<vector<double*> > > fullStack = getSlices(las, hmin, hmax, hstep);
+  vector<vector<vector<double> > > fullStack = getSlices(las, hmin, hmax, hstep);
 
   for(auto& stack : fullStack){
 
@@ -226,15 +226,15 @@ List stackMap(NumericMatrix& las, double hmin=1, double hmax=3, double hstep=0.5
 // [[Rcpp::export]]
 List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
 
-  vector<vector<double*> > cppCloud = rmatrix2cpp(las);
+  vector<vector<double> > cppCloud = rmatrix2cpp(las);
   vector<HoughCenters> treeEstimates = treeHough(cppCloud, h1, h2, hstep, radius, pixel, density, votes);
 
   tempContainer isStem(cppCloud[0].size());
   for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
 
-    double& x = *cppCloud[0][i];
-    double& y = *cppCloud[1][i];
-    double& z = *cppCloud[2][i];
+    double& x = cppCloud[0][i];
+    double& y = cppCloud[1][i];
+    double& z = cppCloud[2][i];
 
     if(z < 0) continue;
 
@@ -282,12 +282,12 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
   xPos.insert(xPos.begin(), xcol.begin(), xcol.end());
   yPos.insert(yPos.begin(), ycol.begin(), ycol.end());
 
-  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  vector<vector<double> > cloud = rmatrix2cpp(las);
   unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
 
   double cropRadius = radius*4;
   for(unsigned int i = 0; i < treeIds.size(); ++i){
-    vector<vector<double*> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
+    vector<vector<double> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
     vector<HoughCenters> denoised = treeHough(tree, h1, h2, hstep, radius, pixel, density, votes);
     denoisedTrees[ treeIds[i] ] = denoised;
   }
@@ -295,9 +295,9 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
   tempContainer plotInfo( cloud[0].size() );
   for(unsigned int i = 0; i < cloud[0].size(); ++i){
 
-    double& x = *cloud[0][i];
-    double& y = *cloud[1][i];
-    double& z = *cloud[2][i];
+    double& x = cloud[0][i];
+    double& y = cloud[1][i];
+    double& z = cloud[2][i];
 
     if(z < 0) continue;
 
@@ -340,18 +340,18 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
 
 // [[Rcpp::export]]
 NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8){
-  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(ransacCircle(cloud, nSamples, pConfidence, pInliers));
 }
 
 // [[Rcpp::export]]
 List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
-  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(ransacStemCircles(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
 List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
-  vector<vector<double*> > cloud = rmatrix2cpp(las);
+  vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
