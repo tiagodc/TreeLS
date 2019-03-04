@@ -2,31 +2,29 @@
 % Please edit documentation in R/methods.R
 \name{tlsSample}
 \alias{tlsSample}
-\title{Samples a point cloud randomly or systematically}
+\title{Resample a point cloud}
 \usage{
-tlsSample(las, by = "voxel", val = 0.05)
+tlsSample(las, method = voxelize())
 }
 \arguments{
 \item{las}{\code{LAS} object.}
 
-\item{by}{\code{character} - sampling method: \emph{"voxel"} for systematic 3D sampling or \emph{"random"} for random sampling.}
-
-\item{val}{\code{numeric} - sampling parameter value. For \code{by = 'voxel'}, \code{val} must be the voxel side length. For \code{by = 'random'}, it must be the proportion of points to be kept (between 0 and 1).}
+\item{method}{point sampling algorithm - currently available: \code{\link{voxelize}} or \code{\link{randomize}}}
 }
 \value{
 \code{LAS} object.
 }
 \description{
-Applies a random sample or voxel thinning algorithm te keep a fraction of the point cloud.
+Applies an algorithm that returns a thinned point cloud.
 }
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
 summary(tls)
 
-tls = tlsSample(tls, by='voxel', val=0.05)
-summary(tls)
+vx = tlsSample(tls, voxelize(0.05))
+summary(vx)
 
-tls = tlsSample(tls, by='random', val=0.5)
-summary(tls)
+rd = tlsSample(tls, randomize(0.5))
+summary(rd)
 }

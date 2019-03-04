@@ -1,7 +1,23 @@
+#' Stem segmentation algorithm: RANSAC circle fit
+#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares circle fit algorithm in a RANSAC fashion over stem segments. Mode details are given in the sections below.
 #' @param tol \code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.
 #' @param n \code{integer} - number of points selected on every RANSAC iteration.
 #' @param conf \code{numeric} - confidence level.
 #' @param inliers \code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.
+#' @template reference-thesis
+#' @section Output Fields:
+#'
+#' \itemize{
+#' \item \code{TreeID}:  unique tree IDs - available only for multiple stems
+#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{X}, \code{Y}: circle center coordinates
+#' \item \code{Radius}: estimated circles radii
+#' \item \code{Error}: least squares circle fit error
+#' \item \code{AvgHeight}: average height of stem segments
+#' \item \code{N}: number of points in the stem segments
+#' }
+#'
+#' @export
 sgmt.ransac.circle = function(tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
 
   params = list(
@@ -34,6 +50,8 @@ sgmt.ransac.circle = function(tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
     stop('inliers must be between 0 and 1')
 
   func = function(las){
+
+    . = NULL
 
     if(las %>% hasAttribute('single_stem_points')){
 

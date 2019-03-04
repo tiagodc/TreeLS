@@ -1,11 +1,26 @@
+#' Stem denoising algorithm: Hough Transform
+#' @description This function is meant to be used inside \code{\link{stemPoints}}. It applies an adapted version of the Hough Transform for circle search. Mode details are given in the sections below.
 #' @template param-hstep
 #' @template param-max-radius
 #' @template param-hbase
 #' @template param-pixel-size
 #' @template param-min-density
 #' @template param-min-votes
+#' @section \code{LAS@data} Special Fields:
+#'
+#' Meaninful fields in the output:
+#'
+#' \itemize{
+#' \item \code{TreeID}: unique tree ID of the point - available when a \emph{tree_map} is provided
+#' \item \code{Stem}: \code{TRUE} for stem points
+#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{Radius}: approximate radius of the point's stem segment estimated by the Hough Transform - always a multiple of the \code{pixel_size}
+#' \item \code{Votes}: votes received by the stem segment's center through the Hough Transform
+#' }
+#'
 #' @template section-hough-transform
 #' @template reference-thesis
+#' @export
 stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
   if(length(hbase) != 2)

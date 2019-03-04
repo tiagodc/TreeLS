@@ -572,7 +572,7 @@ void assignTreeId(vector<HoughCenters>& disks, double distmax, double countDensi
       if(indexCount < minLayers) dsk.tree_id = 0;
     }
 
-};
+}
 
 // single tree stem points detection
 vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1, double h2, double hstep, double radius, double pixel, double density, unsigned int votes){

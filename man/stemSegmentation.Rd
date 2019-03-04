@@ -4,40 +4,19 @@
 \alias{stemSegmentation}
 \title{Stem segmentation}
 \usage{
-stemSegmentation(las, tol = 0.025, n = 10, conf = 0.99,
-  inliers = 0.8)
+stemSegmentation(las, method = sgmt.ransac.circle())
 }
 \arguments{
 \item{las}{\code{LAS} object.}
 
-\item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}
-
-\item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
-
-\item{conf}{\code{numeric} - confidence level.}
-
-\item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
+\item{method}{stem segmentation algorithm - currently available: \code{\link{sgmt.ransac.circle}}.}
 }
 \value{
-\code{data.frame} of stem segmetns.
+\code{data.table} of stem segments with \emph{stem_dt} signature.
 }
 \description{
-Measure stem segments from a classified point cloud through least squares circle fit and the RANSAC algorithm.
+Measure stem segments from a classified point cloud.
 }
-\section{Output Fields}{
-
-
-\itemize{
-\item \code{TreeID}:  unique tree IDs - available only for multiple stems
-\item \code{Segment}: stem segment number (from bottom to top)
-\item \code{X}, \code{Y}: circle center coordinate
-\item \code{Radius}: estimated circle radius
-\item \code{Error}: least squares circle fit error
-\item \code{AvgHeight}: average height of stem segment
-\item \code{N}: number of points in the segment
-}
-}
-
 \examples{
 ### single tree
 file = system.file("extdata", "pine.laz", package="TreeLS")
@@ -51,14 +30,11 @@ file = system.file("extdata", "square.laz", package="TreeLS")
 tls = readTLS(file)
 
 # map the trees on a resampled point cloud so all trees have approximately the same point density
-thin = tlsSample(tls, 'voxel', 0.02)
-map = treeMap(thin, min_density = 0.05)
+thin = tlsSample(tls, voxelize(0.02))
+map = treeMap(thin, map.hough(min_density = 0.05))
 
 tls = stemPoints(tls, map)
 df = stemSegmentation(tls)
 head(df)
 
-}
-\references{
-CONTO, T. ; OLOFSSON, K. ; GORGENS, E. B. ; RODRIGUEZ, L. C. E. ; ALMEIDA, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. COMPUTERS AND ELECTRONICS IN AGRICULTURE, v. 143, p. 165-176, 2017.
 }

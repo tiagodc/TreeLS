@@ -4,7 +4,7 @@
 \alias{tlsNormalize}
 \title{Normalize a TLS point cloud}
 \usage{
-tlsNormalize(las, res = 0.5, keepGround = T)
+tlsNormalize(las, res = 0.5, keepGround = TRUE)
 }
 \arguments{
 \item{las}{\code{LAS} object.}
@@ -17,7 +17,7 @@ tlsNormalize(las, res = 0.5, keepGround = T)
 \code{LAS} object.
 }
 \description{
-Normalizes a TLS point based on a Digital Terrain Model of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
+Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

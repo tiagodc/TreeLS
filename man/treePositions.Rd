@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{treePositions}
 \alias{treePositions}
-\title{Get tree XY positions from a TLS-tree map}
+\title{Get unique tree positions from a \emph{tree_map}}
 \usage{
 treePositions(las, plot = T)
 }
@@ -12,10 +12,10 @@ treePositions(las, plot = T)
 \item{plot}{\code{logical} - plot the tree map?}
 }
 \value{
-\code{data.table} of tree IDs and XY coordinates.
+\code{data.table} of tree IDs and XY coordinates with \emph{tree_map_dt} signature.
 }
 \description{
-Extracts the tree positions from a \code{LAS} object tree map
+Extracts the tree XY positions from a \emph{tree_map} \code{LAS} object
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

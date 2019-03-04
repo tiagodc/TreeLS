@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{readTLS}
 \alias{readTLS}
-\title{Wrapper to read point clouds straight to LAS objects suitable for TLS applications}
+\title{Import a point cloud file into a LAS object}
 \usage{
 readTLS(file, colNames = NULL, ...)
 }
@@ -17,7 +17,7 @@ readTLS(file, colNames = NULL, ...)
 \code{LAS} object.
 }
 \description{
-Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults, or tries to read other file formats with \code{\link[utils:read.table]{read.table}}.
+Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults. Other file formats are (or try to be) read using \code{\link[utils:read.table]{read.table}}.
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

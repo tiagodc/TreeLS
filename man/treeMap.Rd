@@ -4,78 +4,22 @@
 \alias{treeMap}
 \title{Map tree occurrences from TLS data}
 \usage{
-treeMap(las, hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025,
-  max_radius = 0.25, min_density = 0.1, min_votes = 3)
+treeMap(las, method = map.hough())
 }
 \arguments{
 \item{las}{\code{LAS} object.}
 
-\item{hmin, hmax}{\code{numeric} - height thresholds within the point cloud in which circle search will be performed.}
-
-\item{hstep}{\code{numeric} - height interval to perform circle search.}
-
-\item{pixel_size}{\code{numeric} - pixel side length to discretize the point cloud layers while performing the Hough Transform circle search.}
-
-\item{max_radius}{\code{numeric} - approximately the largest stem cross section radius expected in the point cloud.}
-
-\item{min_density}{\code{numeric} - between 0 and 1 - minimum point density within a pixel evaluated on the Hough Transform - i.e. only \emph{dense} point clousters will undergo circle search.}
-
-\item{min_votes}{\code{integer} - Hough Transform parameter - minimum number of circle intersections over a pixel to assign it as a circle center candidate.}
+\item{method}{tree mapping algorithm - currently available: \code{\link{map.hough}}.}
 }
 \value{
-\code{LAS} object.
+\code{LAS} object with \emph{tree_map} signature.
 }
 \description{
-Estimates tree occurrence regions from a \strong{normalized} point cloud based on the Hough Transform circle search.
+Estimates tree occurrence regions from a \strong{normalized} point cloud.
 }
-\section{Output Header}{
+\section{Output}{
 
-
-Each point in the \code{LAS} object output represents a pixel center that is
-\emph{possibly} also stem cross-section center.
-
-The variables describing each point in the output are:
-
-\itemize{
-\item \code{Intensity}: number of votes received by that point
-\item \code{PointSourceID}: stem segment ID (among all trees)
-\item \code{Keypoint_flag}: if \code{TRUE}, the point is the most likely circle center
-of its stem segment (\code{PointSourceID})
-\item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
-\item \code{TreeID}: (possible) unique tree ID of the point
-\item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
-}
-}
-
-\section{Adapted Hough Transform}{
-
-
-The Hough Transform circle search algorithm used in
-TreeLS applies a constrained circle search on discretized 
-point cloud layers. Tree-wise, the circle search is  
-recursive, in which the search for circle parameters 
-of a stem section is constrained to the 
-\emph{feature space} of the stem section underneath it.
-Initial estimates of the stem's \emph{feature space} 
-are performed on a \emph{baselise} stem segment - i.e.
-a low height interval where a tree's bole is expected  
-to be clearly visible in the point cloud.
-The algorithm is described in detail by Conto et al. (2017).
-
-This adapted version of the algorithm is very robust against outliers, 
-but not against forked or leaning stems.
-}
-
-\section{Tree Selection}{
-
-
-An initial tree filter is used to select \emph{probable} trees in the input point
-cloud. Parallel stacked layers, each one as thick as \code{hstep}, undergo the
-circle search within the \code{hmin}/\code{hmax} limits. On every layer, pixels
-above the \code{min_votes} criterion are clustered, forming
-\emph{probability zones}. \emph{Probability zones} vertically aligned
-on at least 3/4 of the stacked layers are assigned as \emph{tree occurrence regions}
-and exported in the output map.
+The output is a \code{LAS} object with extra fields in the \code{data} slot. For more details on the output fields checkout \code{\link{map.hough}}'s help page.
 }
 
 \examples{
@@ -88,7 +32,4 @@ plot(map, color='Radii')
 
 xymap = treePositions(map)
 head(xymap)
-}
-\references{
-CONTO, T. ; OLOFSSON, K. ; GORGENS, E. B. ; RODRIGUEZ, L. C. E. ; ALMEIDA, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. COMPUTERS AND ELECTRONICS IN AGRICULTURE, v. 143, p. 165-176, 2017.
 }

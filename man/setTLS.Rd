@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{setTLS}
 \alias{setTLS}
-\title{Resets or creates a \code{LAS} object depending on the input's type}
+\title{Reset or create a \code{LAS} object depending on the input's type}
 \usage{
 setTLS(cloud, colNames = NULL)
 }
@@ -15,10 +15,10 @@ setTLS(cloud, colNames = NULL)
 \code{LAS} object.
 }
 \description{
-Resets the input's header if it is a \code{LAS} object, or generates a new \code{LAS} from a table-like input.
+Reset the input's header if it is a \code{LAS} object, or generate a new \code{LAS} from a table-like input. For more information, checkout the \code{\link[lidR:LAS]{lidR::LAS}} description page.
 }
 \examples{
-cld = runif(300, 0, 10) \%>\% matrix(ncol=3)
+cld = matrix(runif(300, 0, 10), ncol=3)
 cld = setTLS(cld)
 summary(cld)
 }
