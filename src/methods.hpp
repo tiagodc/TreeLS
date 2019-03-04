@@ -25,7 +25,6 @@
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::depends(RcppEigen)]]
 
-#include <RcppEigen.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include "classes.hpp"

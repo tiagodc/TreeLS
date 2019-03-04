@@ -30,11 +30,9 @@ vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud){
 
   vector<vector<double> > xyz(3);
 
-  for(int i = 0; i < cloud.nrow(); ++i){
-    xyz[0].push_back(xcol[i]);
-    xyz[1].push_back(ycol[i]);
-    xyz[2].push_back(zcol[i]);
-  }
+  xyz[0].insert(xyz[0].begin(), xcol.begin(), xcol.end());
+  xyz[1].insert(xyz[1].begin(), ycol.begin(), ycol.end());
+  xyz[2].insert(xyz[2].begin(), zcol.begin(), zcol.end());
 
   return xyz;
 }

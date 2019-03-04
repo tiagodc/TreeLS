@@ -26,6 +26,17 @@
 
 tls.marker = 'tlsAttribute'
 
+setAttribute = function(obj, attr){
+  attributes(obj)[[tls.marker]] = attr
+  return(obj)
+}
+
+hasAttribute = function(obj, attr){
+  tlsatt = attributes(obj)[[tls.marker]]
+  bool = is.null(tlsatt) || tlsatt != attr
+  return(!bool)
+}
+
 plot.cylinder = function(xCenter = 0, yCenter = 0, hBase = 0, hTop = 1, radius = 0.5, col = 'yellow'){
 
   axis = matrix(c(
@@ -210,57 +221,34 @@ readTLS = function(file, colNames=NULL, ...){
 }
 
 
-#' Samples a point cloud randomly or systematically
-#' @description Applies a random sample or voxel thinning algorithm te keep a fraction of the point cloud.
+#' Resample a point cloud
+#' @description Applies an algorithm that returns a thinned point cloud.
 #' @template param-las
-#' @param by \code{character} - sampling method: \emph{"voxel"} for systematic 3D sampling or \emph{"random"} for random sampling.
-#' @param val \code{numeric} - sampling parameter value. For \code{by = 'voxel'}, \code{val} must be the voxel side length. For \code{by = 'random'}, it must be the proportion of points to be kept (between 0 and 1).
+#' @param method sampling function - currently available: \code{\link{voxelize}} or \code{\link{randomize}}
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' summary(tls)
 #'
-#' tls = tlsSample(tls, by='voxel', val=0.05)
-#' summary(tls)
+#' vx = tlsSample(tls, voxelize(0.05))
+#' summary(vx)
 #'
-#' tls = tlsSample(tls, by='random', val=0.5)
-#' summary(tls)
-#' @importFrom stats rbinom
-#' @useDynLib TreeLS, .registration = TRUE
+#' rd = tlsSample(tls, randomize(0.5))
+#' summary(rd)
 #' @export
-tlsSample = function(las, by='voxel', val=0.05){
+tlsSample = function(las, method = voxelize()){
 
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
 
-  methods = c('voxel', 'random')
+  if(!hasAttribute(method, 'tls_sample_mtd'))
+    stop('invalid method: check ?tlsSample')
 
-  if(!(by %in% methods))
-    stop('choose a valid method: voxel or random')
+  las %<>% lasfilter(method(las))
 
-  if(val <= 0)
-    stop('val must be a positive number')
-
-  if(by == methods[1]){
-
-    keep = las@data[,1:3] %>% as.matrix %>% thinCloud(val)
-
-  }else if(by == methods[2]){
-
-    if(val >= 1)
-      stop('val must be a number between 0 and 1 for random sampling')
-
-    n = nrow(las@data)
-    keep = rbinom(n, 1, val) == 1
-
-  }
-
-  las %<>% lasfilter(keep)
   return(las)
-
 }
-
 
 #' Crops a point cloud using a circle or square
 #' @description Returns a cropped point cloud of all points inside or outside specified boundaries.
@@ -372,12 +360,6 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 #' Map tree occurrences from TLS data
 #' @description Estimates tree occurrence regions from a \strong{normalized} point cloud based on the Hough Transform circle search.
 #' @template param-las
-#' @template param-hmin-hmax
-#' @template param-hstep
-#' @template param-pixel-size
-#' @template param-max-radius
-#' @template param-min-density
-#' @template param-min-votes
 #' @template return-las
 #' @section Output Header:
 #'
@@ -411,61 +393,20 @@ tlsNormalize = function(las, res=.5, keepGround=T){
 #' @template example-tree-map
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
-treeMap = function(las, hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_radius = 0.25, min_density = 0.1, min_votes = 3){
+treeMap = function(las, method = map.hough()){
 
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
 
-  if(hmax <= hmin)
-    stop('hmax must be larger than hmin')
-
-  params = list(
-    hstep = hstep,
-    pixel_size = pixel_size,
-    max_radius = max_radius,
-    min_density = min_density,
-    min_votes = min_votes
-  )
-
-  for(i in names(params)){
-    val = params[[i]]
-
-    if(length(val) != 1)
-      stop( i %>% paste('must be of length 1') )
-
-    if(!is.numeric(val))
-      stop( i %>% paste('must be Numeric') )
-
-    if(val <= 0)
-      stop( i %>% paste('must be positive') )
-  }
-
-  if(min_density > 1)
-    stop('min_den must be between 0 and 1')
-
-  rgz = las$Z %>% range
-
-  if(hmax < rgz[1])
-    stop('hmax is too low - below the point cloud')
-
-  if(hmin > rgz[2])
-    stop('hmin is too high - above the point cloud')
+  if(!hasAttribute(method, 'tls_map_mtd'))
+    stop('invalid method: check ?treeMap')
 
   preCheck(las)
 
   if("Classification" %in% names(las@data))
     las %<>% lasfilter(Classification != 2)
 
-  map = stackMap(las %>% las2xyz, hmin, hmax, hstep, pixel_size, max_radius, min_density, min_votes) %>%
-    do.call(what=cbind) %>% as.data.frame
-
-  map$Intensity %<>% as.integer
-  map$Keypoint_flag %<>% as.logical
-  map$PointSourceID %<>% as.integer
-  map$TreePosition %<>% as.logical
-  map %<>% LAS %>% setHeaderTLS
-
-  attributes(map)[[tls.marker]] = 'tree_map'
+  map = method(las) %>% setAttribute('tree_map')
 
   return(map)
 }
@@ -483,8 +424,7 @@ treePositions = function(las, plot=T){
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
 
-  tlsatt = attributes(las)[[tls.marker]]
-  if(is.null(tlsatt) || tlsatt != 'tree_map')
+  if(!hasAttribute(las, 'tree_map'))
     stop('las is not a tree_map object: check ?treeMap')
 
   las %<>% lasfilter(TreePosition)
@@ -494,7 +434,7 @@ treePositions = function(las, plot=T){
   # TreeID = NULL
   pos = pos[order(TreeID)]
 
-  attributes(pos)[[tls.marker]] = 'tree_map_dt'
+  pos %<>% setAttribute('tree_map_dt')
 
   if(plot){
     pos %$% plot(Y ~ X, cex=3, pch=20, main='tree map', xlab='X', ylab='Y')
@@ -508,12 +448,6 @@ treePositions = function(las, plot=T){
 #' @description Classify stem points from a \strong{normalized} point cloud through the Hough Transform algorithm.
 #' @template param-las
 #' @param map \emph{optional} - map of tree positions (output from \code{\link{treeMap}} or \code{\link{treePositions}}). If omitted, the algorithm assumes that \code{las} is a single tree.
-#' @template param-hstep
-#' @template param-max-radius
-#' @template param-hbase
-#' @template param-pixel-size
-#' @template param-min-density
-#' @template param-min-votes
 #' @template return-las
 #' @section Output Header:
 #'
@@ -527,8 +461,6 @@ treePositions = function(las, plot=T){
 #' \item \code{Votes}: votes received by the stem segment's center during the Hough Transform
 #' }
 #'
-#' @template section-hough-transform
-#' @template reference-thesis
 #' @examples
 #' ### single tree
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
@@ -549,19 +481,16 @@ treePositions = function(las, plot=T){
 #'
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
-stemPoints = function(las, map = NULL, hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
+stemPoints = function(las, map = NULL, method = stem.hough()){
 
   if(class(las)[1] != 'LAS')
     stop('input las must be a LAS object')
 
   if(!is.null(map)){
-    tlsatt = attributes(map)[[tls.marker]]
 
-    if(is.null(tlsatt)){
-      stop('las is not a tree_map object: check ?treeMap')
-    }else if(tlsatt == 'tree_map_dt'){
+    if(hasAttribute(map, 'tree_map_dt')){
       # map = map
-    }else if(tlsatt == 'tree_map'){
+    }else if(hasAttribute(map, 'tree_map')){
       map %<>% treePositions(F)
     }else{
       stop('las is not a tree_map object: check ?treeMap')
@@ -574,79 +503,16 @@ stemPoints = function(las, map = NULL, hstep=0.5, max_radius=0.25, hbase = c(1,2
     rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
 
     if(any(rg > 10))
-      message("point cloud unlikely a single tree - XY extents too large")
+      message("point cloud unlikely a single tree (XY extents too large) - check ?tlsCrop")
   }
-
-  if(length(hbase) != 2)
-    stop('hbase must be a numeric vector of length 2')
-
-  if(diff(hbase) <= 0)
-    stop('hbase[2] must be larger than hbase[1]')
-
-  params = list(
-    hstep = hstep,
-    max_radius = max_radius,
-    pixel_size = pixel_size,
-    min_density = min_density,
-    min_votes = min_votes
-  )
-
-  for(i in names(params)){
-    val = params[[i]]
-
-    if(length(val) != 1)
-      stop( i %>% paste('must be of length 1') )
-
-    if(!is.numeric(val))
-      stop( i %>% paste('must be Numeric') )
-
-    if(val <= 0)
-      stop( i %>% paste('must be positive') )
-  }
-
-  if(min_density > 1)
-    stop('min_density must be between 0 and 1')
 
   if(max(las$Z) < 0)
     stop('input Z coordinates are all negative')
 
-  if(min(las$Z) < 0)
-    message("points with Z below 0 will be ignored")
+  if(!hasAttribute(method, 'stem_pts_mtd'))
+    stop('invalid method: check ?stemPoints')
 
-  if(min(las$Z) > 5)
-    message("point cloud didn't look normalized - Z values too high")
-
-  groundPts = if(las %>% hasField('Classification')){
-    las$Classification == 2
-  }else{
-    rep(F, las@data %>% nrow)
-  }
-
-  if(map %>% is.null){
-    message('no tree_map provided: performing single stem point classification')
-    results = houghStemPoints(las2xyz(las)[!groundPts,], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
-  }else{
-    message('performing point classification on multiple stems')
-    results = houghStemPlot(las2xyz(las)[!groundPts,], map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
-    las@data$TreeID = 0
-    las@data$TreeID[!groundPts] = results$TreeID
-  }
-
-  las@data$Stem = F
-  las@data$Stem[!groundPts] = results$Stem
-
-  las@data$Segment = 0
-  las@data$Segment[!groundPts] = results$Segment
-
-  las@data$Radius = 0
-  las@data$Radius[!groundPts] = results$Radius
-
-  las@data$Votes = 0
-  las@data$Votes[!groundPts] = results$Votes
-
-  las %<>% resetLAS
-
-  attributes(las)[[tls.marker]] = ifelse(map %>% is.null, "single_stem_points", "multiple_stem_points")
+  las %<>% method(map)
 
   return(las)
 
@@ -656,10 +522,6 @@ stemPoints = function(las, map = NULL, hstep=0.5, max_radius=0.25, hbase = c(1,2
 #' Stem segmentation
 #' @description Measure stem segments from a classified point cloud through least squares circle fit and the RANSAC algorithm.
 #' @template param-las
-#' @param tol \code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.
-#' @param n \code{integer} - number of points selected on every RANSAC iteration.
-#' @param conf \code{numeric} - confidence level.
-#' @param inliers \code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.
 #' @return \code{data.frame} of stem segmetns.
 #' @template reference-thesis
 #' @section Output Fields:
@@ -696,86 +558,14 @@ stemPoints = function(las, map = NULL, hstep=0.5, max_radius=0.25, hbase = c(1,2
 #'
 #' @useDynLib TreeLS, .registration = TRUE
 #' @export
-stemSegmentation = function(las, tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
+stemSegmentation = function(las, method=sgmt.ransac.circle()){
 
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object')
 
-  params = list(
-    tol = tol,
-    n = n,
-    conf = conf,
-    inliers = inliers
-  )
+  if(!hasAttribute(method, 'stem_sgmt_mtd'))
+    stop('invalid method: check ?stemSegmentation')
 
-  for(i in names(params)){
-    val = params[[i]]
-
-    if(!is.numeric(val))
-      stop( i %>% paste('must be Numeric') )
-
-    if(length(val) > 1)
-      stop( i %>% paste('must be of length 1') )
-
-    if(val <= 0)
-      stop( i %>% paste('must be positive') )
-  }
-
-  if(n < 3)
-    stop('n must be at least 3')
-
-  if(conf >= 1)
-    stop('conf must be between 0 and 1')
-
-  if(inliers >= 1)
-    stop('inliers must be between 0 and 1')
-
-  tlsatt = attributes(las)[[tls.marker]]
-  if(is.null(tlsatt)){
-    stop('stem points identifier missing - check ?stemPoints')
-  }
-
-  las %<>% lasfilter(Stem)
-
-  if(tlsatt == 'single_stem_points'){
-
-    message('performing single stem segmentation')
-
-    estimates = ransacStem(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, tol) %>% do.call(what = rbind) %>% as.data.table
-    names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment')
-
-    z = las@data[, .(AvgHeight = mean(Z), N = .N), Segment]
-
-    estimates %<>% merge(z, by='Segment')
-
-    # Segment = NULL
-    estimates = estimates[order(Segment)]
-
-    attributes(estimates)[[tls.marker]] = "single_stem_dt"
-
-  }else if(tlsatt == 'multiple_stem_points'){
-
-    message('performing multiple stems segmentation')
-
-    estimates = ransacPlot(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
-
-    names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment', 'TreeID')
-
-    z = las@data[, .(AvgHeight = mean(Z), N = .N), .(TreeID, Segment)]
-
-    estimates %<>% merge(z, by=c('TreeID', 'Segment'))
-
-    # TreeID = Segment = NULL
-    estimates = estimates[order(TreeID, Segment)]
-
-    attributes(estimates)[[tls.marker]] = "multiple_stems_dt"
-
-  }else{
-    stop('stem points identifier missing - check ?stemPoints')
-  }
-
-  estimates = estimates[ N > n ]
-
-  return(estimates)
+  las %>% method %>% return()
 
 }
