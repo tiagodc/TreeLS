@@ -680,7 +680,7 @@ vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSample
       rhsVector(i,0) = pow( tempMatrix(i,0), 2) + pow( tempMatrix(i,1), 2);
     }
 
-    Eigen::Matrix<double, 3, 1> qrDecompose = tempMatrix.colPivHouseholderQr().solve(rhsVector);
+    Eigen::Matrix<double, 3, 1> qrDecompose = tempMatrix.fullPivHouseholderQr().solve(rhsVector);
 
     Eigen::Matrix<double, 3, 1> xyr;
     xyr(0,0) =  qrDecompose(0,0) / 2;
@@ -688,7 +688,8 @@ vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSample
     xyr(2,0) =  sqrt( ((pow( qrDecompose(0,0) ,2) + pow( qrDecompose(1,0) ,2)) / 4) + qrDecompose(2,0) );
 
     double sumOfSquares = 0;
-    for(unsigned int i = 0; i < cloud[0].size(); ++i){
+    // for(unsigned int i = 0; i < cloud[0].size(); ++i){
+    for(auto& i : random){
       double tempX = pow( cloud[0][i] - xyr(0,0) , 2);
       double tempY = pow( cloud[1][i] - xyr(1,0) , 2);
       sumOfSquares += pow( sqrt( tempX + tempY ) - xyr(2,0) , 2);

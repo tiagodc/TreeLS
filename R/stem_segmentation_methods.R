@@ -1,10 +1,9 @@
 #' Stem segmentation algorithm: RANSAC circle fit
 #' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares circle fit algorithm in a RANSAC fashion over stem segments. Mode details are given in the sections below.
-#' @param tol \code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.
-#' @param n \code{integer} - number of points selected on every RANSAC iteration.
-#' @param conf \code{numeric} - confidence level.
-#' @param inliers \code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.
-#' @template reference-thesis
+#' @template param-tol
+#' @template param-n-ransac
+#' @template param-conf
+#' @template param-inliers
 #' @section Output Fields:
 #'
 #' \itemize{
@@ -17,6 +16,9 @@
 #' \item \code{N}: number of points in the stem segments
 #' }
 #'
+#' @template section-circlefit
+#' @template section-ransac
+#' @template reference-thesis
 #' @export
 sgmt.ransac.circle = function(tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
 
@@ -48,6 +50,9 @@ sgmt.ransac.circle = function(tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
 
   if(inliers >= 1)
     stop('inliers must be between 0 and 1')
+
+  if(n > 20)
+    message('beware that a large n value increases processing time exponentially')
 
   func = function(las){
 

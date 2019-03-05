@@ -61,8 +61,8 @@ tls = tlsNormalize(tls, keepGround = T)
 plot(tls, color='Classification')
 
 # extract the tree map from a systematically sampled point cloud
-thin = tlsSample(tls, 'voxel', 0.05)
-map = treeMap(thin, min_density = 0.03)
+thin = tlsSample(tls, voxelize(0.05))
+map = treeMap(thin, map.hough(min_density = 0.03))
 
 # visualize the tree map in 2D and 3D
 xymap = treePositions(map, TRUE)
@@ -72,7 +72,7 @@ plot(map, color='Radii')
 tls = stemPoints(tls, map)
 
 # segment stems
-seg = stemSegmentation(tls, n = 15)
+seg = stemSegmentation(tls, sgmt.ransac.circle(n = 10))
 
 # view the results
 plot(tls, color='Stem', size=.5, clear_artifacts=F)

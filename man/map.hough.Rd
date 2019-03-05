@@ -27,7 +27,7 @@ This function is meant to be used inside \code{\link{treeMap}}. It applies an ad
 
 
 Each point in the \code{LAS} object output represents a pixel center that is
-\emph{possibly} also stem cross-section center.
+\emph{possibly} also a stem cross-section center.
 
 The variables describing each point in the output are:
 
@@ -37,7 +37,7 @@ The variables describing each point in the output are:
 \item \code{Keypoint_flag}: if \code{TRUE}, the point is the most likely circle center
 of its stem segment (\code{PointSourceID})
 \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
-\item \code{TreeID}: (possible) unique tree ID of the point
+\item \code{TreeID}: unique tree ID of the point
 \item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
 }
 }
@@ -73,17 +73,6 @@ on at least 3/4 of the stacked layers are assigned as \emph{tree occurrence regi
 and exported in the output map.
 }
 
-\examples{
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
-tls = readTLS(file)
-plot(tls)
-
-map = treeMap(tls)
-plot(map, color='Radii')
-
-xymap = treePositions(map)
-head(xymap)
-}
 \references{
 Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
 }

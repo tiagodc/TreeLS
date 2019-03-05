@@ -254,6 +254,7 @@ tlsSample = function(las, method = voxelize()){
   return(las)
 }
 
+
 #' Point cloud cropping
 #' @description Returns a cropped point cloud of all points inside or outside specified boundaries of circle or square shapes.
 #' @template param-las

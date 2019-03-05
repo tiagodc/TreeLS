@@ -9,7 +9,7 @@
 #' @section \code{LAS@data} Special Fields:
 #'
 #' Each point in the \code{LAS} object output represents a pixel center that is
-#' \emph{possibly} also stem cross-section center.
+#' \emph{possibly} also a stem cross-section center.
 #'
 #' The variables describing each point in the output are:
 #'
@@ -19,7 +19,7 @@
 #' \item \code{Keypoint_flag}: if \code{TRUE}, the point is the most likely circle center
 #' of its stem segment (\code{PointSourceID})
 #' \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
-#' \item \code{TreeID}: (possible) unique tree ID of the point
+#' \item \code{TreeID}: unique tree ID of the point
 #' \item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
 #' }
 #'
@@ -35,7 +35,6 @@
 #' and exported in the output map.
 #'
 #' @template reference-thesis
-#' @template example-tree-map
 #' @export
 map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_radius = 0.25, min_density = 0.1, min_votes = 3){
 
