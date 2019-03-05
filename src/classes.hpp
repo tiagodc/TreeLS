@@ -29,6 +29,9 @@
 #include <Rcpp.h>
 #include <vector>
 
+// #define USE_RCPP_ARMADILLO
+// #include "optim.hpp"
+
 using namespace std;
 
 typedef unordered_set<array<unsigned int, 2>, boost::hash< array<unsigned int, 2> > > PixelSet;
