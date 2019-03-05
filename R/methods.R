@@ -435,16 +435,8 @@ treePositions = function(las, plot=T){
 #' tls = stemPoints(tls)
 #' plot(tls, color='Stem')
 #'
-#' ### forest plot
-#' file = system.file("extdata", "square.laz", package="TreeLS")
-#' tls = readTLS(file)
-#'
-#' # map the trees on a resampled point cloud so all trees have approximately the same point density
-#' thin = tlsSample(tls, voxelize(0.02))
-#' map = treeMap(thin, map.hough(min_density = 0.05))
-#'
-#' tls = stemPoints(tls, map)
-#' plot(tls, color='Stem')
+#' ### forest plot - check the example given in the stem segmentation function
+#' ?stemSegmentation
 #'
 #' @export
 stemPoints = function(las, map = NULL, method = stem.hough()){
@@ -499,8 +491,11 @@ stemPoints = function(las, map = NULL, method = stem.hough()){
 #' head(df)
 #'
 #' ### forest plot
-#' file = system.file("extdata", "square.laz", package="TreeLS")
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file)
+#'
+#' # normalize the point cloud
+#' tls = tlsNormalize(tls)
 #'
 #' # map the trees on a resampled point cloud so all trees have approximately the same point density
 #' thin = tlsSample(tls, voxelize(0.02))

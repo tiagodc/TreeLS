@@ -26,8 +26,11 @@ df = stemSegmentation(tls)
 head(df)
 
 ### forest plot
-file = system.file("extdata", "square.laz", package="TreeLS")
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
+
+# normalize the point cloud
+tls = tlsNormalize(tls)
 
 # map the trees on a resampled point cloud so all trees have approximately the same point density
 thin = tlsSample(tls, voxelize(0.02))

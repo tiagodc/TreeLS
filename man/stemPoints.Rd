@@ -26,15 +26,7 @@ tls = readTLS(file)
 tls = stemPoints(tls)
 plot(tls, color='Stem')
 
-### forest plot
-file = system.file("extdata", "square.laz", package="TreeLS")
-tls = readTLS(file)
-
-# map the trees on a resampled point cloud so all trees have approximately the same point density
-thin = tlsSample(tls, voxelize(0.02))
-map = treeMap(thin, map.hough(min_density = 0.05))
-
-tls = stemPoints(tls, map)
-plot(tls, color='Stem')
+### forest plot - check the example given in the stem segmentation function
+?stemSegmentation
 
 }

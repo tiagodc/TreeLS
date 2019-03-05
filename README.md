@@ -72,7 +72,7 @@ plot(map, color='Radii')
 tls = stemPoints(tls, map)
 
 # segment stems
-seg = stemSegmentation(tls, sgmt.ransac.circle(n = 10))
+seg = stemSegmentation(tls, sgmt.ransac.circle(n = 15))
 
 # view the results
 plot(tls, color='Stem', size=.5, clear_artifacts=F)
