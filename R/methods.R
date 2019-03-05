@@ -25,9 +25,14 @@
 #' @import rgl
 #' @useDynLib TreeLS, .registration = TRUE
 
-. = Z = Classification = TreePosition = TreeID = Stem = Segment = NULL
+. = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = NULL
 
 tls.marker = 'tlsAttribute'
+
+isLAS = function(las){
+  if(class(las)[1] != 'LAS')
+    stop('input data must be a LAS object - checkout ?setTLS')
+}
 
 setAttribute = function(obj, atnm){
   attr(obj, tls.marker) = atnm
@@ -56,8 +61,7 @@ plot.cylinder = function(xCenter = 0, yCenter = 0, hBase = 0, hTop = 1, radius =
 
 preCheck = function(las){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   hasClass = "Classification" %in% names(las@data)
 
@@ -172,6 +176,38 @@ tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
   return(cbind(x,y,z) %>% toLAS)
 }
 
+planeAngle = function(xyz, axis='z'){
+
+  e = eigen(cov(xyz))
+  if(axis != 'z') e$vectors[3,3] = 0
+
+  global_axis = if(axis == 'z') c(0,0,1) else if(axis=='x') c(1,0,0) else c(0,1,0)
+
+  ang = (( e$vectors[,3] %*% global_axis ) / ( sqrt(sum(e$vectors[,3]^2)) * sqrt(sum(global_axis^2)) )) %>%
+    as.double %>% acos
+
+  return(ang)
+}
+
+rotationMatrix = function (ax, az, ax2){
+
+  Rx = matrix(c(1, 0, 0, 0, cos(ax), sin(ax), 0, -sin(ax), cos(ax)), ncol = 3, byrow = T)
+  Rz = matrix(c(cos(az), 0, -sin(az), 0, 1, 0, sin(az), 0, cos(az)), ncol = 3, byrow = T)
+  Rx2 = matrix(c(cos(ax2), sin(ax2), 0, -sin(ax2), cos(ax2), 0, 0, 0, 1), ncol = 3, byrow = T)
+
+  mat = Rx2 %*% Rz %*% Rx
+
+  return(mat)
+}
+
+tfMatrix = function (ax, az, ax2, x, y, z){
+
+  mat = rotationMatrix(ax, az, ax2) %>%
+    rbind(0) %>% cbind(c(x,y,z,1))
+
+  return(mat)
+}
+
 
 #' Reset or create a \code{LAS} object depending on the input's type
 #' @description Reset the input's header if it is a \code{LAS} object, or generate a new \code{LAS} from a table-like input. For more information, checkout the \code{\link[lidR:LAS]{lidR::LAS}} description page.
@@ -243,8 +279,7 @@ readTLS = function(file, colNames=NULL, ...){
 #' @export
 tlsSample = function(las, method = voxelize()){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   if(!hasAttribute(method, 'tls_sample_mtd'))
     stop('invalid method: check ?tlsSample')
@@ -276,8 +311,7 @@ tlsSample = function(las, method = voxelize()){
 #' @export
 tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   if(!is.numeric(x))
     stop('x must be Numeric')
@@ -337,8 +371,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' @export
 tlsNormalize = function(las, res=.5, keepGround=TRUE){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   if(res <= 0)
     stop('res must be a positive number')
@@ -373,15 +406,14 @@ tlsNormalize = function(las, res=.5, keepGround=TRUE){
 #' @export
 treeMap = function(las, method = map.hough()){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   if(!hasAttribute(method, 'tls_map_mtd'))
     stop('invalid method: check ?treeMap')
 
   preCheck(las)
 
-  if("Classification" %in% names(las@data))
+  if(hasField(las, 'Classification'))
     las %<>% lasfilter(Classification != 2)
 
   map = method(las) %>% setAttribute('tree_map')
@@ -399,8 +431,7 @@ treeMap = function(las, method = map.hough()){
 #' @export
 treePositions = function(las, plot=T){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   if(!hasAttribute(las, 'tree_map'))
     stop('las is not a tree_map object: check ?treeMap')
@@ -441,8 +472,7 @@ treePositions = function(las, plot=T){
 #' @export
 stemPoints = function(las, map = NULL, method = stem.hough()){
 
-  if(class(las)[1] != 'LAS')
-    stop('input las must be a LAS object')
+  isLAS(las)
 
   if(!is.null(map)){
 
@@ -508,12 +538,161 @@ stemPoints = function(las, map = NULL, method = stem.hough()){
 #' @export
 stemSegmentation = function(las, method=sgmt.ransac.circle()){
 
-  if(class(las)[1] != 'LAS')
-    stop('input data must be a LAS object')
+  isLAS(las)
 
   if(!hasAttribute(method, 'stem_sgmt_mtd'))
     stop('invalid method: check ?stemSegmentation')
 
   las %>% method %>% return()
+
+}
+
+#' Rotate point cloud towards a horizontal plane
+#' @description Check for ground points and rotates the point cloud to align its ground surface to a horizontal plane (XY).
+#' This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
+#' which might present a tilted global reference system.
+#' @template param-las
+#' @template return-las
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' ### note the tilted ground
+#' plot(tls)
+#' axes3d(col='white')
+#'
+#' ### after rotation
+#' tls = tlsRotate(tls)
+#' plot(tls)
+#' axes3d(col='white')
+#'
+#' @export
+tlsRotate = function(las){
+
+  isLAS(las)
+
+  . = NULL
+
+  ground = las@data[,1:3] %>%
+    toLAS %>%
+    lasground(csf(class_threshold = .2), F) %>%
+    lasfilter(Classification == 2)
+
+  center = ground@data[,.(mean(X), mean(Y))] %>% as.double
+  ground = tlsCrop(ground, center[1], center[2], 5) %>% las2xyz
+
+  az = planeAngle(ground, 'z')
+  ax = planeAngle(ground, 'x')
+  ay = planeAngle(ground, 'y')
+
+  rz = ifelse(az > pi/2, pi-az, -az)
+  rx = ifelse(ay < pi/2, -ax, ax)
+
+  rot = rotationMatrix(0, rz, rx)
+
+  las@data[,1:3] = (las2xyz(las) %*% as.matrix(rot)) %>% as.data.table
+  las = las@data %>% LAS
+
+  return(las)
+}
+
+
+#' Filter points based on gpstime
+#' @description This is a simple wrapper to \code{\link[lidR:lasfilter]{lasfilter}} that takes as inputs proportional values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
+#' @template param-las
+#' @param from,to \code{numeric} - between 0 and 1 - gpstime quantile limits to filter by
+#' @template return-las
+#' @importFrom stats quantile
+#' @export
+gpsTimeFilter = function(las, from=0, to=1){
+
+  isLAS(las)
+
+  if(!hasField(las, 'gpstime'))
+    stop('LAS object has no gpstime field')
+
+  if(length(from) != 1 || from < 0 || from > 1)
+    stop('from must be a single value between 0 and 1')
+
+  if(length(to) != 1 || to < 0 || to > 1)
+    stop('to must be a single value between 0 and 1')
+
+  if(to <= from)
+    stop('to must be larger than from')
+
+  if(all(las@data$gpstime == las@data$gpstime[1])){
+    message('all observations have the same gpstime stamp - no filtering performed')
+    return(las)
+  }
+
+  qts = las@data$gpstime %>% quantile(c(from, to))
+  las %<>% lasfilter(gpstime >= qts[1] & gpstime <= qts[2])
+
+  return(las)
+
+}
+
+
+tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate = FALSE){
+
+  isLAS(las)
+
+  xyz %<>% toupper
+
+  if(typeof(xyz) != 'character' || length(xyz) != 3)
+    stop('xyz must be of type character and have length of exactly 3')
+
+  if(!is.logical(bring_to_origin))
+    stop('bring_to_origin must be logical')
+
+  if(!is.logical(rotate))
+    stop('rotate must be logical')
+
+  XYZ = data.table()
+  for(i in xyz){
+    temp =
+      if(i == 'X')
+        las$X
+      else if(i == '-X')
+        -las$X
+      else if(i == 'Y')
+        las$Y
+      else if(i == '-Y')
+        -las$Y
+      else if(i == 'Z')
+        las$Z
+      else if(i == '-Z')
+        -las$Z
+      else
+        NULL
+
+    if(temp %>% is.null)
+      stop('invalid input in xyz:' %>% paste(i))
+
+    XYZ %<>% cbind(temp)
+  }
+
+  . = NULL
+
+  las@data[,1:3] = XYZ
+  las %<>% resetLAS
+
+  if(rotate){
+    las %<>% tlsRotate()
+  }
+
+  if(bring_to_origin){
+    las = LAS(las@data)
+
+    mincoords = las@data[,.(min(X), min(Y), min(Z))] %>% as.double
+
+    las@data$X = las@data$X - mincoords[1]
+    las@data$Y = las@data$Y - mincoords[2]
+    las@data$Z = las@data$Z - mincoords[3]
+
+    las %<>% resetLAS
+  }
+
+  return(las)
 
 }
