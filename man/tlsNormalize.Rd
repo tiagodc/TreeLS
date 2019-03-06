@@ -20,7 +20,7 @@ tlsNormalize(las, res = 0.5, keepGround = TRUE)
 Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
 }
 \examples{
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
 plot(tls)
 

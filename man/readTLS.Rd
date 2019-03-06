@@ -20,7 +20,7 @@ readTLS(file, colNames = NULL, ...)
 Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults. Other file formats are (or try to be) read using \code{\link[utils:read.table]{read.table}}.
 }
 \examples{
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
+file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
 summary(tls)
 }

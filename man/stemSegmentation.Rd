@@ -23,7 +23,9 @@ file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
 tls = stemPoints(tls)
 df = stemSegmentation(tls)
+
 head(df)
+tlsPlot(tls, df)
 
 ### forest plot
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")
@@ -38,6 +40,8 @@ map = treeMap(thin, map.hough(min_density = 0.05))
 
 tls = stemPoints(tls, map)
 df = stemSegmentation(tls)
+
 head(df)
+tlsPlot(tls, df, map)
 
 }

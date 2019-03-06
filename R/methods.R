@@ -25,7 +25,7 @@
 #' @import rgl
 #' @useDynLib TreeLS, .registration = TRUE
 
-. = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = NULL
+. = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
 
 tls.marker = 'tlsAttribute'
 
@@ -176,6 +176,7 @@ tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
   return(cbind(x,y,z) %>% toLAS)
 }
 
+#' @importFrom stats cov
 planeAngle = function(xyz, axis='z'){
 
   e = eigen(cov(xyz))
@@ -238,7 +239,7 @@ setTLS = function(cloud, colNames=NULL){
 #' @param ... further arguments passed to either \code{readLAS} or \code{read.table}.
 #' @template return-las
 #' @examples
-#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' summary(tls)
 #' @importFrom utils read.table
@@ -361,7 +362,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' @param keepGround \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points.
 #' @template return-las
 #' @examples
-#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' plot(tls)
 #'
@@ -518,7 +519,9 @@ stemPoints = function(las, map = NULL, method = stem.hough()){
 #' tls = readTLS(file)
 #' tls = stemPoints(tls)
 #' df = stemSegmentation(tls)
+#'
 #' head(df)
+#' tlsPlot(tls, df)
 #'
 #' ### forest plot
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
@@ -533,7 +536,9 @@ stemPoints = function(las, map = NULL, method = stem.hough()){
 #'
 #' tls = stemPoints(tls, map)
 #' df = stemSegmentation(tls)
+#'
 #' head(df)
+#' tlsPlot(tls, df, map)
 #'
 #' @export
 stemSegmentation = function(las, method=sgmt.ransac.circle()){
@@ -545,55 +550,6 @@ stemSegmentation = function(las, method=sgmt.ransac.circle()){
 
   las %>% method %>% return()
 
-}
-
-#' Rotate point cloud towards a horizontal plane
-#' @description Check for ground points and rotates the point cloud to align its ground surface to a horizontal plane (XY).
-#' This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
-#' which might present a tilted global reference system.
-#' @template param-las
-#' @template return-las
-#' @examples
-#' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file)
-#'
-#' ### note the tilted ground
-#' plot(tls)
-#' axes3d(col='white')
-#'
-#' ### after rotation
-#' tls = tlsRotate(tls)
-#' plot(tls)
-#' axes3d(col='white')
-#'
-#' @export
-tlsRotate = function(las){
-
-  isLAS(las)
-
-  . = NULL
-
-  ground = las@data[,1:3] %>%
-    toLAS %>%
-    lasground(csf(class_threshold = .2), F) %>%
-    lasfilter(Classification == 2)
-
-  center = ground@data[,.(mean(X), mean(Y))] %>% as.double
-  ground = tlsCrop(ground, center[1], center[2], 5) %>% las2xyz
-
-  az = planeAngle(ground, 'z')
-  ax = planeAngle(ground, 'x')
-  ay = planeAngle(ground, 'y')
-
-  rz = ifelse(az > pi/2, pi-az, -az)
-  rx = ifelse(ay < pi/2, -ax, ax)
-
-  rot = rotationMatrix(0, rz, rx)
-
-  las@data[,1:3] = (las2xyz(las) %*% as.matrix(rot)) %>% as.data.table
-  las = las@data %>% LAS
-
-  return(las)
 }
 
 
@@ -633,6 +589,100 @@ gpsTimeFilter = function(las, from=0, to=1){
 }
 
 
+#' Rotate point cloud towards a horizontal plane
+#' @description Check for ground points and rotates the point cloud to align its ground surface to a horizontal plane (XY).
+#' This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
+#' which might present a tilted global reference system. Since the coordinates are altered in this procedure, any
+#' geographical information is erased from the LAS' header after rotation.
+#' @template param-las
+#' @template return-las
+#' @examples
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' ### note the tilted ground
+#' plot(tls)
+#' rgl::axes3d(col='white')
+#'
+#' ### after rotation
+#' tls = tlsRotate(tls)
+#' plot(tls)
+#' rgl::axes3d(col='white')
+#'
+#' @export
+tlsRotate = function(las){
+
+  isLAS(las)
+
+  . = NULL
+
+  ground = las@data[,1:3] %>%
+    toLAS %>%
+    lasground(csf(class_threshold = .2), F) %>%
+    lasfilter(Classification == 2)
+
+  center = ground@data[,.(mean(X), mean(Y))] %>% as.double
+  ground = tlsCrop(ground, center[1], center[2], 5) %>% las2xyz
+
+  az = planeAngle(ground, 'z')
+  ax = planeAngle(ground, 'x')
+  ay = planeAngle(ground, 'y')
+
+  rz = ifelse(az > pi/2, pi-az, -az)
+  rx = ifelse(ay < pi/2, -ax, ax)
+
+  rot = rotationMatrix(0, rz, rx)
+
+  las@data[,1:3] = (las2xyz(las) %*% as.matrix(rot)) %>% as.data.table
+  las = las@data %>% LAS
+
+  return(las)
+}
+
+
+#' Alter point cloud's coordinates
+#' @description Apply transformations to the XYZ axes of a point cloud.
+#' @template param-las
+#' @param xyz \code{character} vector of length 3 - \code{las}' columns to be reassigned as XYZ, respectively.
+#' Use minus signs to mirror the axes' coordinates - more details in the sections below.
+#' @param bring_to_origin \code{logical} - force output to start at \code{c(0,0,0)}? If \code{TRUE},
+#' removes any geographical information from the output.
+#' @param rotate  \code{logical} - rotate the point cloud to align the ground points horizontally? If \code{TRUE},
+#' removes any geographical information from the output. Checkout \code{\link{tlsRotate}} for more information.
+#' @template return-las
+#' @section XYZ Manipulation:
+#'
+#' The \code{xyz} argument can take a few different forms, it is useful to shift axes positions in a point cloud or
+#' to mirror an axis' coordinates. All axes characters can be entered in lower or uppercase and also be preceeded
+#' by a minus sign ('-'), indicating to invert (mirror) the axis' coordinates in the output.
+#' Check the \emph{examples} section for a practical overview.
+#'
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' ### swap the Y and Z axes
+#' zy = tlsAlter(tls, c('x', 'z', 'y'))
+#' bbox(zy)
+#' range(zy$Z)
+#' plot(zy, clear_artifacts=FALSE)
+#' rgl::axes3d(col='white')
+#'
+#' ### return an upside down point cloud
+#' ud = tlsAlter(tls, c('x', 'y', '-z'))
+#' bbox(ud)
+#' range(ud$Z)
+#' plot(zy, clear_artifacts=FALSE)
+#' rgl::axes3d(col='white')
+#'
+#' ### mirror all axes, then set the point cloud's starting point as the origin
+#' rv = tlsAlter(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
+#' bbox(rv)
+#' range(rv$Z)
+#' plot(rv, clear_artifacts=FALSE)
+#' rgl::axes3d(col='white')
+#'
+#' @export
 tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate = FALSE){
 
   isLAS(las)
@@ -648,29 +698,29 @@ tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate
   if(!is.logical(rotate))
     stop('rotate must be logical')
 
-  XYZ = data.table()
-  for(i in xyz){
+  XYZ = lapply(xyz, function(i){
     temp =
-      if(i == 'X')
+      if(i == 'X'){
         las$X
-      else if(i == '-X')
+      }else if(i == '-X'){
         -las$X
-      else if(i == 'Y')
+      }else if(i == 'Y'){
         las$Y
-      else if(i == '-Y')
+      }else if(i == '-Y'){
         -las$Y
-      else if(i == 'Z')
+      }else if(i == 'Z'){
         las$Z
-      else if(i == '-Z')
+      }else if(i == '-Z'){
         -las$Z
-      else
+      }else{
         NULL
+      }
 
     if(temp %>% is.null)
       stop('invalid input in xyz:' %>% paste(i))
 
-    XYZ %<>% cbind(temp)
-  }
+    return(temp)
+  }) %>% do.call(what = cbind) %>% as.data.table
 
   . = NULL
 
@@ -694,5 +744,97 @@ tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate
   }
 
   return(las)
+
+}
+
+
+#' Plot TLS outputs
+#' @description Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
+#' for usage examples.
+#' @param las optional \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
+#' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
+#' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
+#' @param treeID optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
+#' @param sgmtColor optional - color of the plotted stem segment representations.
+#' @export
+tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yellow'){
+
+  isLAS(las)
+
+  if(!is.null(treeID) && (length(treeID) != 1 || !is.numeric(treeID)))
+      stop('treeID must be numeric of length 1')
+
+  . = NULL
+
+  cp = pastel.colors(100)
+
+  if(hasAttribute(las, 'multiple_stem_points')){
+
+    if(is.null(treeID)){
+
+      temp = lasfilter(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
+
+      corner = plot(las %>% lasfilter(Stem), color='TreeID', colorPalette=cp, size=1.5)
+      las %<>% lasfilter(!Stem & Classification != 2)
+      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
+
+      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=sgmtColor)
+
+    }else{
+
+      xy = las@data[TreeID == treeID, .(mean(X),mean(Y))]
+
+      if(nrow(xy) == 0)
+        stop('no match for treeID ==' %>% paste(treeID))
+
+      xy %<>% as.double
+
+      las %<>% tlsCrop(xy[1], xy[2], 1.5)
+
+      temp = lasfilter(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
+
+      corner = plot(las %>% lasfilter(Stem), size=1.5)
+      las %<>% lasfilter(!Stem & Classification != 2)
+      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
+
+      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=sgmtColor)
+
+    }
+
+  }else if(hasAttribute(las, 'single_stem_points')){
+
+    corner = plot(las %>% lasfilter(Stem), size=1.5)
+    las %<>% lasfilter(!Stem & Classification != 2)
+    rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
+
+  }else{
+    corner = plot(las, size=1.5)
+  }
+
+  if(!is.null(sgmt)){
+    if(hasAttribute(sgmt, 'multiple_stems_dt') || hasAttribute(sgmt, 'single_stem_dt')){
+
+      if(!is.null(treeID) && hasAttribute(sgmt, 'multiple_stems_dt')){
+        sgmt = sgmt[TreeID == treeID]
+      }
+
+      sgmt %$% spheres3d(X-corner[1], Y-corner[2], AvgHeight, Radius, color=sgmtColor)
+    }else{
+      message('sgmt does not have a stem_dt signature')
+    }
+  }
+
+  if(!is.null(map)){
+    if(hasAttribute(map, 'tree_map')){
+      if(!is.null(treeID)){
+        map %<>% lasfilter(TreeID == treeID)
+      }
+      map@data %$% rgl.points(X - corner[1], Y - corner[2], Z, color='green', size=.5)
+    }else{
+      message('map does not have a tree_map signature')
+    }
+  }
+
+  return(corner %>% invisible)
 
 }
