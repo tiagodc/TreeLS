@@ -75,7 +75,7 @@ tls = stemPoints(tls, map)
 seg = stemSegmentation(tls, sgmt.ransac.circle(n = 15))
 
 # view the results
-plot(tls, color='Stem', size=.5, clear_artifacts=F)
-with(seg, rgl::spheres3d(X, Y, AvgHeight, Radius, color='yellow'))
+tlsPlot(tls, seg)
+tlsPlot(tls, seg, map)
 
 ```
