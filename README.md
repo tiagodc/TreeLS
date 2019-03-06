@@ -17,7 +17,6 @@ This is an ongoing project and new features will be introduced often. For any qu
 
 ## Coming soon:
 - `lidR` wrappers for writing TLS data with extra header fields
-- 3D visualization functions for TLS specific outputs
 - Eigen decomposition feature detection for trees and stems
 - Tree modelling based on robust cylinder fitting
 - 3D interactive point cloud manipulation
@@ -31,11 +30,11 @@ This is an ongoing project and new features will be introduced often. For any qu
     - on Mac: install Xcode
     - on Linux: be sure to have `r-base-dev` installed
 
-### Install TreeLS development version
+### Install TreeLS latest version
 
 On the R console, run:
 ```
-devtools::install_github('tiagodc/TreeLS', ref='devel')
+devtools::install_github('tiagodc/TreeLS', ref='master')
 ```
 
 #### Legacy code
@@ -44,7 +43,7 @@ For anyone still interested in the old implementations of this library (fully de
 ```
 devtools::install_github('tiagodc/TreeLS', ref='old')
 ```
-Not all features from the old package were reimplemented in `Rcpp`, but I'll get there.
+Not all features from the old package were reimplemented using `Rcpp`, but I'll get there.
 
 ## Examples
 
