@@ -6,5 +6,3 @@
 ^\.vscode$
 ^test_data$
 ^tests\.R$
-^src/methods\.hpp$
-^src/classes\.hpp$

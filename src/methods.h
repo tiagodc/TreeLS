@@ -27,7 +27,7 @@
 
 #include <Eigen/Dense>
 #include <iostream>
-#include "classes.hpp"
+#include "classes.h"
 
 using namespace Rcpp;
 
