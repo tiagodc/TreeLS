@@ -1,0 +1,7 @@
+PKG_CPPFLAGS = -I. -I../inst/include/
+
+SOURCES = ./methods.cpp \
+					./r_interface.cpp \
+		  		./RcppExports.cpp
+
+CXX_STD = CXX11

@@ -27,12 +27,9 @@
 
 #include <Eigen/Dense>
 #include <iostream>
-#include "classes.h"
+#include "classes.hpp"
 
 using namespace Rcpp;
-
-template <typename AnyType>
-void debugMsg(AnyType container);
 
 vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud);
 

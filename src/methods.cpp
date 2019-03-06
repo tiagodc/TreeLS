@@ -19,7 +19,7 @@
 //
 //  ===============================================================================
 
-#include "methods.h"
+#include "methods.hpp"
 
 // convert r matrix to std::vector
 vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud){
