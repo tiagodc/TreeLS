@@ -12,7 +12,7 @@ This is an ongoing project and new features will be introduced often. For any qu
 
 ## Main functionalities
 
-<img align="right" height="500" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
+<img align="right" height="450" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
 
 - Tree detection at plot level
 - Stem points detection at single tree and plot levels
