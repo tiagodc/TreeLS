@@ -751,7 +751,7 @@ tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate
 #' Plot TLS outputs
 #' @description Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
 #' for usage examples.
-#' @param las optional \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
+#' @param las \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
 #' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
 #' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
 #' @param treeID optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
