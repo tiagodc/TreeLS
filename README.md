@@ -12,11 +12,11 @@ This is an ongoing project and new features will be introduced often. For any qu
 
 ## Main functionalities
 
-<img align="right" height="100" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
-
 - Tree detection at plot level
 - Stem points detection at single tree and plot levels
 - Stem segmentation at single tree and plot levels
+
+<img align="middle" height="300" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
 
 ## Coming soon:
 - `lidR` wrappers for writing TLS data with extra header fields
