@@ -10,9 +10,9 @@ The algorithms were rewritten in C++ and wrapped in R functions through `Rcpp`. 
 
 This is an ongoing project and new features will be introduced often. For any questions or comments please contact me through github. Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
 
-## Main functionalities
-
 <img align="right" height="450" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
+
+## Main functionalities
 
 - Tree detection at plot level
 - Stem points detection at single tree and plot levels
