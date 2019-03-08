@@ -7,3 +7,5 @@ test_data
 *.o
 *.pdf
 tests.R
+src/*.dll
+src/*.so
