@@ -16,7 +16,7 @@ This is an ongoing project and new features will be introduced often. For any qu
 - Stem points detection at single tree and plot levels
 - Stem segmentation at single tree and plot levels
 
-<img align="middle" height="300" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
+<img align="right" height="500" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
 
 ## Coming soon:
 - `lidR` wrappers for writing TLS data with extra header fields
