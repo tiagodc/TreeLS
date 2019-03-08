@@ -4,7 +4,7 @@ High performance R functions for forest inventory based on **T**errestrial **L**
 
 ## Description
 
-This package is a refactor of the methods described in [this paper](https://www.researchgate.net/publication/321434623_Performance_of_stem_denoising_and_stem_modelling_algorithms_on_single_tree_point_clouds_from_terrestrial_laser_scanning).
+This package is a refactor of the methods described in [this paper](https://doi.org/10.1016/j.compag.2017.10.019).
 
 The algorithms were rewritten in C++ and wrapped in R functions through `Rcpp`. The algorithms were reviewed and enhanced, new functionalities introduced and the rebuilt functions now work upon [`lidR`](https://github.com/Jean-Romain/lidR/)'s `LAS` objects infrastructure.
 
@@ -37,7 +37,7 @@ This is an ongoing project and new features will be introduced often. For any qu
 
 On the R console, run:
 ```
-devtools::install_github('tiagodc/TreeLS', ref='master')
+devtools::install_github('tiagodc/TreeLS')
 ```
 
 #### Legacy code
@@ -48,9 +48,9 @@ devtools::install_github('tiagodc/TreeLS', ref='old')
 ```
 Not all features from the old package were reimplemented using `Rcpp`, but I'll get there.
 
-## Examples
+## Usage
 
-Example of stem detection plot-wise:
+Example of full processing pipe until stem segmentation for a forest plot:
 ```
 library(TreeLS)
 
@@ -62,18 +62,18 @@ tls = readTLS(file)
 tls = tlsNormalize(tls, keepGround = T)
 plot(tls, color='Classification')
 
-# extract the tree map from a systematically sampled point cloud
+# extract the tree map from a thinned point cloud
 thin = tlsSample(tls, voxelize(0.05))
 map = treeMap(thin, map.hough(min_density = 0.03))
 
-# visualize the tree map in 2D and 3D
-xymap = treePositions(map, TRUE)
+# visualize tree map in 2D and 3D
+xymap = treePositions(map, plot = TRUE)
 plot(map, color='Radii')
 
-# classify the stem points
+# classify stem points
 tls = stemPoints(tls, map)
 
-# segment stems
+# extract measures
 seg = stemSegmentation(tls, sgmt.ransac.circle(n = 15))
 
 # view the results
