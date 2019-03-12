@@ -17,3 +17,15 @@ gpsTimeFilter(las, from = 0, to = 1)
 \description{
 This is a simple wrapper to \code{\link[lidR:lasfilter]{lasfilter}} that takes as inputs proportional values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
 }
+\examples{
+file = system.file("extdata", "model_boles.laz", package="TreeLS")
+tls = readTLS(file)
+
+### color points according to its chronological time stamp
+plot(tls, color='gpstime')
+
+### keep points registered in the 70\% to 95\% time interval
+tls = gpsTimeFilter(tls, .7, .95)
+plot(tls, color='gpstime')
+
+}

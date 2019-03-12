@@ -56,6 +56,15 @@ This adapted version of the algorithm is very robust against outliers,
 but not against forked or leaning stems.
 }
 
+\examples{
+file = system.file("extdata", "spruce.laz", package="TreeLS")
+tls = readTLS(file)
+
+### identify stem points
+tls = stemPoints(tls, method = stem.hough(max_radius=.2))
+plot(tls, color='Stem')
+
+}
 \references{
 Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
 }

@@ -12,3 +12,13 @@ randomize(p = 0.5)
 \description{
 This function is meant to be used inside \code{\link{tlsSample}}. It selects points randomly, returning a fraction of the input point cloud.
 }
+\examples{
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file)
+print(tls)
+
+### thin point cloud - note the point count
+tls = tlsSample(tls, randomize(0.33))
+print(tls)
+
+}

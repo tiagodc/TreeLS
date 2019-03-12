@@ -35,6 +35,7 @@
 #' and exported in the output map.
 #'
 #' @template reference-thesis
+#' @template example-tree-map
 #' @export
 map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_radius = 0.25, min_density = 0.1, min_votes = 3){
 

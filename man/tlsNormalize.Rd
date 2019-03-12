@@ -23,7 +23,11 @@ Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
 plot(tls)
+rgl::axes3d(col='white')
 
+### remove topography effect
 tls = tlsNormalize(tls, 0.5, FALSE)
 plot(tls)
+rgl::axes3d(col='white')
+
 }

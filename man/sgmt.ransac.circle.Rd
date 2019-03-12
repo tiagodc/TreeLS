@@ -65,6 +65,33 @@ fitting over a set of 3D coordinates, selecting the best possible model through 
 For more information, checkout \href{https://en.wikipedia.org/wiki/Random_sample_consensus}{this wikipedia page}.
 }
 
+\examples{
+### single tree
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file)
+tls = stemPoints(tls)
+df = stemSegmentation(tls)
+
+head(df)
+tlsPlot(tls, df)
+
+### forest plot
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+tls = readTLS(file)
+
+# normalize the point cloud
+tls = tlsNormalize(tls)
+
+# map the trees on a resampled point cloud so all trees have approximately the same point density
+thin = tlsSample(tls, voxelize(0.02))
+map = treeMap(thin, map.hough(min_density = 0.05))
+
+tls = stemPoints(tls, map)
+df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
+
+head(df)
+tlsPlot(tls, df, map)
+}
 \references{
 Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
 }

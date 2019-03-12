@@ -73,6 +73,19 @@ on at least 3/4 of the stacked layers are assigned as \emph{tree occurrence regi
 and exported in the output map.
 }
 
+\examples{
+file = system.file("extdata", "model_boles.laz", package="TreeLS")
+tls = readTLS(file)
+plot(tls)
+
+## build a 3D map of tree occurrences
+map = treeMap(tls)
+plot(map, color='Radii')
+
+## get a 2D representation of the tree map
+xymap = treePositions(map)
+head(xymap)
+}
 \references{
 Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
 }

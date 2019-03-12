@@ -26,7 +26,7 @@ tls = readTLS(file)
 tls = stemPoints(tls)
 plot(tls, color='Stem')
 
-### forest plot - check the example given in the stem segmentation function
+### forest plot - check the example given for the stem segmentation function
 ?stemSegmentation
 
 }

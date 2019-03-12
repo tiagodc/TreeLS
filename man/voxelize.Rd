@@ -12,3 +12,13 @@ voxelize(spacing = 0.05)
 \description{
 This function is meant to be used inside \code{\link{tlsSample}}. It selects one random point per voxel at a given spatial resolution.
 }
+\examples{
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file)
+print(tls)
+
+### thin point cloud - note the point count
+tls = tlsSample(tls, voxelize(0.05))
+print(tls)
+
+}

@@ -272,11 +272,14 @@ readTLS = function(file, colNames=NULL, ...){
 #' tls = readTLS(file)
 #' summary(tls)
 #'
+#' ## sample points systematically in 3D
 #' vx = tlsSample(tls, voxelize(0.05))
 #' summary(vx)
 #'
+#' ## sample points randomly
 #' rd = tlsSample(tls, randomize(0.5))
 #' summary(rd)
+#'
 #' @export
 tlsSample = function(las, method = voxelize()){
 
@@ -365,9 +368,13 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' plot(tls)
+#' rgl::axes3d(col='white')
 #'
+#' ### remove topography effect
 #' tls = tlsNormalize(tls, 0.5, FALSE)
 #' plot(tls)
+#' rgl::axes3d(col='white')
+#'
 #' @importFrom raster raster extent res<-
 #' @export
 tlsNormalize = function(las, res=.5, keepGround=TRUE){
@@ -467,7 +474,7 @@ treePositions = function(las, plot=T){
 #' tls = stemPoints(tls)
 #' plot(tls, color='Stem')
 #'
-#' ### forest plot - check the example given in the stem segmentation function
+#' ### forest plot - check the example given for the stem segmentation function
 #' ?stemSegmentation
 #'
 #' @export
@@ -513,33 +520,7 @@ stemPoints = function(las, map = NULL, method = stem.hough()){
 #' @template param-las
 #' @param method stem segmentation algorithm - currently available: \code{\link{sgmt.ransac.circle}}.
 #' @return \code{data.table} of stem segments with \emph{stem_dt} signature.
-#' @examples
-#' ### single tree
-#' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' tls = stemPoints(tls)
-#' df = stemSegmentation(tls)
-#'
-#' head(df)
-#' tlsPlot(tls, df)
-#'
-#' ### forest plot
-#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-#' tls = readTLS(file)
-#'
-#' # normalize the point cloud
-#' tls = tlsNormalize(tls)
-#'
-#' # map the trees on a resampled point cloud so all trees have approximately the same point density
-#' thin = tlsSample(tls, voxelize(0.02))
-#' map = treeMap(thin, map.hough(min_density = 0.05))
-#'
-#' tls = stemPoints(tls, map)
-#' df = stemSegmentation(tls)
-#'
-#' head(df)
-#' tlsPlot(tls, df, map)
-#'
+#' @template example-segmentation
 #' @export
 stemSegmentation = function(las, method=sgmt.ransac.circle()){
 
@@ -559,6 +540,17 @@ stemSegmentation = function(las, method=sgmt.ransac.circle()){
 #' @param from,to \code{numeric} - between 0 and 1 - gpstime quantile limits to filter by
 #' @template return-las
 #' @importFrom stats quantile
+#' @examples
+#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' ### color points according to its chronological time stamp
+#' plot(tls, color='gpstime')
+#'
+#' ### keep points registered in the 70% to 95% time interval
+#' tls = gpsTimeFilter(tls, .7, .95)
+#' plot(tls, color='gpstime')
+#'
 #' @export
 gpsTimeFilter = function(las, from=0, to=1){
 
@@ -581,7 +573,7 @@ gpsTimeFilter = function(las, from=0, to=1){
     return(las)
   }
 
-  qts = las@data$gpstime %>% quantile(c(from, to))
+  qts = las@data$gpstime %>% quantile(c(from, to), na.rm=T)
   las %<>% lasfilter(gpstime >= qts[1] & gpstime <= qts[2])
 
   return(las)
@@ -756,6 +748,17 @@ tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate
 #' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
 #' @param treeID optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
 #' @param sgmtColor optional - color of the plotted stem segment representations.
+#' @examples
+#' ### single tree
+#' file = system.file("extdata", "spruce.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' tls = stemPoints(tls)
+#' df = stemSegmentation(tls)
+#'
+#' tlsPlot(tls, df)
+#'
+#' ### For further examples check:
+#' ?stemSegmentation
 #' @export
 tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yellow'){
 

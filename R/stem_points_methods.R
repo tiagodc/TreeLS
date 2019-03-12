@@ -20,6 +20,14 @@
 #'
 #' @template section-hough-transform
 #' @template reference-thesis
+#' @examples
+#' file = system.file("extdata", "spruce.laz", package="TreeLS")
+#' tls = readTLS(file)
+#'
+#' ### identify stem points
+#' tls = stemPoints(tls, method = stem.hough(max_radius=.2))
+#' plot(tls, color='Stem')
+#'
 #' @export
 stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 

@@ -8,7 +8,7 @@ tlsPlot(las, sgmt = NULL, map = NULL, treeID = NULL,
   sgmtColor = "yellow")
 }
 \arguments{
-\item{las}{optional \code{LAS} object - ideally an output from \code{\link{stemPoints}}.}
+\item{las}{\code{LAS} object - ideally an output from \code{\link{stemPoints}}.}
 
 \item{sgmt}{optional \code{data.table} - output from \code{\link{stemSegmentation}}.}
 
@@ -21,4 +21,16 @@ tlsPlot(las, sgmt = NULL, map = NULL, treeID = NULL,
 \description{
 Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
 for usage examples.
+}
+\examples{
+### single tree
+file = system.file("extdata", "spruce.laz", package="TreeLS")
+tls = readTLS(file)
+tls = stemPoints(tls)
+df = stemSegmentation(tls)
+
+tlsPlot(tls, df)
+
+### For further examples check:
+?stemSegmentation
 }

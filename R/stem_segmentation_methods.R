@@ -19,6 +19,7 @@
 #' @template section-circlefit
 #' @template section-ransac
 #' @template reference-thesis
+#' @template example-segmentation
 #' @export
 sgmt.ransac.circle = function(tol=0.025, n = 10, conf = 0.99, inliers = 0.8){
 

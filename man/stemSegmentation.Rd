@@ -39,9 +39,8 @@ thin = tlsSample(tls, voxelize(0.02))
 map = treeMap(thin, map.hough(min_density = 0.05))
 
 tls = stemPoints(tls, map)
-df = stemSegmentation(tls)
+df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
 
 head(df)
 tlsPlot(tls, df, map)
-
 }
