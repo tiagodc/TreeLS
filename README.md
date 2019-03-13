@@ -8,7 +8,13 @@ This package is a refactor of the methods described in [this paper](https://doi.
 
 The algorithms were rewritten in C++ and wrapped in R functions through `Rcpp`. The algorithms were reviewed and enhanced, new functionalities introduced and the rebuilt functions now work upon [`lidR`](https://github.com/Jean-Romain/lidR/)'s `LAS` objects infrastructure.
 
-This is an ongoing project and new features will be introduced often. For any questions or comments please contact me through github. Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
+This is an ongoing project and new features will be introduced often. For any questions or comments please contact me [through github](https://github.com/tiagodc/TreeLS). Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
+
+`TreeLS` v1.0 was released on CRAN as of March 2019. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the \emph{Installation from source} section below.
+
+## News
+
+- March/2019: `TreeLS` is finally available on CRAN and is now an [official R package](https://cran.r-project.org/web/packages/TreeLS/TreeLS.pdf) !!
 
 <img align="right" height="450" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
 
@@ -24,7 +30,7 @@ This is an ongoing project and new features will be introduced often. For any qu
 - Tree modelling based on robust cylinder fitting
 - 3D interactive point cloud manipulation
 
-## Installation
+## Installation from source
 
 ### Requirements
 - `devtools`: run `install.packages('devtools', dependencies = TRUE)` from the R console
