@@ -10,7 +10,7 @@ The algorithms were rewritten in C++ and wrapped in R functions through `Rcpp`. 
 
 This is an ongoing project and new features will be introduced often. For any questions or comments please contact me [through github](https://github.com/tiagodc/TreeLS). Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
 
-`TreeLS` v1.0 was released on CRAN as of March 2019. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the \emph{Installation from source} section below.
+`TreeLS` v1.0 was released on CRAN as of March 2019. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the *Installation from source* section below.
 
 ## News
 
