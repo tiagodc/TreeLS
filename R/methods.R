@@ -394,7 +394,7 @@ tlsNormalize = function(las, res=.5, keepGround=TRUE){
 
   dtm = grid_terrain(las, res = grid, algorithm = knnidw())
 
-  las %<>% lasnormalize(dtm, TRUE)
+  las %<>% lasnormalize(dtm, na.rm=TRUE)
 
   if(!keepGround) las %<>% lasfilter(Classification != 2)
 
