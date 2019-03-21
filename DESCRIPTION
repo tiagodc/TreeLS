@@ -10,5 +10,5 @@ Imports: rgl (>= 0.99.0), raster (>= 2.8.19)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-LinkingTo: Rcpp,BH,RcppEigen
+LinkingTo: Rcpp,BH,RcppEigen,RcppArmadillo
 RoxygenNote: 6.1.0

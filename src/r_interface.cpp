@@ -19,7 +19,9 @@
 //
 //  ===============================================================================
 
+#define USE_RCPP_ARMADILLO
 #include "methods.hpp"
+#include "optim.hpp"
 
 // [[Rcpp::plugins("cpp11")]]
 
@@ -355,3 +357,56 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
   vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
+
+
+////////optimization
+
+/*
+double test_circle(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data)
+{
+  // vector<double> x = {-0.5, 0, 0.5};
+  // vector<double> y = {0, 0.5, 0};
+
+  vector<vector<double> >* xy = reinterpret_cast<vector<vector<double> >* >(opt_data);
+  vector<double> x = (*xy)[0];
+  vector<double> y = (*xy)[1];
+
+  double xx = vals_inp(0);
+  double yy = vals_inp(1);
+  double rr = vals_inp(2);
+
+  double obj_val = 0;
+  for(unsigned i = 0; i < 3; i++){
+    obj_val += abs(sqrt( pow(x[i]-xx,2) + pow(y[i]-yy,2) ) - rr);
+  }
+  return obj_val;
+}
+
+// [[Rcpp::export]]
+int main()
+{
+  // initial values:
+  arma::vec x = arma::ones(3,1) - 1; // (2,2)
+
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+
+  vector<vector<double> > tdt = {{-0.25, 0, 0.25}, {0, 0.24, 0}};
+
+  bool success = optim::nm(x,test_circle,&tdt);
+
+  std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end-start;
+
+  if (success) {
+    std::cout << "de: test completed successfully.\n"
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+  } else {
+    std::cout << "de: test completed unsuccessfully." << std::endl;
+  }
+
+  arma::cout << "\nde: solution:\n" << x << arma::endl;
+
+  return 0;
+}
+*/
+
