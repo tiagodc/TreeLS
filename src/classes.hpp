@@ -29,8 +29,8 @@
 #include <RcppArmadillo.h>
 #include <vector>
 
-// #define USE_RCPP_ARMADILLO
-// #include "optim.hpp"
+#define USE_RCPP_ARMADILLO
+#include "optim.hpp"
 
 using namespace std;
 

@@ -19,9 +19,7 @@
 //
 //  ===============================================================================
 
-#define USE_RCPP_ARMADILLO
 #include "methods.hpp"
-#include "optim.hpp"
 
 // [[Rcpp::plugins("cpp11")]]
 
@@ -361,7 +359,111 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 
 ////////optimization
 
-/*
+vector<double> cylInit(vector<vector<double> > las){
+  // vector<vector<double> > las = rmatrix2cpp(cloud);
+
+  // vector<double> x_sort = las[0];
+  // sort(x_sort.begin(), x_sort.end());
+  //
+  // vector<double> y_sort = las[1];
+  // sort(y_sort.begin(), y_sort.end());
+  //
+  // unsigned int imd = round(x_sort.size()/2);
+
+  // double x0  = x_sort[imd];
+  // double y0  = y_sort[imd];
+  // double r0  = ( (x_sort.back() - x_sort.front()) + (y_sort.back() - y_sort.front()) )/4;
+  // double rho = sqrt(pow(x0,2) + pow(y0,2));
+  double rho = 0;
+  double theta = PI/2;
+  double phi = 0;
+  double alpha = 0;
+  double r = 0;
+
+  vector<double> pars = {rho, theta, phi, alpha, r};
+
+  return pars;
+}
+
+vector<double> xprod(vector<double> a, vector<double> b){
+
+  vector<double> x = {
+    a[1]*b[2] - a[2]*b[1],
+    a[2]*b[0] - a[0]*b[2],
+    a[0]*b[1] - a[1]*b[0]
+  };
+
+  return x;
+}
+
+double cylDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
+
+  vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
+
+  double rho = vals_inp(0);
+  double theta = vals_inp(1);
+  double phi = vals_inp(2);
+  double alpha = vals_inp(3);
+  double r = vals_inp(4);
+
+  vector<double> n = {cos(phi) * sin(theta) , sin(phi) * sin(theta) , cos(theta)};
+  vector<double> ntheta = {cos(phi) * cos(theta) , sin(phi) * cos(theta) , -sin(theta)};
+  vector<double> nphi = {-sin(phi) * sin(theta) , cos(phi) * sin(theta) , 0};
+
+  vector<double> nphibar = nphi;
+  nphibar[0] /= sin(theta);
+  nphibar[1] /= sin(theta);
+  nphibar[2] /= sin(theta);
+
+  vector<double> a = {
+    ntheta[0] * cos(alpha) + nphibar[0] * sin(alpha),
+    ntheta[1] * cos(alpha) + nphibar[1] * sin(alpha),
+    ntheta[2] * cos(alpha) + nphibar[2] * sin(alpha)
+  };
+
+  vector<double> q = n;
+  q[0] *= (rho + r);
+  q[1] *= (rho + r);
+  q[2] *= (rho + r);
+
+  double distSum = 0;
+  for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
+    double x = (*xyz)[0][i];
+    double y = (*xyz)[1][i];
+    double z = (*xyz)[2][i];
+
+    vector<double> iq = {x - q[0], y - q[1], z - q[2]};
+    vector<double> xp = xprod(iq,a);
+    double dst = sqrt( xp[0]*xp[0] + xp[1]*xp[1] + xp[2]*xp[2] ) - r ;
+
+    distSum += (dst*dst);
+  }
+
+  return distSum;
+}
+
+double cDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
+
+  vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
+
+  double ix = vals_inp(0);
+  double iy = vals_inp(1);
+  double ir = vals_inp(2);
+
+  double distSum = 0;
+  for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
+    double x = (*xyz)[0][i];
+    double y = (*xyz)[1][i];
+
+    double dst = sqrt( pow(x-ix,2) + pow(y-iy,2) ) - ir;
+
+    distSum += (dst*dst);
+  }
+
+  return distSum;
+
+}
+
 double test_circle(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data)
 {
   // vector<double> x = {-0.5, 0, 0.5};
@@ -383,30 +485,37 @@ double test_circle(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_dat
 }
 
 // [[Rcpp::export]]
-int main()
+void temp(NumericMatrix& cloud)
 {
+
+  vector<vector<double> > las = rmatrix2cpp(cloud);
+
   // initial values:
-  arma::vec x = arma::ones(3,1) - 1; // (2,2)
+  vector<double> init = {0,PI/2,0,0,0};
+  // vector<double> init = {0,0,0};
+  arma::vec x(init);
 
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
 
-  vector<vector<double> > tdt = {{-0.25, 0, 0.25}, {0, 0.24, 0}};
+  optim::algo_settings_t settings;
+  settings.vals_bound = true;
+  settings.lower_bounds = {-1,-PI/2,-PI/2,-PI/2,0};
+  settings.upper_bounds = {1,PI/2,PI/2,PI/2,1};
 
-  bool success = optim::nm(x,test_circle,&tdt);
+  bool success = optim::nm(x,cylDist,&las,settings);
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end-start;
 
   if (success) {
-    std::cout << "de: test completed successfully.\n"
+    std::cout << "test completed successfully.\n"
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
   } else {
-    std::cout << "de: test completed unsuccessfully." << std::endl;
+    std::cout << "test completed unsuccessfully." << std::endl;
   }
 
-  arma::cout << "\nde: solution:\n" << x << arma::endl;
+  arma::cout << "\nsolution:\n" << x << arma::endl;
 
-  return 0;
 }
-*/
+
 
