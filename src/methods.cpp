@@ -579,6 +579,12 @@ vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1, dou
 
   vector<double> bbox = getMinMax(cppCloud);
   vector<vector<double> > cloudSegment = getSlices(cppCloud, h1, h2, h2-h1)[0];
+
+  if(cloudSegment[0].empty()){
+    vector<HoughCenters> noPoints;
+    return noPoints;
+  }
+
   Raster raster = getCounts(cloudSegment, pixel);
 
   HoughCircle circle = getSingleCenter(&raster, radius, density, votes).main_circle;

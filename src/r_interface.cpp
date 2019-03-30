@@ -229,6 +229,11 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
   vector<vector<double> > cppCloud = rmatrix2cpp(las);
   vector<HoughCenters> treeEstimates = treeHough(cppCloud, h1, h2, hstep, radius, pixel, density, votes);
 
+  if(treeEstimates.empty()){
+    List noTree;
+    return noTree;
+  }
+
   tempContainer isStem(cppCloud[0].size());
   for(unsigned int i = 0; i < cppCloud[0].size(); ++i){
 
@@ -288,7 +293,13 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
   double cropRadius = radius*4;
   for(unsigned int i = 0; i < treeIds.size(); ++i){
     vector<vector<double> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
+
+    if(tree[0].empty()) continue;
+
     vector<HoughCenters> denoised = treeHough(tree, h1, h2, hstep, radius, pixel, density, votes);
+
+    if(denoised.empty()) continue;
+
     denoisedTrees[ treeIds[i] ] = denoised;
   }
 
@@ -358,7 +369,7 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 
 
 ////////optimization
-
+/*
 vector<double> cylInit(vector<vector<double> > las){
   // vector<vector<double> > las = rmatrix2cpp(cloud);
 
@@ -517,5 +528,5 @@ void temp(NumericMatrix& cloud)
   arma::cout << "\nsolution:\n" << x << arma::endl;
 
 }
-
+*/
 
