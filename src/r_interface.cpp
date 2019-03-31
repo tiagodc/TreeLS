@@ -369,23 +369,20 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 
 
 ////////optimization
-/*
-vector<double> cylInit(vector<vector<double> > las){
-  // vector<vector<double> > las = rmatrix2cpp(cloud);
 
-  // vector<double> x_sort = las[0];
-  // sort(x_sort.begin(), x_sort.end());
-  //
-  // vector<double> y_sort = las[1];
-  // sort(y_sort.begin(), y_sort.end());
-  //
-  // unsigned int imd = round(x_sort.size()/2);
+vector<double> nmCylinderInit(vector<vector<double> >& las){
 
-  // double x0  = x_sort[imd];
-  // double y0  = y_sort[imd];
-  // double r0  = ( (x_sort.back() - x_sort.front()) + (y_sort.back() - y_sort.front()) )/4;
-  // double rho = sqrt(pow(x0,2) + pow(y0,2));
-  double rho = 0;
+  vector<double> x_sort = las[0];
+  sort(x_sort.begin(), x_sort.end());
+
+  vector<double> y_sort = las[1];
+  sort(y_sort.begin(), y_sort.end());
+
+  unsigned int imd = round(x_sort.size()/2);
+
+  double x0  = x_sort[imd];
+  double y0  = y_sort[imd];
+  double rho = sqrt(pow(x0,2) + pow(y0,2));
   double theta = PI/2;
   double phi = 0;
   double alpha = 0;
@@ -396,7 +393,7 @@ vector<double> cylInit(vector<vector<double> > las){
   return pars;
 }
 
-vector<double> xprod(vector<double> a, vector<double> b){
+vector<double> xprod(vector<double>& a, vector<double>& b){
 
   vector<double> x = {
     a[1]*b[2] - a[2]*b[1],
@@ -407,7 +404,7 @@ vector<double> xprod(vector<double> a, vector<double> b){
   return x;
 }
 
-double cylDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
+double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
 
   vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
 
@@ -453,80 +450,56 @@ double cylDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
   return distSum;
 }
 
-double cDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
-
-  vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
-
-  double ix = vals_inp(0);
-  double iy = vals_inp(1);
-  double ir = vals_inp(2);
-
-  double distSum = 0;
-  for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
-    double x = (*xyz)[0][i];
-    double y = (*xyz)[1][i];
-
-    double dst = sqrt( pow(x-ix,2) + pow(y-iy,2) ) - ir;
-
-    distSum += (dst*dst);
-  }
-
-  return distSum;
-
-}
-
-double test_circle(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data)
-{
-  // vector<double> x = {-0.5, 0, 0.5};
-  // vector<double> y = {0, 0.5, 0};
-
-  vector<vector<double> >* xy = reinterpret_cast<vector<vector<double> >* >(opt_data);
-  vector<double> x = (*xy)[0];
-  vector<double> y = (*xy)[1];
-
-  double xx = vals_inp(0);
-  double yy = vals_inp(1);
-  double rr = vals_inp(2);
-
-  double obj_val = 0;
-  for(unsigned i = 0; i < 3; i++){
-    obj_val += abs(sqrt( pow(x[i]-xx,2) + pow(y[i]-yy,2) ) - rr);
-  }
-  return obj_val;
-}
+// double cDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
+//
+//   vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
+//
+//   double ix = vals_inp(0);
+//   double iy = vals_inp(1);
+//   double ir = vals_inp(2);
+//
+//   double distSum = 0;
+//   for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
+//     double x = (*xyz)[0][i];
+//     double y = (*xyz)[1][i];
+//
+//     double dst = sqrt( pow(x-ix,2) + pow(y-iy,2) ) - ir;
+//
+//     distSum += (dst*dst);
+//   }
+//
+//   return distSum;
+//
+// }
 
 // [[Rcpp::export]]
-void temp(NumericMatrix& cloud)
+vector<double> nmCylinderFit(NumericMatrix& cloud, double max_rad = 0.5)
 {
 
   vector<vector<double> > las = rmatrix2cpp(cloud);
 
   // initial values:
-  vector<double> init = {0,PI/2,0,0,0};
-  // vector<double> init = {0,0,0};
-  arma::vec x(init);
+  arma::vec init(nmCylinderInit(las));
 
-  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+
+  vector<double > minmax = getMinMax(las);
+
+  double low = *min_element(minmax.begin(), minmax.end());
+  double up = *max_element(minmax.begin(), minmax.end());
+
+  cout << "bounds " << low << " : " << up << endl;
 
   optim::algo_settings_t settings;
-  settings.vals_bound = true;
-  settings.lower_bounds = {-1,-PI/2,-PI/2,-PI/2,0};
-  settings.upper_bounds = {1,PI/2,PI/2,PI/2,1};
+  // settings.vals_bound = true;
+  // settings.lower_bounds = {low,-PI/2,-PI/2,-PI/2, 0};
+  // settings.upper_bounds = {up , PI/2, PI/2, PI/2, max_rad};
 
-  bool success = optim::nm(x,cylDist,&las,settings);
+  bool success = optim::nm(init,nmCylinderDist,&las,settings);
 
-  std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end-start;
+  vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
 
-  if (success) {
-    std::cout << "test completed successfully.\n"
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
-  } else {
-    std::cout << "test completed unsuccessfully." << std::endl;
-  }
-
-  arma::cout << "\nsolution:\n" << x << arma::endl;
+  return pars;
 
 }
-*/
+
 
