@@ -450,6 +450,18 @@ double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_
   return distSum;
 }
 
+double maxDistance(vector<vector<double> >& las){
+
+  double dst = sqrt( las[0][0]*las[0][0] + las[1][0]*las[1][0] + las[2][0]*las[2][0] );
+
+  for(unsigned int i = 1; i < las[0].size(); ++i){
+    double temp = sqrt( las[0][i]*las[0][i] + las[1][i]*las[1][i] + las[2][i]*las[2][i] );
+    dst = temp > dst ? temp : dst;
+  }
+
+  return dst;
+}
+
 // double cDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
 //
 //   vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
@@ -481,18 +493,12 @@ vector<double> nmCylinderFit(NumericMatrix& cloud, double max_rad = 0.5)
   // initial values:
   arma::vec init(nmCylinderInit(las));
 
-
-  vector<double > minmax = getMinMax(las);
-
-  double low = *min_element(minmax.begin(), minmax.end());
-  double up = *max_element(minmax.begin(), minmax.end());
-
-  cout << "bounds " << low << " : " << up << endl;
+  double md = maxDistance(las);
 
   optim::algo_settings_t settings;
-  // settings.vals_bound = true;
-  // settings.lower_bounds = {low,-PI/2,-PI/2,-PI/2, 0};
-  // settings.upper_bounds = {up , PI/2, PI/2, PI/2, max_rad};
+  settings.vals_bound = true;
+  settings.lower_bounds = {-md,-PI,-PI,-PI, 0};
+  settings.upper_bounds = { md, PI, PI, PI, max_rad};
 
   bool success = optim::nm(init,nmCylinderDist,&las,settings);
 
