@@ -370,29 +370,6 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 
 ////////optimization
 
-vector<double> nmCylinderInit(vector<vector<double> >& las){
-
-  vector<double> x_sort = las[0];
-  sort(x_sort.begin(), x_sort.end());
-
-  vector<double> y_sort = las[1];
-  sort(y_sort.begin(), y_sort.end());
-
-  unsigned int imd = round(x_sort.size()/2);
-
-  double x0  = x_sort[imd];
-  double y0  = y_sort[imd];
-  double rho = sqrt(pow(x0,2) + pow(y0,2));
-  double theta = PI/2;
-  double phi = 0;
-  double alpha = 0;
-  double r = 0;
-
-  vector<double> pars = {rho, theta, phi, alpha, r};
-
-  return pars;
-}
-
 vector<double> xprod(vector<double>& a, vector<double>& b){
 
   vector<double> x = {
@@ -402,6 +379,64 @@ vector<double> xprod(vector<double>& a, vector<double>& b){
   };
 
   return x;
+}
+
+double median(vector<double> x){
+  sort(x.begin(), x.end());
+  unsigned int i = round(x.size()/2);
+  return x[i];
+}
+
+void bringOrigin(vector<vector<double> >& las){
+
+  double x0 = median(las[0]);
+  double y0 = median(las[1]);
+  double z0 = median(las[2]);
+
+  for(unsigned int i = 0; i < las[0].size(); ++i){
+    las[0][i] -= x0;
+    las[1][i] -= y0;
+    las[2][i] -= z0;
+  }
+
+}
+
+double mad(vector<double> x, double c = 1.4826){
+
+  double md = median(x);
+
+  for(auto& i : x){
+    i = abs(i - md);
+  }
+
+  return c * median(x);
+}
+
+void tukeyBiSq(vector<double>& errors, double b = 5){
+  double s = mad(errors);
+
+  for(auto& i : errors){
+    i /= s;
+    i = abs(i) > b ? 0 : pow(1-(i/b)*(i/b),2);
+  }
+
+}
+
+vector<double> nmCylinderInit(vector<vector<double> >& las){
+
+  double x0 = median(las[0]);
+  double y0 = median(las[1]);
+  double z0 = median(las[2]);
+  double rho = sqrt(x0*x0 + y0*y0 + z0*z0);
+  double theta = PI/2;
+  double phi = 0;
+  double alpha = 0;
+  double r = 0;
+
+  rho=0;
+  vector<double> pars = {rho, theta, phi, alpha, r};
+
+  return pars;
 }
 
 double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
@@ -430,9 +465,9 @@ double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_
   };
 
   vector<double> q = n;
-  q[0] *= (rho + r);
-  q[1] *= (rho + r);
-  q[2] *= (rho + r);
+  q[0] *= (r + rho);
+  q[1] *= (r + rho);
+  q[2] *= (r + rho);
 
   double distSum = 0;
   for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
@@ -450,59 +485,23 @@ double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_
   return distSum;
 }
 
-double maxDistance(vector<vector<double> >& las){
-
-  double dst = sqrt( las[0][0]*las[0][0] + las[1][0]*las[1][0] + las[2][0]*las[2][0] );
-
-  for(unsigned int i = 1; i < las[0].size(); ++i){
-    double temp = sqrt( las[0][i]*las[0][i] + las[1][i]*las[1][i] + las[2][i]*las[2][i] );
-    dst = temp > dst ? temp : dst;
-  }
-
-  return dst;
-}
-
-// double cDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
-//
-//   vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
-//
-//   double ix = vals_inp(0);
-//   double iy = vals_inp(1);
-//   double ir = vals_inp(2);
-//
-//   double distSum = 0;
-//   for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
-//     double x = (*xyz)[0][i];
-//     double y = (*xyz)[1][i];
-//
-//     double dst = sqrt( pow(x-ix,2) + pow(y-iy,2) ) - ir;
-//
-//     distSum += (dst*dst);
-//   }
-//
-//   return distSum;
-//
-// }
 
 // [[Rcpp::export]]
 vector<double> nmCylinderFit(NumericMatrix& cloud, double max_rad = 0.5)
 {
 
   vector<vector<double> > las = rmatrix2cpp(cloud);
+  bringOrigin(las);
 
   // initial values:
   arma::vec init(nmCylinderInit(las));
 
-  double md = maxDistance(las);
-
-  optim::algo_settings_t settings;
-  settings.vals_bound = true;
-  settings.lower_bounds = {-md,-PI,-PI,-PI, 0};
-  settings.upper_bounds = { md, PI, PI, PI, max_rad};
-
-  bool success = optim::nm(init,nmCylinderDist,&las,settings);
+  bool success = optim::nm(init,nmCylinderDist,&las);
 
   vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
+
+  double err =  nmCylinderDist(arma::vec(pars), nullptr, &las);
+  pars.push_back(err);
 
   return pars;
 
