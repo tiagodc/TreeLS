@@ -412,10 +412,10 @@ double mad(vector<double> x, double c = 1.4826){
   return c * median(x);
 }
 
-void tukeyBiSq(vector<double>& errors, double b = 5){
-  double s = mad(errors);
+void tukeyBiSq(vector<double>& werrors, double b = 5){
+  double s = mad(werrors);
 
-  for(auto& i : errors){
+  for(auto& i : werrors){
     i /= s;
     i = abs(i) > b ? 0 : pow(1-(i/b)*(i/b),2);
   }
@@ -479,16 +479,60 @@ double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_
     vector<double> xp = xprod(iq,a);
     double dst = sqrt( xp[0]*xp[0] + xp[1]*xp[1] + xp[2]*xp[2] ) - r ;
 
-    distSum += (dst*dst);
+    distSum += ((*xyz).size() == 4) ? (dst*dst)*(*xyz)[3][i] : (dst*dst);
   }
 
   return distSum;
 }
 
+vector<double> cylDists(vector<vector<double> >& xyz, arma::vec& pars){
+
+  double rho = pars(0);
+  double theta = pars(1);
+  double phi = pars(2);
+  double alpha = pars(3);
+  double r = pars(4);
+
+  vector<double> n = {cos(phi) * sin(theta) , sin(phi) * sin(theta) , cos(theta)};
+  vector<double> ntheta = {cos(phi) * cos(theta) , sin(phi) * cos(theta) , -sin(theta)};
+  vector<double> nphi = {-sin(phi) * sin(theta) , cos(phi) * sin(theta) , 0};
+
+  vector<double> nphibar = nphi;
+  nphibar[0] /= sin(theta);
+  nphibar[1] /= sin(theta);
+  nphibar[2] /= sin(theta);
+
+  vector<double> a = {
+    ntheta[0] * cos(alpha) + nphibar[0] * sin(alpha),
+    ntheta[1] * cos(alpha) + nphibar[1] * sin(alpha),
+    ntheta[2] * cos(alpha) + nphibar[2] * sin(alpha)
+  };
+
+  vector<double> q = n;
+  q[0] *= (r + rho);
+  q[1] *= (r + rho);
+  q[2] *= (r + rho);
+
+  vector<double> sqDists(xyz[0].size(), 0);
+  for(unsigned int i = 0; i < xyz[0].size(); ++i){
+    double x = xyz[0][i];
+    double y = xyz[1][i];
+    double z = xyz[2][i];
+
+    vector<double> iq = {x - q[0], y - q[1], z - q[2]};
+    vector<double> xp = xprod(iq,a);
+    double dst = sqrt( xp[0]*xp[0] + xp[1]*xp[1] + xp[2]*xp[2] ) - r ;
+
+    sqDists[i] = (dst*dst);
+
+  }
+
+  return sqDists;
+
+}
 
 // [[Rcpp::export]]
-vector<double> nmCylinderFit(NumericMatrix& cloud, double max_rad = 0.5)
-{
+vector<double> nmCylinderFit(NumericMatrix& cloud){
 
   vector<vector<double> > las = rmatrix2cpp(cloud);
   bringOrigin(las);
@@ -499,12 +543,104 @@ vector<double> nmCylinderFit(NumericMatrix& cloud, double max_rad = 0.5)
   bool success = optim::nm(init,nmCylinderDist,&las);
 
   vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
-
-  double err =  nmCylinderDist(arma::vec(pars), nullptr, &las);
+  double err =  success ? nmCylinderDist(init, nullptr, &las) : 0;
   pars.push_back(err);
 
   return pars;
 
 }
 
+vector<double> nmCylinderFit(vector<vector<double> >& las){
 
+  bringOrigin(las);
+
+  // initial values:
+  arma::vec init(nmCylinderInit(las));
+
+  bool success = optim::nm(init,nmCylinderDist,&las);
+
+  vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
+  double err =  success ? nmCylinderDist(init, nullptr, &las) : 0;
+  pars.push_back(err);
+
+  return pars;
+
+}
+
+// [[Rcpp::export]]
+vector<double> irlsCylinder(NumericMatrix& cloud, double err_tol = 1E-06, unsigned int max_iter = 100){
+
+  vector<vector<double> > las = rmatrix2cpp(cloud);
+  bringOrigin(las);
+
+  arma::vec init(nmCylinderInit(las));
+
+  vector<double> weights(las[0].size(), 1);
+  las.push_back(weights);
+
+  double ssq = 0;
+  unsigned int count = 0;
+  bool converge = false;
+
+  while(!converge){
+    bool success = optim::nm(init,nmCylinderDist,&las);
+    double err = nmCylinderDist(init, nullptr, &las);
+
+    vector<double> werr = cylDists(las, init);
+    tukeyBiSq(werr);
+    las[3] = werr;
+    converge = abs(err - ssq) < err_tol || ++count == max_iter;
+    ssq = err;
+  }
+
+  vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
+  pars.push_back(ssq);
+
+  return pars;
+
+}
+
+// [[Rcpp::export]]
+vector<double> ransacCylinder(NumericMatrix& cloud, unsigned int nSamples=10, double pConfidence=0.99, double pInliers=0.8){
+
+  vector<vector<double> > las = rmatrix2cpp(cloud);
+  bringOrigin(las);
+
+  vector<vector<double> > tempCloud(3, vector<double>(nSamples));
+
+  unsigned int kIterations = ceil(5 * log(1 - pConfidence) / log(1 - pow( pInliers, nSamples)));
+  vector<double> bestfit;
+
+  for(unsigned int k = 0; k < kIterations; ++k){
+
+    vector<unsigned int> random(nSamples);
+
+    for(unsigned int i = 0; i < random.size(); ++i){
+      unsigned int n;
+      bool exists;
+
+      do{
+        n = floor( R::runif(0, las[0].size()) );
+        exists = find(begin(random), end(random), n) != end(random);
+      }while(exists);
+
+      random[i] = n;
+
+      tempCloud[0][i] = las[0][n];
+      tempCloud[1][i] = las[1][n];
+      tempCloud[2][i] = las[2][n];
+    }
+
+    vector<double> fit = nmCylinderFit(tempCloud);
+
+    if(k == 0) bestfit = fit;
+
+    if(fit[5] < bestfit[5]){
+      bestfit = fit;
+    }
+
+  }
+
+  return bestfit;
+
+}
