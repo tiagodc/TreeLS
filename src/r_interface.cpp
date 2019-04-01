@@ -424,16 +424,17 @@ void tukeyBiSq(vector<double>& werrors, double b = 5){
 
 vector<double> nmCylinderInit(vector<vector<double> >& las){
 
-  double x0 = median(las[0]);
-  double y0 = median(las[1]);
-  double z0 = median(las[2]);
-  double rho = sqrt(x0*x0 + y0*y0 + z0*z0);
+  // double x0 = median(las[0]);
+  // double y0 = median(las[1]);
+  // double z0 = median(las[2]);
+  // double rho = sqrt(x0*x0 + y0*y0 + z0*z0);
+
+  double rho=0;
   double theta = PI/2;
   double phi = 0;
   double alpha = 0;
   double r = 0;
 
-  rho=0;
   vector<double> pars = {rho, theta, phi, alpha, r};
 
   return pars;
