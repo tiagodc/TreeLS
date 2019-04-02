@@ -514,7 +514,7 @@ vector<double> cylDists(vector<vector<double> >& xyz, arma::vec& pars){
   q[1] *= (r + rho);
   q[2] *= (r + rho);
 
-  vector<double> sqDists(xyz[0].size(), 0);
+  vector<double> sqDists(xyz[0].size());
   for(unsigned int i = 0; i < xyz[0].size(); ++i){
     double x = xyz[0][i];
     double y = xyz[1][i];
