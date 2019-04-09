@@ -81,8 +81,11 @@ stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0
     }else{
       message('performing point classification on multiple stems')
       results = houghStemPlot(las2xyz(las)[!groundPts,], map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
-      las@data$TreeID = 0
-      las@data$TreeID[!groundPts] = results$TreeID
+
+      if(!hasAttribute(las, 'tree_points')){
+        las@data$TreeID[!groundPts] = results$TreeID
+        las@data$TreeID[las@data$TreeID %>% is.na] = 0
+      }
     }
 
     las@data$Stem = F

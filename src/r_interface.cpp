@@ -645,3 +645,4 @@ vector<double> ransacCylinder(NumericMatrix& cloud, unsigned int nSamples=10, do
   return bestfit;
 
 }
+

@@ -841,3 +841,27 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
   return(corner %>% invisible)
 
 }
+
+
+####### NEW IMPLEMENTATIONS
+
+treePoints = function(las, map, method=trees.voronoi()){
+
+  isLAS(las)
+
+  if(hasAttribute(map, 'tree_map_dt')){
+    # map = map
+  }else if(hasAttribute(map, 'tree_map')){
+    map %<>% treePositions(F)
+  }else{
+    stop('las is not a tree_map object: check ?treeMap')
+  }
+
+  if( map$TreeID %>% duplicated %>% any )
+    stop('input map must have unique TreeIDs')
+
+  las %<>% method(map)
+  return(las)
+
+}
+
