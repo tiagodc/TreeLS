@@ -370,6 +370,24 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 
 ////////optimization
 
+vector<vector<double> > randomPoints(vector<vector<double> >& cloud, double p = 0.5){
+
+  vector<vector<double> > reCloud(3);
+
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+
+    double val = R::runif(0,1);
+    if(val > p) continue;
+
+    reCloud[0].push_back( cloud[0][i] );
+    reCloud[1].push_back( cloud[1][i] );
+    reCloud[2].push_back( cloud[2][i] );
+  }
+
+  return reCloud;
+
+}
+
 vector<double> xprod(vector<double>& a, vector<double>& b){
 
   vector<double> x = {
@@ -568,13 +586,11 @@ vector<double> nmCylinderFit(vector<vector<double> >& las){
 
 }
 
-// [[Rcpp::export]]
-vector<double> irlsCylinder(NumericMatrix& cloud, double err_tol = 1E-06, unsigned int max_iter = 100){
+vector<double> irlsCylinder(vector<vector<double> >& las, vector<double> initPars, double err_tol = 1E-06, unsigned int max_iter = 100){
 
-  vector<vector<double> > las = rmatrix2cpp(cloud);
+  // vector<vector<double> > las = rmatrix2cpp(cloud);
   bringOrigin(las);
-
-  arma::vec init(nmCylinderInit(las));
+  arma::vec init(initPars);
 
   vector<double> weights(las[0].size(), 1);
   las.push_back(weights);
@@ -646,3 +662,34 @@ vector<double> ransacCylinder(NumericMatrix& cloud, unsigned int nSamples=10, do
 
 }
 
+// [[Rcpp::export]]
+vector<vector<double> > irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, unsigned int nPoints=500){
+
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
+
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  vector<double> initPars = {0, PI/2, 0, 0, 0};
+
+  vector<vector<double> > parStore;
+
+  unsigned counter = 0;
+  for(auto& i : stemSlices){
+    cout << "... seg " << ++counter << " of " << stemSlices.size() << ", n points: " << i[0].size() << endl;
+
+    vector<vector<double> > cld = i;
+    if(i[0].size() > nPoints){
+      double p = (double)nPoints / (double)i[0].size();
+      cld = randomPoints(cld, p);
+    }
+
+    vector<double> temp = irlsCylinder(cld, initPars);
+    parStore.push_back(temp);
+    // initPars = temp;
+  }
+
+  return parStore;
+
+}
