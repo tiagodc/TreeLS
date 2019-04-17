@@ -623,10 +623,22 @@ tlsRotate = function(las){
   rz = ifelse(az > pi/2, pi-az, -az)
   rx = ifelse(ay < pi/2, -ax, ax)
 
-  rot = rotationMatrix(0, rz, rx)
+  rot = rotationMatrix(0, rz, rx) %>% as.matrix
+  xyBack = rotationMatrix(0,0,-rx) %>% as.matrix
 
-  las@data[,1:3] = (las2xyz(las) %*% as.matrix(rot)) %>% as.data.table
-  las = las@data %>% LAS
+  minXYZ = apply(las@data[,1:3], 2, min) %>% as.double
+
+  las@data$X = las@data$X - minXYZ[1]
+  las@data$Y = las@data$Y - minXYZ[2]
+  las@data$Z = las@data$Z - minXYZ[3]
+
+  las@data[,1:3] = (las2xyz(las) %*% rot) %*% xyBack %>% as.data.table
+
+  las@data$X = las@data$X + minXYZ[1]
+  las@data$Y = las@data$Y + minXYZ[2]
+  las@data$Z = las@data$Z + minXYZ[3]
+
+  las %<>% resetLAS
 
   return(las)
 }
