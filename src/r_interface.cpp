@@ -370,6 +370,44 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 
 ////////optimization
 
+vector<double> eigenCircle(vector<vector<double> >& cloud){
+
+  unsigned int n = cloud[0].size();
+
+  Eigen::Matrix<double, Eigen::Dynamic, 3> tempMatrix;
+  tempMatrix.resize(n, 3);
+
+  Eigen::Matrix<double, Eigen::Dynamic, 1> rhsVector;
+  rhsVector.resize(n, 3);
+
+  for(unsigned int i = 0; i < n; ++i){
+    tempMatrix(i, 0) = cloud[0][i];
+    tempMatrix(i, 1) = cloud[1][i];
+    tempMatrix(i, 2) = 1;
+    rhsVector(i,0) = pow( tempMatrix(i,0), 2) + pow( tempMatrix(i,1), 2);
+  }
+
+  Eigen::Matrix<double, 3, 1> qrDecompose = tempMatrix.colPivHouseholderQr().solve(rhsVector);
+
+  Eigen::Matrix<double, 3, 1> xyr;
+  xyr(0,0) =  qrDecompose(0,0) / 2;
+  xyr(1,0) =  qrDecompose(1,0) / 2;
+  xyr(2,0) =  sqrt( ((pow( qrDecompose(0,0) ,2) + pow( qrDecompose(1,0) ,2)) / 4) + qrDecompose(2,0) );
+
+  double sumOfSquares = 0;
+  for(unsigned int i = 0; i < n; ++i){
+    double tempX = pow( cloud[0][i] - xyr(0,0) , 2);
+    double tempY = pow( cloud[1][i] - xyr(1,0) , 2);
+    sumOfSquares += pow( sqrt( tempX + tempY ) - xyr(2,0) , 2);
+  }
+
+  double circleError = sqrt(sumOfSquares / n);
+
+  vector<double> bestFit = { xyr(0,1), xyr(1,0), xyr(2,0), circleError };
+  return bestFit;
+
+}
+
 vector<vector<double> > randomPoints(vector<vector<double> >& cloud, double p = 0.5){
 
   vector<vector<double> > reCloud(3);
@@ -504,6 +542,26 @@ double nmCylinderDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_
   return distSum;
 }
 
+double nmCircleDist(const arma::vec& vals_inp, arma::vec* grad_out, void* opt_data){
+
+  vector<vector<double> >* xyz = reinterpret_cast<vector<vector<double> >* >(opt_data);
+
+  double xInit = vals_inp(0);
+  double yInit = vals_inp(1);
+  double rad = vals_inp(2);
+
+  double distSum = 0;
+  for(unsigned int i = 0; i < (*xyz)[0].size(); ++i){
+    double x = (*xyz)[0][i];
+    double y = (*xyz)[1][i];
+
+    double dst = sqrt( (x-xInit)*(x-xInit) + (y-yInit)*(y-yInit) ) - rad;
+    distSum += ((*xyz).size() == 4) ? (dst*dst)*(*xyz)[3][i] : (dst*dst);
+  }
+
+  return distSum;
+}
+
 vector<double> cylDists(vector<vector<double> >& xyz, arma::vec& pars){
 
   double rho = pars(0);
@@ -550,6 +608,24 @@ vector<double> cylDists(vector<vector<double> >& xyz, arma::vec& pars){
 
 }
 
+vector<double> circleDists(vector<vector<double> >& xyz, arma::vec& pars){
+
+  double xInit = pars(0);
+  double yInit = pars(1);
+  double rad = pars(2);
+
+  vector<double> sqDists(xyz[0].size());
+  for(unsigned int i = 0; i < xyz[0].size(); ++i){
+    double x = xyz[0][i];
+    double y = xyz[1][i];
+
+    double dst = sqrt( (x-xInit)*(x-xInit) + (y-yInit)*(y-yInit) ) - rad;
+    sqDists[i] = (dst*dst);
+  }
+
+  return sqDists;
+}
+
 // [[Rcpp::export]]
 vector<double> nmCylinderFit(NumericMatrix& cloud){
 
@@ -586,6 +662,21 @@ vector<double> nmCylinderFit(vector<vector<double> >& las){
 
 }
 
+vector<double> nmCircleFit(vector<vector<double> >& las){
+
+  // vector<vector<double> > las = rmatrix2cpp(cloud);
+  arma::vec init(eigenCircle(las));
+
+  bool success = optim::nm(init,nmCircleDist,&las);
+
+  vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
+  double err =  success ? nmCircleDist(init, nullptr, &las) : 0;
+  pars.push_back(err);
+
+  return pars;
+
+}
+
 vector<double> irlsCylinder(vector<vector<double> >& las, vector<double> initPars, double err_tol = 1E-06, unsigned int max_iter = 100){
 
   // vector<vector<double> > las = rmatrix2cpp(cloud);
@@ -604,6 +695,35 @@ vector<double> irlsCylinder(vector<vector<double> >& las, vector<double> initPar
     double err = nmCylinderDist(init, nullptr, &las);
 
     vector<double> werr = cylDists(las, init);
+    tukeyBiSq(werr);
+    las[3] = werr;
+    converge = abs(err - ssq) < err_tol || ++count == max_iter;
+    ssq = err;
+  }
+
+  vector<double> pars = arma::conv_to<std::vector<double> >::from(init);
+  pars.push_back(ssq);
+
+  return pars;
+
+}
+
+vector<double> irlsCircle(vector<vector<double> >& las, vector<double> initPars, double err_tol = 1E-06, unsigned int max_iter = 100){
+
+  arma::vec init(initPars);
+
+  vector<double> weights(las[0].size(), 1);
+  las.push_back(weights);
+
+  double ssq = 0;
+  unsigned int count = 0;
+  bool converge = false;
+
+  while(!converge){
+    bool success = optim::nm(init,nmCircleDist,&las);
+    double err = nmCircleDist(init, nullptr, &las);
+
+    vector<double> werr = circleDists(las, init);
     tukeyBiSq(werr);
     las[3] = werr;
     converge = abs(err - ssq) < err_tol || ++count == max_iter;
@@ -692,4 +812,12 @@ vector<vector<double> > irlsStemCylinder(NumericMatrix& las, vector<unsigned int
 
   return parStore;
 
+}
+
+// [[Rcpp::export]]
+vector<double> temp(NumericMatrix& cloud){
+  vector<vector<double> > las = rmatrix2cpp(cloud);
+  vector<double> init = eigenCircle(las);
+  vector<double> res = irlsCircle(las, init);
+  return res;
 }
