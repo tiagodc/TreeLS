@@ -25,12 +25,10 @@
 // [[Rcpp::depends(BH)]]
 
 #include <boost/functional/hash.hpp>
+#include <iostream>
 #include <math.h>
-#include <RcppArmadillo.h>
 #include <vector>
-
-#define USE_RCPP_ARMADILLO
-#include "optim.hpp"
+#include <RcppArmadillo.h>
 
 using namespace std;
 
