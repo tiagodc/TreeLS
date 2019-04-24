@@ -366,7 +366,7 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
 ////////optimization
 
 // [[Rcpp::export]]
-vector<vector<double> > irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, unsigned int nPoints=500){
+vector<vector<double> > irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=500,  double tolerance=0.05){
 
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
@@ -374,31 +374,53 @@ vector<vector<double> > irlsStemCylinder(NumericMatrix& las, vector<unsigned int
   cloud.clear();
   cloud.shrink_to_fit();
 
-  vector<double> initPars = {0, PI/2, 0, 0, 0};
+  vector<double> segRadii = idSortUnique(segments, radii);
 
-  vector<vector<double> > parStore;
-
-  unsigned counter = 0;
-  for(auto& i : stemSlices){
-    cout << "... seg " << ++counter << " of " << stemSlices.size() << ", n points: " << i[0].size() << endl;
-
-    vector<vector<double> > cld = i;
-    if(i[0].size() > nPoints){
-      double p = (double)nPoints / (double)i[0].size();
-      cld = randomPoints(cld, p);
-    }
-
-    vector<double> temp = irlsCylinder(cld, initPars);
-    parStore.push_back(temp);
-    // initPars = temp;
+  set<unsigned int> uniqueIds;
+  for(auto& i : segments){
+    uniqueIds.insert(i);
   }
 
-  return parStore;
+  vector< vector<double> > estimates;
+  vector<double> initPars = {0, PI/2, 0, 0, 0};
+
+  for(unsigned int i = 0; i < stemSlices.size(); ++i){
+
+    vector<vector<double> > slice = stemSlices[i];
+
+    cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
+
+    if(slice[0].size() <= 5) continue;
+
+    if(slice[0].size() > nPoints){
+      double p = (double)nPoints / (double)slice[0].size();
+      slice = randomPoints(slice, p);
+    }
+
+    double& hrad = segRadii[i];
+    vector<double> temp = irlsCylinder(slice, initPars);
+
+    double rdiff = abs(temp[4] - hrad);
+    if(rdiff > tolerance){
+      temp[0] = 0;
+      temp[1] = PI/2;
+      temp[2] = 0;
+      temp[3] = 0;
+      temp[4] = hrad;
+      temp[5] = 0;
+    }
+
+    unsigned int id = *next(uniqueIds.begin(), i);
+    temp.push_back(id);
+    estimates.push_back(temp);
+  }
+
+  return estimates;
 
 }
 
 // [[Rcpp::export]]
-vector<vector<double> > irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments){
+vector<vector<double> > irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double tolerance=0.05){
 
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
@@ -406,15 +428,39 @@ vector<vector<double> > irlsStemCircle(NumericMatrix& las, vector<unsigned int>&
   cloud.clear();
   cloud.shrink_to_fit();
 
-  vector<vector<double> > parStore;
+  vector<double> segRadii = idSortUnique(segments, radii);
 
-  for(auto& i : stemSlices){
-    vector<double> initPars = eigenCircle(i);
-    vector<double> temp = irlsCircle(i, initPars);
-    parStore.push_back(temp);
+  set<unsigned int> uniqueIds;
+  for(auto& i : segments){
+    uniqueIds.insert(i);
   }
 
-  return parStore;
+  vector< vector<double> > estimates;
+
+  for(unsigned int i = 0; i < stemSlices.size(); ++i){
+
+    vector<vector<double> >& slice = stemSlices[i];
+
+    if(slice[0].size() <= nSamples) continue;
+
+    double& hrad = segRadii[i];
+    vector<double> initPars = eigenCircle(slice);
+    vector<double> temp = irlsCircle(slice, initPars);
+
+    double rdiff = abs(temp[2] - hrad);
+    if(rdiff > tolerance){
+      temp[0] = 0;
+      temp[1] = 0;
+      temp[2] = hrad;
+      temp[3] = 0;
+    }
+
+    unsigned int id = *next(uniqueIds.begin(), i);
+    temp.push_back(id);
+    estimates.push_back(temp);
+  }
+
+  return estimates;
 
 }
 
@@ -439,6 +485,8 @@ vector<vector<double> > ransacStemCylinders(NumericMatrix& las, vector<unsigned 
   for(unsigned int i = 0; i < stemSlices.size(); ++i){
 
     vector<vector<double> > slice = stemSlices[i];
+
+    cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
 
     if(slice[0].size() <= nSamples) continue;
 
