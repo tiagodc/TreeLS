@@ -35,7 +35,6 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
   vector<unsigned int> discId;
   // vector<unsigned int> nPoints;
 
-
   unsigned int diskCounter = 1;
   unsigned int maxId = 0;
 
@@ -117,29 +116,38 @@ List exportTreeMap(vector<HoughCenters>& coordinates){
 
   List out;
   out["X"] = xout;
-  out["Y"] = yout;
-  out["Z"] = zout;
-  out["Intensity"] = votes;
-  out["PointSourceID"] = discId;
-  out["Keypoint_flag"] = keyFlag;
-  out["Radii"] = radii;
-  out["TreeID"] = treeId;
-  out["TreePosition"] = treeFlag;
-
   xout.clear();
   xout.shrink_to_fit();
+
+  out["Y"] = yout;
   yout.clear();
   yout.shrink_to_fit();
+
+  out["Z"] = zout;
   zout.clear();
   zout.shrink_to_fit();
+
+  out["Intensity"] = votes;
   votes.clear();
   votes.shrink_to_fit();
+
+  out["PointSourceID"] = discId;
   discId.clear();
   discId.shrink_to_fit();
+
+  out["Keypoint_flag"] = keyFlag;
   keyFlag.clear();
-  radii.shrink_to_fit();
+  keyFlag.shrink_to_fit();
+
+  out["Radii"] = radii;
   radii.clear();
+  radii.shrink_to_fit();
+
+  out["TreeID"] = treeId;
+  treeId.clear();
   treeId.shrink_to_fit();
+
+  out["TreePosition"] = treeFlag;
   treeFlag.clear();
   treeFlag.shrink_to_fit();
 
@@ -351,9 +359,27 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
 }
 
 // [[Rcpp::export]]
-List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
+List ransacStemCircle(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
-  return wrap(ransacStemCircles(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+  return wrap(ransacStemCircle(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+}
+
+// [[Rcpp::export]]
+List irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=500,  double tolerance=0.05){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  return wrap(irlsStemCylinder(cloud, segments, radii, nPoints, tolerance));
+}
+
+// [[Rcpp::export]]
+List irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double tolerance=0.05){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  return wrap(irlsStemCircle(cloud, segments, radii, nSamples, tolerance));
+}
+
+// [[Rcpp::export]]
+List ransacStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence=0.95, double pInliers=0.8, double tolerance=0.05){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  return wrap(ransacStemCylinder(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
@@ -362,152 +388,8 @@ List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vect
   return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
-
-////////optimization
-
 // [[Rcpp::export]]
-vector<vector<double> > irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=500,  double tolerance=0.05){
-
+List ransacPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
   vector<vector<double> > cloud = rmatrix2cpp(las);
-  vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
-
-  cloud.clear();
-  cloud.shrink_to_fit();
-
-  vector<double> segRadii = idSortUnique(segments, radii);
-
-  set<unsigned int> uniqueIds;
-  for(auto& i : segments){
-    uniqueIds.insert(i);
-  }
-
-  vector< vector<double> > estimates;
-  vector<double> initPars = {0, PI/2, 0, 0, 0};
-
-  for(unsigned int i = 0; i < stemSlices.size(); ++i){
-
-    vector<vector<double> > slice = stemSlices[i];
-
-    cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
-
-    if(slice[0].size() <= 5) continue;
-
-    if(slice[0].size() > nPoints){
-      double p = (double)nPoints / (double)slice[0].size();
-      slice = randomPoints(slice, p);
-    }
-
-    double& hrad = segRadii[i];
-    vector<double> temp = irlsCylinder(slice, initPars);
-
-    double rdiff = abs(temp[4] - hrad);
-    if(rdiff > tolerance){
-      temp[0] = 0;
-      temp[1] = PI/2;
-      temp[2] = 0;
-      temp[3] = 0;
-      temp[4] = hrad;
-      temp[5] = 0;
-    }
-
-    unsigned int id = *next(uniqueIds.begin(), i);
-    temp.push_back(id);
-    estimates.push_back(temp);
-  }
-
-  return estimates;
-
-}
-
-// [[Rcpp::export]]
-vector<vector<double> > irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double tolerance=0.05){
-
-  vector<vector<double> > cloud = rmatrix2cpp(las);
-  vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
-
-  cloud.clear();
-  cloud.shrink_to_fit();
-
-  vector<double> segRadii = idSortUnique(segments, radii);
-
-  set<unsigned int> uniqueIds;
-  for(auto& i : segments){
-    uniqueIds.insert(i);
-  }
-
-  vector< vector<double> > estimates;
-
-  for(unsigned int i = 0; i < stemSlices.size(); ++i){
-
-    vector<vector<double> >& slice = stemSlices[i];
-
-    if(slice[0].size() <= nSamples) continue;
-
-    double& hrad = segRadii[i];
-    vector<double> initPars = eigenCircle(slice);
-    vector<double> temp = irlsCircle(slice, initPars);
-
-    double rdiff = abs(temp[2] - hrad);
-    if(rdiff > tolerance){
-      temp[0] = 0;
-      temp[1] = 0;
-      temp[2] = hrad;
-      temp[3] = 0;
-    }
-
-    unsigned int id = *next(uniqueIds.begin(), i);
-    temp.push_back(id);
-    estimates.push_back(temp);
-  }
-
-  return estimates;
-
-}
-
-// [[Rcpp::export]]
-vector<vector<double> > ransacStemCylinders(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence=0.95, double pInliers=0.8, double tolerance=0.05){
-
-  vector<vector<double> > cloud = rmatrix2cpp(las);
-  vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
-
-  cloud.clear();
-  cloud.shrink_to_fit();
-
-  vector<double> segRadii = idSortUnique(segments, radii);
-
-  set<unsigned int> uniqueIds;
-  for(auto& i : segments){
-    uniqueIds.insert(i);
-  }
-
-  vector< vector<double> > estimates;
-
-  for(unsigned int i = 0; i < stemSlices.size(); ++i){
-
-    vector<vector<double> > slice = stemSlices[i];
-
-    cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
-
-    if(slice[0].size() <= nSamples) continue;
-
-    double& hrad = segRadii[i];
-    vector<double> temp = ransacCylinder(slice, nSamples, pConfidence, pInliers);
-
-    double rdiff = abs(temp[4] - hrad);
-    if(rdiff > tolerance){
-      temp[0] = 0;
-      temp[1] = PI/2;
-      temp[2] = 0;
-      temp[3] = 0;
-      temp[4] = hrad;
-      temp[5] = 0;
-    }
-
-    unsigned int id = *next(uniqueIds.begin(), i);
-    temp.push_back(id);
-    estimates.push_back(temp);
-  }
-
-  return estimates;
-
+  return wrap(ransacPlotCylinders(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
