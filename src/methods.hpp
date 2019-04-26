@@ -32,9 +32,13 @@ Raster getCounts(vector<vector<double> >& slice, double pixel_size);
 
 HoughCenters getSingleCenter(Raster* raster, double max_radius=0.25, double min_den=0.1, unsigned int min_votes=3);
 
-vector<vector<double> > irlsStemCircle(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double tolerance=0.05);
+vector<vector<vector<double> > > irlsPlotCircles(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=100, double tolerance=0.05);
 
-vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=500,  double tolerance=0.05);
+vector<vector<vector<double> > > irlsPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=100, double tolerance=0.05);
+
+vector<vector<double> > irlsStemCircle(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=0, double tolerance=0.05);
+
+vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=100,  double tolerance=0.05);
 
 vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05);
 

@@ -393,3 +393,15 @@ List ransacPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vecto
   vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(ransacPlotCylinders(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
+
+// [[Rcpp::export]]
+List irlsPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  return wrap(irlsPlotCylinders(cloud, treeId, segments, radii, nPoints, tolerance));
+}
+
+// [[Rcpp::export]]
+List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  return wrap(irlsPlotCircles(cloud, treeId, segments, radii, nPoints, tolerance));
+}

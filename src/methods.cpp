@@ -486,11 +486,11 @@ vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<
 
     vector<vector<double> > slice = stemSlices[i];
 
-    cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
+    // cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
 
     if(slice[0].size() <= 5) continue;
 
-    if(slice[0].size() > nPoints){
+    if(slice[0].size() > nPoints && nPoints > 0){
       double p = (double)nPoints / (double)slice[0].size();
       slice = randomPoints(slice, p);
     }
@@ -517,7 +517,7 @@ vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<
 
 }
 
-vector<vector<double> > irlsStemCircle(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double tolerance){
+vector<vector<double> > irlsStemCircle(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
 
   vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
 
@@ -537,7 +537,12 @@ vector<vector<double> > irlsStemCircle(vector<vector<double> >& cloud, vector<un
 
     vector<vector<double> >& slice = stemSlices[i];
 
-    if(slice[0].size() <= nSamples) continue;
+    if(slice[0].size() <= 3) continue;
+
+    if(slice[0].size() > nPoints && nPoints > 0){
+      double p = (double)nPoints / (double)slice[0].size();
+      slice = randomPoints(slice, p);
+    }
 
     double& hrad = segRadii[i];
     vector<double> initPars = eigenCircle(slice);
@@ -619,6 +624,76 @@ vector<vector<vector<double> > > ransacPlotCylinders(vector<vector<double> >& cl
     vector<double>& segsRadii = treeRadii[i];
 
     vector< vector<double> > temp = ransacStemCylinder(tree, segs, segsRadii, nSamples, pConfidence, pInliers, tolerance);
+
+    for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
+      t->push_back(uniqId[i]);
+
+    treeEstimates.push_back(temp);
+  }
+
+  return treeEstimates;
+
+}
+
+vector<vector<vector<double> > > irlsPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
+
+  vector<vector<vector<double> > > trees = getChunks(cloud, treeId);
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  vector<unsigned int> uniqId = idSortUnique(treeId, treeId);
+  vector<vector<unsigned int> > indices = partitionIndex(treeId, segments);
+  vector<vector<double> > treeRadii = partitionIndex(treeId, radii);
+
+  vector< vector< vector<double> > > treeEstimates;
+
+  for(unsigned int i = 0; i < trees.size(); ++i){
+
+    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+
+    vector<unsigned int>& segs = indices[i];
+
+    if(segs.empty()) continue;
+
+    vector< vector<double> >& tree = trees[i];
+    vector<double>& segsRadii = treeRadii[i];
+
+    vector< vector<double> > temp = irlsStemCylinder(tree, segs, segsRadii, nPoints, tolerance);
+
+    for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
+      t->push_back(uniqId[i]);
+
+    treeEstimates.push_back(temp);
+  }
+
+  return treeEstimates;
+
+}
+
+vector<vector<vector<double> > > irlsPlotCircles(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
+
+  vector<vector<vector<double> > > trees = getChunks(cloud, treeId);
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  vector<unsigned int> uniqId = idSortUnique(treeId, treeId);
+  vector<vector<unsigned int> > indices = partitionIndex(treeId, segments);
+  vector<vector<double> > treeRadii = partitionIndex(treeId, radii);
+
+  vector< vector< vector<double> > > treeEstimates;
+
+  for(unsigned int i = 0; i < trees.size(); ++i){
+
+    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+
+    vector<unsigned int>& segs = indices[i];
+
+    if(segs.empty()) continue;
+
+    vector< vector<double> >& tree = trees[i];
+    vector<double>& segsRadii = treeRadii[i];
+
+    vector< vector<double> > temp = irlsStemCircle(tree, segs, segsRadii, nPoints, tolerance);
 
     for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
       t->push_back(uniqId[i]);
