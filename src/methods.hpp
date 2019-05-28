@@ -42,7 +42,7 @@ vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<
 
 vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05);
 
-vector<vector<vector<double> > > ransacPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence=0.05, double pInliers=0.9, double tolerance=0.05);
+vector<vector<vector<double> > > ransacPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence=0.95, double pInliers=0.9, double tolerance=0.05);
 
 vector< vector<double> > ransacStemCircle(vector<vector<double> >& cloud, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05);
 

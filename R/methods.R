@@ -464,7 +464,6 @@ treePositions = function(las, plot=T){
 #' Stem points classification
 #' @description Classify stem points on a \strong{normalized} point cloud.
 #' @template param-las
-#' @param map optional - map of tree positions (output from \code{\link{treeMap}} or \code{\link{treePositions}}). If omitted, the algorithm assumes \code{las} is a single tree.
 #' @param method stem denoising algorithm - currently available: \code{\link{stem.hough}}.
 #' @return \code{LAS} object with \emph{stem_points} signature.
 #' @examples
@@ -478,28 +477,15 @@ treePositions = function(las, plot=T){
 #' ?stemSegmentation
 #'
 #' @export
-stemPoints = function(las, map = NULL, method = stem.hough()){
+stemPoints = function(las, method = stem.hough()){
 
   isLAS(las)
 
-  if(!is.null(map)){
-
-    if(hasAttribute(map, 'tree_map_dt')){
-      # map = map
-    }else if(hasAttribute(map, 'tree_map')){
-      map %<>% treePositions(F)
-    }else{
-      stop('las is not a tree_map object: check ?treeMap')
-    }
-
-    if( map$TreeID %>% duplicated %>% any )
-      stop('input map must have unique TreeIDs')
-
-  }else{
+  if(!hasField(las, 'TreeID')){
     rg = apply(las@data[,1:2], 2, function(x) max(x) - min(x)) %>% as.double
 
     if(any(rg > 10))
-      message("point cloud unlikely a single tree (XY extents too large) - check ?tlsCrop")
+      message("point cloud unlikely a single tree (XY extents too large) - check ?tlsCrop or ?treePoints")
   }
 
   if(max(las$Z) < 0)
@@ -508,7 +494,10 @@ stemPoints = function(las, map = NULL, method = stem.hough()){
   if(!hasAttribute(method, 'stem_pts_mtd'))
     stop('invalid method: check ?stemPoints')
 
-  las %<>% method(map)
+  if(abs(min(las$Z)) > 0.5)
+    warning('point cloud apparently not normalized')
+
+  las %<>% method()
 
   return(las)
 

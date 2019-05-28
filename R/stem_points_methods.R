@@ -8,12 +8,11 @@
 #' @template param-min-votes
 #' @section \code{LAS@data} Special Fields:
 #'
-#' Meaninful fields in the output:
+#' Meaninful new fields in the output:
 #'
 #' \itemize{
-#' \item \code{TreeID}: unique tree ID of the point - available when a \emph{tree_map} is provided
 #' \item \code{Stem}: \code{TRUE} for stem points
-#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{Segment}: stem segment number (from bottom to top and nested with TreeID)
 #' \item \code{Radius}: approximate radius of the point's stem segment estimated by the Hough Transform - always a multiple of the \code{pixel_size}
 #' \item \code{Votes}: votes received by the stem segment's center through the Hough Transform
 #' }
@@ -61,7 +60,7 @@ stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0
   if(min_density > 1)
     stop('min_density must be between 0 and 1')
 
-  func = function(las, map){
+  func = function(las){
 
     if(min(las$Z) < 0)
       message("points with Z below 0 will be ignored")
@@ -75,17 +74,12 @@ stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0
       rep(F, las@data %>% nrow)
     }
 
-    if(map %>% is.null){
-      message('no tree_map provided: performing single stem point classification')
+    if(!hasField(las, 'TreeID')){
+      message('no TreeID field found with tree_points signature: performing single stem point classification')
       results = houghStemPoints(las2xyz(las)[!groundPts,], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
     }else{
       message('performing point classification on multiple stems')
-      results = houghStemPlot(las2xyz(las)[!groundPts,], map %>% as.matrix, hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
-
-      if(!hasAttribute(las, 'tree_points')){
-        las@data$TreeID[!groundPts] = results$TreeID
-        las@data$TreeID[las@data$TreeID %>% is.na] = 0
-      }
+      results = houghStemPlot(las2xyz(las)[!groundPts,], las@data$TreeID[!groundPts], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
     }
 
     las@data$Stem = F
@@ -102,7 +96,7 @@ stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0
 
     las %<>% resetLAS
 
-    if(map %>% is.null){
+    if(!hasField(las, 'TreeID')){
       las %<>% setAttribute("single_stem_points")
     }else{
       las %<>% setAttribute("multiple_stem_points")

@@ -276,34 +276,26 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
 }
 
 // [[Rcpp::export]]
-List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+List houghStemPlot(NumericMatrix& las, vector<unsigned int> pointIds, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
 
-  NumericMatrix::Column treecol = treePositions( _, 0);
-  NumericMatrix::Column xcol = treePositions( _, 1);
-  NumericMatrix::Column ycol = treePositions( _, 2);
-
-  vector<unsigned int> treeIds;
-  vector<double> xPos;
-  vector<double> yPos;
-
-  treeIds.insert(treeIds.begin(), treecol.begin(), treecol.end());
-  xPos.insert(xPos.begin(), xcol.begin(), xcol.end());
-  yPos.insert(yPos.begin(), ycol.begin(), ycol.end());
+  // unordered_set<unsigned int> treeIds(pointIds.begin(), pointIds.end());
+  // vector<unsigned int> treeIdsVec(treeIds.begin(), treeIds.end());
 
   vector<vector<double> > cloud = rmatrix2cpp(las);
-  unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
+  vector<vector<vector<double> > > treeList = getChunks(cloud, pointIds);
+  // unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
+  vector<vector<HoughCenters>> denoisedTrees;
+  
+  for(auto& tree : treeList){
 
-  double cropRadius = radius*4;
-  for(unsigned int i = 0; i < treeIds.size(); ++i){
-    vector<vector<double> > tree = cropCloud(cloud, xPos[i], yPos[i], cropRadius);
-
+    // vector<vector<double> >& tree = treeList[i];
     if(tree[0].empty()) continue;
 
     vector<HoughCenters> denoised = treeHough(tree, h1, h2, hstep, radius, pixel, density, votes);
 
     if(denoised.empty()) continue;
 
-    denoisedTrees[ treeIds[i] ] = denoised;
+    denoisedTrees.push_back(denoised);
   }
 
   tempContainer plotInfo( cloud[0].size() );
@@ -318,9 +310,9 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
     unsigned int ptLayer = floor(z / hstep);
     for(auto& tree : denoisedTrees){
 
-      if(tree.second.size() <= ptLayer) continue;
+      if(tree.size() <= ptLayer) continue;
 
-      HoughCircle* tempCircle = &tree.second[ptLayer].main_circle;
+      HoughCircle* tempCircle = &tree[ptLayer].main_circle;
 
       if(tempCircle->n_votes < votes) continue;
 
@@ -330,7 +322,7 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
         plotInfo.filter[i] = true;
         plotInfo.values[i] = tempCircle->radius;
         plotInfo.counts[i] = tempCircle->n_votes;
-        plotInfo.ids[i] = tree.first;
+        // plotInfo.ids[i] = tree.first;
         plotInfo.sections[i] = ptLayer + 1;
         break;
       }
@@ -342,7 +334,7 @@ List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1 =
 
   List output;
   output["Stem"]   = plotInfo.filter;
-  output["TreeID"] = plotInfo.ids;
+  // output["TreeID"] = plotInfo.ids;
   output["Segment"] = plotInfo.sections;
   output["Radius"] = plotInfo.values;
   output["Votes"]  = plotInfo.counts;
@@ -383,7 +375,7 @@ List ransacStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vect
 }
 
 // [[Rcpp::export]]
-List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
+List ransacPlotCircles(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
