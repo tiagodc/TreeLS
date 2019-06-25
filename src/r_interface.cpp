@@ -363,7 +363,7 @@ List irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector
 }
 
 // [[Rcpp::export]]
-List irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double tolerance=0.05){
+List irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=500, double tolerance=0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(irlsStemCircle(cloud, segments, radii, nSamples, tolerance));
 }
