@@ -6,6 +6,5 @@ test_data
 .vscode
 *.o
 *.pdf
-tests.R
 src/*.dll
 src/*.so
