@@ -61,4 +61,6 @@ vector<bool> voxelFilter(vector<vector<double> >& cloud, double voxel_spacing = 
 
 vector<double> xprod(vector<double>& a, vector<double>& b);
 
+void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs);
+
 #endif // UTILS_HPP

@@ -285,7 +285,7 @@ List houghStemPlot(NumericMatrix& las, vector<unsigned int> pointIds, double h1 
   vector<vector<vector<double> > > treeList = getChunks(cloud, pointIds);
   // unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
   vector<vector<HoughCenters>> denoisedTrees;
-  
+
   for(auto& tree : treeList){
 
     // vector<vector<double> >& tree = treeList[i];
@@ -397,3 +397,23 @@ List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<un
   vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap(irlsPlotCircles(cloud, treeId, segments, radii, nPoints, tolerance));
 }
+
+
+/////// TESTS
+
+// [[Rcpp::export]]
+List temp(NumericMatrix& las){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+
+  vector<double> eVal;
+  vector<vector<double> > eVec;
+
+  eigenDecomposition(cloud, &eVal, &eVec);
+
+  List out;
+  out["vals"] = eVal;
+  out["vecs"] = eVec;
+
+  return(out);
+}
+

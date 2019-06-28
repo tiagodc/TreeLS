@@ -60,6 +60,27 @@ vector<double> xprod(vector<double>& a, vector<double>& b){
   return x;
 }
 
+void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs) {
+
+  arma::mat armaCloud;
+  armaCloud.insert_cols(0, arma::vec(cloud[0]));
+  armaCloud.insert_cols(1, arma::vec(cloud[1]));
+  armaCloud.insert_cols(2, arma::vec(cloud[2]));
+
+  arma::mat coeff;
+  arma::mat score;
+  arma::vec latent;
+
+  arma::princomp(coeff, score, latent, armaCloud);
+
+  *eiVals = arma::conv_to<std::vector<double> >::from(latent);
+
+  *eiVecs = {};
+  for(unsigned int i = 0; i < cloud.size(); ++i){
+    eiVecs->push_back( arma::conv_to<std::vector<double> >::from(coeff.col(i)) );
+  }
+}
+
 // conversions
 vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud){
 
@@ -228,7 +249,7 @@ vector<vector<vector<double> > > getChunks(vector<vector<double> >& cloud, vecto
 //// split point cloud into horizontal slices
 vector<vector<vector<double> > > getSlices(NumericMatrix& cloud, double zmin, double zmax, double zstep){
   vector<vector<double> > las = rmatrix2cpp(cloud);
-  return getSlices(las, zmin, zmax, zstep); 
+  return getSlices(las, zmin, zmax, zstep);
 }
 
 vector<vector<vector<double> > > getSlices(vector<vector<double> >& cloud, double zmin, double zmax, double zstep){

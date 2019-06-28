@@ -209,6 +209,23 @@ tfMatrix = function (ax, az, ax2, x, y, z){
   return(mat)
 }
 
+splitByIndex = function(las, var='Z', max_size = 1E6){
+
+  npts = nrow(las@data)
+  zclass = 0
+
+  if(npts > max_size){
+    nparts = ceiling(npts/max_size)
+    probs = seq(0, 1, by = 1/nparts)
+    probs = probs[probs > 0 & probs < 1]
+    zqts = quantile(las[[var]], probs) %>% as.double
+    hs = c(min(las[[var]])-1, zqts, max(las$Z)+1)
+    zclass = cut(las[[var]], hs) %>% as.integer
+  }
+
+  return(zclass)
+}
+
 
 #' Reset or create a \code{LAS} object depending on the input's type
 #' @description Reset the input's header if it is a \code{LAS} object, or generate a new \code{LAS} from a table-like input. For more information, checkout the \code{\link[lidR:LAS]{lidR::LAS}} description page.
@@ -866,3 +883,25 @@ treePoints = function(las, map, method=trees.voronoi()){
 
 }
 
+nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
+
+  zclass = splitByIndex(las, max_size = max_points)
+  keep = rep(T, nrow(las@data))
+
+  for(i in unique(zclass)){
+    bool = zclass == i
+    xyz = las@data[bool,.(X,Y,Z)]
+    rnn = RANN::nn2(data = xyz, radius = d, treetype = 'kd', searchtype = 'radius')$nn.idx %>% as.data.frame
+
+    knn = rep(0, nrow(rnn))
+    for(j in 2:ncol(rnn)){
+      temp = ifelse(rnn[,j] > 0, 1, 0) %>% as.double
+      knn = knn + temp
+    }
+
+    keep[bool] = knn > n
+  }
+
+  las %<>% lasfilter(keep)
+  return(las)
+}
