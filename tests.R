@@ -20,9 +20,50 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 # nn = RANN::nn2(da ta = tls %>% las2xyz, k=20, treetype = 'kd', searchtype = 'standard')
 
-las = readTLS('test_data/zeb.laz', filter='-keep_circle -66 249 10') #%>% lasfilter(Z > 2 & Z < 4)
+# tls = readTLS('test_data/zeb.laz', filter='-keep_circle -66 249 10')
+#
+# tls %<>% tlsNormalize(keepGround = F)
+#
+# thin = tlsSample(tls, voxelize(.025))
+# map = treeMap(thin, map.hough(min_votes=5, min_density = .05))
+#
+# tls %<>% treePoints(map)
+#
+# tls %<>% stemPoints()
+#
+# df = stemSegmentation(tls)
+#
+# tlsPlot(tls, df, treeID = 47)
+# tree = lasfilter(tls, TreeID == 47)
+#
+# plot(tree)
 
-# xy = las@data[,1:2] %>% apply(2,mean) %>% as.double
-# las %<>% tlsCrop(xy[1], xy[2], 10)
+tree = readTLS('inst/extdata/pine.laz')
 
+n = 30
+d = 0.2
+search = c('knn', 'sphere', 'voxel')
+search = search[1]
+stype = ifelse(search == 'knn', 'standard', ifelse(search == 'sphere', 'radius', search))
 
+knn = RANN::nn2(tree %>% las2xyz(), k = n+1, treetype = 'kd', searchtype = stype, radius = d)
+
+kid = knn$nn.idx[,-1]
+kds = knn$nn.dists[,-1]
+
+a = temp(tree %>% las2xyz, kid)
+
+b = las2xyz(tree)[kid[2,], ]
+eigen(b %>% cov)
+a[[2]]
+
+# temp = lasfilter(tree, Stem)
+# ps = seq(min(tree$Z)-1, max(tree$Z)+1, by = .5)
+# bool = cut(tree$Z, ps) %>% as.integer
+#
+# tlist = lapply(bool %>% unique, function(x) lasfilter(tree, bool == x))
+#
+# for(i in tlist){
+#   plot(i, clear_artifacts=F, color='Stem', size=2)
+#   axes3d(col='white')
+# }

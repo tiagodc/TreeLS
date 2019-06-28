@@ -63,4 +63,6 @@ vector<double> xprod(vector<double>& a, vector<double>& b);
 
 void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs);
 
+vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
+
 #endif // UTILS_HPP

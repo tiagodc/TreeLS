@@ -704,3 +704,43 @@ vector<vector<vector<double> > > irlsPlotCircles(vector<vector<double> >& cloud,
   return treeEstimates;
 
 }
+
+vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx){
+
+  unsigned int ncol = idx.size();
+  unsigned int nrow = idx[0].size();
+
+  vector<double> eVal;
+  vector<vector<double> > eVec;
+
+  vector<vector<double> > out;
+  for(unsigned int i = 0; i < nrow; ++i){
+
+    vector<vector<double> > xyz(3);
+
+    for(unsigned int j = 0; j < ncol; ++j){
+
+      unsigned int cell = idx[j][i];
+      if(cell-- == 0) break;
+
+      xyz[0].push_back( cloud[0][cell] );
+      xyz[1].push_back( cloud[1][cell] );
+      xyz[2].push_back( cloud[2][cell] );
+    }
+
+    if(xyz[0].size() < 3){
+      eVal = {0,0,0};
+    }else{
+      eigenDecomposition(xyz, &eVal, &eVec);
+    }
+
+    out.push_back(eVal);
+
+    eVal.clear();
+    eVal.shrink_to_fit();
+    eVec.clear();
+    eVec.shrink_to_fit();
+  }
+
+  return(out);
+}

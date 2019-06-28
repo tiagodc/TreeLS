@@ -22,6 +22,27 @@
 #include "utils.hpp"
 
 // statistics
+void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs){
+
+  arma::mat armaCloud;
+  armaCloud.insert_cols(0, arma::vec(cloud[0]));
+  armaCloud.insert_cols(1, arma::vec(cloud[1]));
+  armaCloud.insert_cols(2, arma::vec(cloud[2]));
+
+  arma::mat coeff;
+  arma::mat score;
+  arma::vec latent;
+
+  arma::princomp(coeff, score, latent, armaCloud);
+
+  *eiVals = arma::conv_to<std::vector<double> >::from(latent);
+
+  *eiVecs = {};
+  for(unsigned int i = 0; i < cloud.size(); ++i){
+    eiVecs->push_back( arma::conv_to<std::vector<double> >::from(coeff.col(i)) );
+  }
+}
+
 double mad(vector<double> x, double c){
 
   double md = median(x);
@@ -60,41 +81,39 @@ vector<double> xprod(vector<double>& a, vector<double>& b){
   return x;
 }
 
-void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs) {
-
-  arma::mat armaCloud;
-  armaCloud.insert_cols(0, arma::vec(cloud[0]));
-  armaCloud.insert_cols(1, arma::vec(cloud[1]));
-  armaCloud.insert_cols(2, arma::vec(cloud[2]));
-
-  arma::mat coeff;
-  arma::mat score;
-  arma::vec latent;
-
-  arma::princomp(coeff, score, latent, armaCloud);
-
-  *eiVals = arma::conv_to<std::vector<double> >::from(latent);
-
-  *eiVecs = {};
-  for(unsigned int i = 0; i < cloud.size(); ++i){
-    eiVecs->push_back( arma::conv_to<std::vector<double> >::from(coeff.col(i)) );
-  }
-}
-
 // conversions
 vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud){
 
-  NumericMatrix::Column xcol = cloud( _, 0);
-  NumericMatrix::Column ycol = cloud( _, 1);
-  NumericMatrix::Column zcol = cloud( _, 2);
+  unsigned int ncol = cloud.ncol();
+  vector<vector<double> > xyz(ncol);
 
-  vector<vector<double> > xyz(3);
+  for(unsigned int i = 0; i < ncol; ++i){
+    NumericMatrix::Column tempcol = cloud( _, i);
+    xyz[i].insert(xyz[i].begin(), tempcol.begin(), tempcol.end());
+  }
 
-  xyz[0].insert(xyz[0].begin(), xcol.begin(), xcol.end());
-  xyz[1].insert(xyz[1].begin(), ycol.begin(), ycol.end());
-  xyz[2].insert(xyz[2].begin(), zcol.begin(), zcol.end());
+  // NumericMatrix::Column xcol = cloud( _, 0);
+  // NumericMatrix::Column ycol = cloud( _, 1);
+  // NumericMatrix::Column zcol = cloud( _, 2);
+  //
+  // xyz[0].insert(xyz[0].begin(), xcol.begin(), xcol.end());
+  // xyz[1].insert(xyz[1].begin(), ycol.begin(), ycol.end());
+  // xyz[2].insert(xyz[2].begin(), zcol.begin(), zcol.end());
 
   return xyz;
+}
+
+vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix){
+
+  unsigned int ncol = idxMatrix.ncol();
+  vector<vector<unsigned int> > imat(ncol);
+
+  for(unsigned int i = 0; i < ncol; ++i){
+    NumericMatrix::Column tempcol = idxMatrix( _, i);
+    imat[i].insert(imat[i].begin(), tempcol.begin(), tempcol.end());
+  }
+
+  return imat;
 }
 
 // point cloud manipulation

@@ -50,4 +50,6 @@ vector<vector<double> > ransacStemCylinder(vector<vector<double> >& cloud, vecto
 
 vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3);
 
+vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx);
+
 #endif // METHODS_HPP

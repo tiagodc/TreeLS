@@ -402,18 +402,9 @@ List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<un
 /////// TESTS
 
 // [[Rcpp::export]]
-List temp(NumericMatrix& las){
+SEXP temp(NumericMatrix& las, NumericMatrix& kIds){
   vector<vector<double> > cloud = rmatrix2cpp(las);
-
-  vector<double> eVal;
-  vector<vector<double> > eVec;
-
-  eigenDecomposition(cloud, &eVal, &eVec);
-
-  List out;
-  out["vals"] = eVal;
-  out["vecs"] = eVec;
-
-  return(out);
+  vector<vector<unsigned int> > idx = intmatrix2cpp(kIds);
+  return( wrap(pointMetrics(cloud, idx)) );
 }
 
