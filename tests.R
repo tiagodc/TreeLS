@@ -51,16 +51,18 @@ knn = RANN::nn2(tree %>% las2xyz(), k = n+1, treetype = 'kd', searchtype = stype
 kid = knn$nn.idx[,-1]
 kds = knn$nn.dists[,-1]
 
-a = temp(tree %>% las2xyz, kid)
+ptm = pointMetrics(tree %>% las2xyz, kid) %>% do.call(what = rbind) %>% as.data.table
+colnames(ptm) = c('planarity', 'verticality', 'linearSaliency', 'planarSaliency', 'scattering', 'anisotropy', 'zrange', 'zsd')
 
-a = do.call(rbind, a)
-a %>% apply(2,range)
+ptm %>% apply(2,range)
 
-tree %<>% lasadddata(a[,1] %>% as.double, 'planarity')
-tree %<>% lasadddata(a[,2] %>% as.double, 'verticality')
+bole = lasfilter(tree, ptm$planarSaliency > .5 & ptm$verticality > 80 & ptm$verticality < 100)
+plot(bole)
 
-bole = lasfilter(tree, planarity < .03 & verticality > 85 & verticality < 95)
-plot(tree)
+for(i in 1:ncol(ptm)){
+  tree %<>% lasadddata(ptm[,i], 'temp')
+  plot(tree, color='temp')
+}
 
 # temp = lasfilter(tree, Stem)
 # ps = seq(min(tree$Z)-1, max(tree$Z)+1, by = .5)

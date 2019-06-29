@@ -718,10 +718,22 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
 
     vector<vector<double> > xyz(3);
 
+    double zmin;
+    double zmax;
+
     for(unsigned int j = 0; j < ncol; ++j){
 
       unsigned int cell = idx[j][i];
       if(cell-- == 0) break;
+
+      double z = cloud[2][cell];
+
+      if(j == 0){
+        zmin = zmax = z;
+      }else{
+        if(z < zmin) zmin = z;
+        if(z > zmax) zmax = z;
+      }
 
       xyz[0].push_back( cloud[0][cell] );
       xyz[1].push_back( cloud[1][cell] );
@@ -732,13 +744,30 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
       out.push_back({0});
     }else{
       eigenDecomposition(xyz, &eVal, &eVec);
+      vector<double> z = {0,0,1};
+      double zmean = accumulate(xyz[2].begin(), xyz[2].end(), 0) / xyz[2].size();
+      double zsumsq = 0;
+      for(auto& pt : xyz[2]) zsumsq += pow( pt - zmean ,2);
 
       double planarity = eVal[2] / (eVal[0] + eVal[1] + eVal[2]);
-
-      vector<double> z = {0,0,1};
       double verticality = vecAngle(z, eVec[2]);
+      double linearSaliency = (eVal[0] - eVal[1]) / eVal[0];
+      double planarSaliency = (eVal[1] - eVal[2]) / eVal[0];
+      double scattering = eVal[2] / eVal[0];
+      double anisotropy = (eVal[0] - eVal[2]) / eVal[0];
+      double zrange = zmax - zmin;
+      double zsd = sqrt( zsumsq / xyz[2].size() );
 
-      out.push_back({planarity, verticality});
+      out.push_back({
+        planarity,
+        verticality,
+        linearSaliency,
+        planarSaliency,
+        scattering,
+        anisotropy,
+        zrange,
+        zsd
+      });
     }
 
     eVal.clear();
@@ -747,5 +776,5 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
     eVec.shrink_to_fit();
   }
 
-  return(out);
+  return out;
 }
