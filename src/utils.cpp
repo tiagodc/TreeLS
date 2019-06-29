@@ -81,6 +81,23 @@ vector<double> xprod(vector<double>& a, vector<double>& b){
   return x;
 }
 
+double vecAngle(vector<double>& a, vector<double>& b){
+
+  double dotprod = 0;
+  double asqsum  = 0;
+  double bsqsum  = 0;
+
+  for(unsigned int i = 0; i < a.size(); ++i){
+    dotprod += a[i]*b[i];
+    asqsum  += a[i]*a[i];
+    bsqsum  += b[i]*b[i];
+  }
+
+  double ang  = dotprod / ( sqrt(asqsum) * sqrt(bsqsum) );
+  double cang = acos(ang) * 180/PI;
+  return cang;
+}
+
 // conversions
 vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud){
 

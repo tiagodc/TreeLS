@@ -407,4 +407,3 @@ SEXP temp(NumericMatrix& las, NumericMatrix& kIds){
   vector<vector<unsigned int> > idx = intmatrix2cpp(kIds);
   return( wrap(pointMetrics(cloud, idx)) );
 }
-

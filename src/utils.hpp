@@ -65,4 +65,6 @@ void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, 
 
 vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
 
+double vecAngle(vector<double>& a, vector<double>& b);
+
 #endif // UTILS_HPP

@@ -40,7 +40,7 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 tree = readTLS('inst/extdata/pine.laz')
 
-n = 30
+n = 20
 d = 0.2
 search = c('knn', 'sphere', 'voxel')
 search = search[1]
@@ -53,9 +53,14 @@ kds = knn$nn.dists[,-1]
 
 a = temp(tree %>% las2xyz, kid)
 
-b = las2xyz(tree)[kid[2,], ]
-eigen(b %>% cov)
-a[[2]]
+a = do.call(rbind, a)
+a %>% apply(2,range)
+
+tree %<>% lasadddata(a[,1] %>% as.double, 'planarity')
+tree %<>% lasadddata(a[,2] %>% as.double, 'verticality')
+
+bole = lasfilter(tree, planarity < .03 & verticality > 85 & verticality < 95)
+plot(tree)
 
 # temp = lasfilter(tree, Stem)
 # ps = seq(min(tree$Z)-1, max(tree$Z)+1, by = .5)

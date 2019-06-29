@@ -729,12 +729,17 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
     }
 
     if(xyz[0].size() < 3){
-      eVal = {0,0,0};
+      out.push_back({0});
     }else{
       eigenDecomposition(xyz, &eVal, &eVec);
-    }
 
-    out.push_back(eVal);
+      double planarity = eVal[2] / (eVal[0] + eVal[1] + eVal[2]);
+
+      vector<double> z = {0,0,1};
+      double verticality = vecAngle(z, eVec[2]);
+
+      out.push_back({planarity, verticality});
+    }
 
     eVal.clear();
     eVal.shrink_to_fit();
