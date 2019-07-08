@@ -891,15 +891,15 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
   for(i in unique(zclass)){
     bool = zclass == i
     xyz = las@data[bool,.(X,Y,Z)]
-    rnn = RANN::nn2(data = xyz, radius = d, treetype = 'kd', searchtype = 'radius')$nn.idx %>% as.data.frame
+    rnn = RANN::nn2(data = xyz, k = n+1, treetype = 'kd')$nn.dists[,-1] %>% as.data.frame
 
     knn = rep(0, nrow(rnn))
-    for(j in 2:ncol(rnn)){
-      temp = ifelse(rnn[,j] > 0, 1, 0) %>% as.double
+    for(j in 1:ncol(rnn)){
+      temp = ifelse(rnn[,j] > d, 1, 0) %>% as.double
       knn = knn + temp
     }
 
-    keep[bool] = knn > n
+    keep[bool] = knn < n
   }
 
   las %<>% lasfilter(keep)

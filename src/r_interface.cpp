@@ -407,3 +407,9 @@ SEXP pointMetrics(NumericMatrix& las, NumericMatrix& kIds){
   vector<vector<unsigned int> > idx = intmatrix2cpp(kIds);
   return wrap(pointMetrics(cloud, idx));
 }
+
+// [[Rcpp::export]]
+SEXP voxelIndex(NumericMatrix& las, double d){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  return wrap( voxelIndex(cloud, d) );
+}

@@ -52,4 +52,6 @@ vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1 = 1,
 
 vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx);
 
+vector<long long int> voxelIndex(vector<vector<double> >& cloud, double voxel_spacing=0.05);
+
 #endif // METHODS_HPP

@@ -778,3 +778,25 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
 
   return out;
 }
+
+vector<long long int> voxelIndex(vector<vector<double> >& cloud, double voxel_spacing){
+
+  double& xoffset = cloud[0][0];
+  double& yoffset = cloud[1][0];
+  double& zoffset = cloud[2][0];
+
+  VoxelSet ledger;
+  vector<long long int> indexer(cloud[0].size());
+  boost::hash< array<int,3> > hasher;
+
+  for(unsigned int i = 0; i < indexer.size(); ++i){
+    int nx = floor( (cloud[0][i] - xoffset) / voxel_spacing);
+    int ny = floor( (cloud[1][i] - yoffset) / voxel_spacing);
+    int nz = floor( (cloud[2][i] - zoffset) / voxel_spacing);
+
+    array<int, 3> voxel = {nx, ny, nz};
+    indexer[i] = (long long int)hasher(voxel);
+  }
+
+  return indexer;
+}

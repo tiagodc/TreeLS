@@ -38,7 +38,33 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 #
 # plot(tree)
 
-tree = readTLS('inst/extdata/pine.laz')
+las = readTLS('test_data/zeb.laz', filter='-keep_random_fraction 0.2')
+# tree = readTLS('inst/extdata/pine.laz')
+
+d = .1
+df = data.table()
+offset = las@data[1,1:3]
+for(var in c('X', 'Y', 'Z')){
+  dst = floor( (las[[var]] - offset[[var]]) / d )
+  # brk = seq(min(tree[[var]]), max(tree[[var]]), d)
+  # ktemp = cut(tree[[var]], brk) %>% as.integer
+  df %<>% cbind(dst)
+}
+
+vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
+
+vx = voxelIndex(las %>% las2xyz, d)
+vx = as.factor(vx) %>% as.integer
+
+las = lasadddata(las, vx, 'voxel')
+colpal = lidR::pastel.colors(vx %>% unique %>% length)
+plot(las, color='voxel', colorPalette=colpal, size=2)
+
+unique(vx) %>% length
+vxl = lasfilter(las, voxel == unique(vx)[124124] )
+apply(vxl %>% las2xyz, 2, function(x) diff(range(x)))
+plot(vxl) ; axes3d(col='white')
+
 
 n = 20
 d = 0.2
