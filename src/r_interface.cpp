@@ -413,3 +413,4 @@ SEXP voxelIndex(NumericMatrix& las, double d){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   return wrap( voxelIndex(cloud, d) );
 }
+

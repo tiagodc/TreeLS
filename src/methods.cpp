@@ -779,24 +779,37 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
   return out;
 }
 
-vector<long long int> voxelIndex(vector<vector<double> >& cloud, double voxel_spacing){
+vector<unsigned long long int> voxelIndex(vector<vector<double> >& cloud, double voxel_spacing){
 
-  double& xoffset = cloud[0][0];
-  double& yoffset = cloud[1][0];
-  double& zoffset = cloud[2][0];
+  typedef unsigned long long int llint;
 
-  VoxelSet ledger;
-  vector<long long int> indexer(cloud[0].size());
-  boost::hash< array<int,3> > hasher;
+  double xoffset = *min_element(cloud[0].begin(), cloud[0].end());
+  double yoffset = *min_element(cloud[1].begin(), cloud[1].end());
+  double zoffset = *min_element(cloud[2].begin(), cloud[2].end());
+
+  // VoxelSet ledger;
+  vector<llint> indexer(cloud[0].size());
+  // unordered_set<llint> distinctSet;
+  // vector<llint> distinctVec;
+  // boost::hash< array<llint, 3> > hasher;
 
   for(unsigned int i = 0; i < indexer.size(); ++i){
-    int nx = floor( (cloud[0][i] - xoffset) / voxel_spacing);
-    int ny = floor( (cloud[1][i] - yoffset) / voxel_spacing);
-    int nz = floor( (cloud[2][i] - zoffset) / voxel_spacing);
+    llint nx = floor( (cloud[0][i] - xoffset) / voxel_spacing);
+    llint ny = floor( (cloud[1][i] - yoffset) / voxel_spacing);
+    llint nz = floor( (cloud[2][i] - zoffset) / voxel_spacing);
 
-    array<int, 3> voxel = {nx, ny, nz};
-    indexer[i] = (long long int)hasher(voxel);
+    llint tx = nx << 15;
+    llint ty = ny << 30;
+    llint tz = nz;
+
+    // array<llint, 3> voxel = {nx, ny, nz};
+    llint tindex = tx + ty + tz;
+
+    indexer[i] = tindex;
   }
+
+  llint mindex = *min_element(indexer.begin(), indexer.end());
+  for(auto& i : indexer) i -= mindex;
 
   return indexer;
 }
