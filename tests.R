@@ -38,10 +38,14 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 #
 # plot(tree)
 
-las = readTLS('test_data/zeb.laz', filter='-keep_random_fraction 0.2')
-# tree = readTLS('inst/extdata/pine.laz')
+las = readTLS('test_data/zeb.laz', filter='-keep_random_fraction 0.1')
+# las = readTLS('inst/extdata/pine.laz')
 
-d = .1
+las = las@data[,1:3] %>% toLAS
+
+d = .025
+
+t1 = Sys.time()
 df = data.table()
 offset = las@data[1,1:3]
 for(var in c('X', 'Y', 'Z')){
@@ -52,16 +56,27 @@ for(var in c('X', 'Y', 'Z')){
 }
 
 vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
+t2 = Sys.time()
+print(t2-t1)
 
-vx = voxelIndex(las %>% las2xyz, d)
-vx = as.factor(vx) %>% as.integer
+range(vx)
+unique(vx) %>% length
+
+t1 = Sys.time()
+vx = voxelIndex(las %>% las2xyz, d) #%>% as.factor %>% as.integer()
+t2 = Sys.time()
+print(t2-t1)
+
+range(vx)
+unique(vx) %>% length
 
 las = lasadddata(las, vx, 'voxel')
 colpal = lidR::pastel.colors(vx %>% unique %>% length)
 plot(las, color='voxel', colorPalette=colpal, size=2)
 
 unique(vx) %>% length
-vxl = lasfilter(las, voxel == unique(vx)[124124] )
+
+vxl = lasfilter(las, voxel == sample(unique(vx), 1) )
 apply(vxl %>% las2xyz, 2, function(x) diff(range(x)))
 plot(vxl) ; axes3d(col='white')
 
