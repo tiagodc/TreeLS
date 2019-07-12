@@ -6,9 +6,9 @@
 #
 # COPYRIGHT: Tiago de Conto, 2019
 #
-# This piece of software is open and free to use, redistribution and modifications
-# should be done in accordance to the GNU General Public License >= 3
-#
+# This piece of software is open and free to use, redistribution and modifica
+tions
+# should be done in accordance to the GNU General Public License >= 3#
 # Use this software as you wish, but no warranty is provided whatsoever. For any
 # comments or questions on TreeLS, please contact the developer (prefereably through my github account)
 #
@@ -904,4 +904,27 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
 
   las %<>% lasfilter(keep)
   return(las)
+}
+
+ptm.voxels = function(las, d = .05, exact=F){
+  las = las@data[,1:3] %>% toLAS
+
+  if(exact){
+
+    df = data.table()
+    offset = las@data[1,1:3]
+    for(var in c('X', 'Y', 'Z')){
+      dst = floor( (las[[var]] - offset[[var]]) / d )
+      df %<>% cbind(dst)
+    }
+
+    vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
+
+  }else{
+    las = las2xyz(las)
+    vx = voxelIndex(las, d)
+  }
+
+  return(vx)
+
 }

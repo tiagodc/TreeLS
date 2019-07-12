@@ -18,44 +18,37 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-# nn = RANN::nn2(da ta = tls %>% las2xyz, k=20, treetype = 'kd', searchtype = 'standard')
-
-# tls = readTLS('test_data/zeb.laz', filter='-keep_circle -66 249 10')
-#
-# tls %<>% tlsNormalize(keepGround = F)
-#
-# thin = tlsSample(tls, voxelize(.025))
-# map = treeMap(thin, map.hough(min_votes=5, min_density = .05))
-#
-# tls %<>% treePoints(map)
-#
-# tls %<>% stemPoints()
-#
-# df = stemSegmentation(tls)
-#
-# tlsPlot(tls, df, treeID = 47)
-# tree = lasfilter(tls, TreeID == 47)
-#
-# plot(tree)
-
-las = readTLS('test_data/zeb.laz', filter='-keep_random_fraction 0.1')
+las = readTLS('inst/extdata/pine_plot.laz', filter='-keep_random_fraction 0.1')
 # las = readTLS('inst/extdata/pine.laz')
 
-las = las@data[,1:3] %>% toLAS
 
-d = .025
+ptm.voxels = function(las, d = .05, exact=F){
+  las = las@data[,1:3] %>% toLAS
 
-t1 = Sys.time()
-df = data.table()
-offset = las@data[1,1:3]
-for(var in c('X', 'Y', 'Z')){
-  dst = floor( (las[[var]] - offset[[var]]) / d )
-  # brk = seq(min(tree[[var]]), max(tree[[var]]), d)
-  # ktemp = cut(tree[[var]], brk) %>% as.integer
-  df %<>% cbind(dst)
+  if(exact){
+
+    df = data.table()
+    offset = las@data[1,1:3]
+    for(var in c('X', 'Y', 'Z')){
+      dst = floor( (las[[var]] - offset[[var]]) / d )
+      df %<>% cbind(dst)
+    }
+
+    vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
+
+  }else{
+    las = las2xyz(las)
+    vx = voxelIndex(las, d)
+  }
+
+  return(vx)
+
 }
 
-vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
+
+
+
+
 t2 = Sys.time()
 print(t2-t1)
 
