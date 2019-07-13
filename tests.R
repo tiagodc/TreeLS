@@ -18,56 +18,28 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-las = readTLS('inst/extdata/pine_plot.laz', filter='-keep_random_fraction 0.1')
-# las = readTLS('inst/extdata/pine.laz')
+# las = readTLS('test_data/zeb.laz', filter='-keep_random_fraction 0.025')
+las = readTLS('inst/extdata/pine.laz')
 
+las %<>% las2xyz %>% toLAS
 
-ptm.voxels = function(las, d = .05, exact=F){
-  las = las@data[,1:3] %>% toLAS
+vx = ptm.voxels(las, d = 0.15)
+idx = split(1:length(vx), vx)
 
-  if(exact){
+temp = voxelMetrics(las2xyz(las), idx) %>% do.call(what = rbind) %>% as.data.table
+colnames(temp) = c('planarity', 'verticality', 'linearSaliency', 'planarSaliency', 'scattering', 'anisotropy', 'zrange', 'zsd')
+temp$VoxelID = names(idx) %>% as.double
 
-    df = data.table()
-    offset = las@data[1,1:3]
-    for(var in c('X', 'Y', 'Z')){
-      dst = floor( (las[[var]] - offset[[var]]) / d )
-      df %<>% cbind(dst)
-    }
+las@data$VoxelID = vx #%>% as.factor %>% as.double
+las@data = merge(las@data, temp, by='VoxelID')
 
-    vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
-
-  }else{
-    las = las2xyz(las)
-    vx = voxelIndex(las, d)
-  }
-
-  return(vx)
-
-}
+cpa = lidR::pastel.colors(las@data$VoxelID %>% unique %>% length)
+plot(las, color='VoxelID', colorPalette = cpa, size=2)
 
 
 
-
-
-t2 = Sys.time()
-print(t2-t1)
-
-range(vx)
-unique(vx) %>% length
-
-t1 = Sys.time()
-vx = voxelIndex(las %>% las2xyz, d) #%>% as.factor %>% as.integer()
-t2 = Sys.time()
-print(t2-t1)
-
-range(vx)
-unique(vx) %>% length
-
-las = lasadddata(las, vx, 'voxel')
-colpal = lidR::pastel.colors(vx %>% unique %>% length)
-plot(las, color='voxel', colorPalette=colpal, size=2)
-
-unique(vx) %>% length
+las@data$trunk = with(las@data, {planarity < .05})
+plot(las, color='trunk')
 
 vxl = lasfilter(las, voxel == sample(unique(vx), 1) )
 apply(vxl %>% las2xyz, 2, function(x) diff(range(x)))

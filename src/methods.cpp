@@ -785,9 +785,9 @@ vector<vector<double> > voxelMetrics(vector<vector<double> >& cloud, vector<vect
 
   vector<double> eVal;
   vector<vector<double> > eVec;
-  vector<vector<double> > out(idx.size());
+  vector<vector<double> > out;
 
-  for(auto& vx : idx){
+  for(auto& vx : idx){   
 
     if(vx.size() < 3){
       out.push_back({0});

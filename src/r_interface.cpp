@@ -415,17 +415,9 @@ SEXP voxelIndex(NumericMatrix& las, double d){
 }
 
 // [[Rcpp::export]]
-SEXP voxelMetrics(NumericMatrix& las, List& voxelIds ){
+List voxelMetrics(NumericMatrix& las, List& voxelIds ){
+  typedef vector< vector<unsigned int> > vvint;
   vector<vector<double> > cloud = rmatrix2cpp(las);
-  vector<vector<unsigned int> > idx( voxelIds.size() );
-
-  unsigned int i = 0;
-  for(auto& vx : voxelIds){
-    for(auto& pt : vx){
-      idx[i].push_back(pt);
-    }
-    i++;
-  }
-
+  vvint idx = Rcpp::as< vvint >( voxelIds );
   return wrap( voxelMetrics(cloud, idx) );
 }

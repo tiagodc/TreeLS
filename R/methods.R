@@ -6,8 +6,7 @@
 #
 # COPYRIGHT: Tiago de Conto, 2019
 #
-# This piece of software is open and free to use, redistribution and modifica
-tions
+# This piece of software is open and free to use, redistribution and modifications
 # should be done in accordance to the GNU General Public License >= 3#
 # Use this software as you wish, but no warranty is provided whatsoever. For any
 # comments or questions on TreeLS, please contact the developer (prefereably through my github account)
@@ -921,8 +920,15 @@ ptm.voxels = function(las, d = .05, exact=F){
     vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
 
   }else{
-    las = las2xyz(las)
-    vx = voxelIndex(las, d)
+
+    vx = voxelIndex(las2xyz(las), d)
+
+    uid = unique(vx)
+    vxid = data.table(hash = uid, id = 1:length(uid))
+
+    vx = data.table(hash = vx)
+    vx = merge(vx, vxid, by='hash', sort=F)
+    vx = vx$id %>% as.double
   }
 
   return(vx)
