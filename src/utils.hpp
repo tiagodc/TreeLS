@@ -63,6 +63,8 @@ vector<double> xprod(vector<double>& a, vector<double>& b);
 
 void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs);
 
+vector<double> nnMetrics(vector<vector<double> >& xyz);
+
 vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
 
 double vecAngle(vector<double>& a, vector<double>& b);

@@ -26,6 +26,8 @@
 
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
 
+point.metrics.names = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N')
+
 tls.marker = 'tlsAttribute'
 
 isLAS = function(las){
@@ -905,8 +907,7 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
   return(las)
 }
 
-ptm.voxels = function(las, d = .05, exact=F){
-  las = las@data[,1:3] %>% toLAS
+ptm.voxels = function(las, d = .1, exact=F){
 
   if(exact){
 
@@ -931,6 +932,71 @@ ptm.voxels = function(las, d = .05, exact=F){
     vx = vx$id %>% as.double
   }
 
-  return(vx)
+  idx = split(1:length(vx), vx)
+  vtm = voxelMetrics(las2xyz(las), idx) %>% do.call(what = rbind) %>% as.data.table
+  colnames(vtm) = point.metrics.names
 
+  vtm$VoxelID = names(idx) %>% as.double
+  las@data$VoxelID = vx
+  las@data = merge(las@data, vtm, by='VoxelID', sort=F)
+  las@data = las@data[,-c('VoxelID')]
+  las@data$VoxelID = vx
+
+  return(las)
+
+}
+
+ptm.knn = function(las, k = 30){
+  zclass = splitByIndex(las)
+  zuq = unique(zclass)
+
+  df = data.table()
+  for(i in zuq){
+    temp = lasfilter(las, zclass == i)
+    knn = RANN::nn2(temp %>% las2xyz, k = k, treetype = 'kd', searchtype = 'standard')
+    ptm = ptmStatistics(las, knn)
+    temp@data[,colnames(ptm)] = ptm
+    df = rbind(df, temp@data)
+  }
+
+  las@data = df
+  las = resetLAS(las)
+  return(las)
+}
+
+ptm.radius = function(las, r = 0.1, max_k = 30){
+  zclass = splitByIndex(las)
+  zuq = unique(zclass)
+
+  df = data.table()
+  for(i in zuq){
+    temp = lasfilter(las, zclass == i)
+    knn = RANN::nn2(las %>% las2xyz, k = max_k, treetype = 'kd', searchtype = 'radius', radius = r)
+    ptm = ptmStatistics(las, knn)
+    temp@data[,colnames(ptm)] = ptm
+    df = rbind(df, temp@data)
+  }
+
+  las@data = df
+  las = resetLAS(las)
+  return(las)
+}
+
+ptmStatistics = function(las, knn){
+  kid = knn$nn.idx
+  kds = knn$nn.dists
+  kds[kid == 0] = NA
+
+  ptm = pointMetrics(las %>% las2xyz, kid) %>% do.call(what = rbind) %>% as.data.table
+  colnames(ptm) = point.metrics.names
+
+  ptm$MinDistance = suppressWarnings(kds[,-1] %>% apply(1, min, na.rm=T))
+  ptm$MaxDistance = suppressWarnings(kds[,-1] %>% apply(1, max, na.rm=T))
+  ptm$MeanDistance = kds[,-1] %>% rowMeans(na.rm=T)
+
+  ptm = as.matrix(ptm)
+  ptm[is.na(ptm)] = ptm[is.nan(ptm)] = ptm[is.null(ptm)] = ptm[is.infinite(ptm)] = 0
+  ptm = as.data.table(ptm)
+
+  return(ptm)
 }

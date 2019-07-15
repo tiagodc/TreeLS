@@ -43,6 +43,45 @@ void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, 
   }
 }
 
+vector<double> nnMetrics(vector<vector<double> >& xyz){
+
+      vector<double> eVal;
+      vector<vector<double> > eVec;
+
+      eigenDecomposition(xyz, &eVal, &eVec);
+
+      vector<double> z = {0,0,1};
+      double zmean = accumulate(xyz[2].begin(), xyz[2].end(), 0) / xyz[2].size();
+      double zmax = *max_element(xyz[2].begin(), xyz[2].end());
+      double zmin = *min_element(xyz[2].begin(), xyz[2].end());
+      double zsumsq = 0;
+      for(auto& pt : xyz[2]) zsumsq += pow( pt - zmean ,2);
+
+      double planarity = eVal[2] / (eVal[0] + eVal[1] + eVal[2]);
+      double verticality = vecAngle(z, eVec[2]);
+      double linearSaliency = (eVal[0] - eVal[1]) / eVal[0];
+      double planarSaliency = (eVal[1] - eVal[2]) / eVal[0];
+      double scattering = eVal[2] / eVal[0];
+      double anisotropy = (eVal[0] - eVal[2]) / eVal[0];
+      double zrange = zmax - zmin;
+      double zsd = sqrt( zsumsq / xyz[2].size() );
+      double nobs = xyz[0].size();
+
+      vector<double> metrics = {
+        planarity,
+        verticality,
+        linearSaliency,
+        planarSaliency,
+        scattering,
+        anisotropy,
+        zrange,
+        zsd,
+        nobs
+      };
+
+      return metrics;
+}
+
 double mad(vector<double> x, double c){
 
   double md = median(x);
