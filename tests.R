@@ -18,33 +18,27 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-# las = readTLS('test_data/zeb.laz', filter='-keep_random_fraction 0.025')
+# las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
 las = readTLS('inst/extdata/pine.laz')
 
-las %<>% las2xyz %>% toLAS
+# las %<>% tlsAlter(c('-x','z','y'), T, T)
+xy = las@data[,.(mean(X),mean(Y))] %>% as.double
+vx = tlsCrop(las, xy[1], xy[2], 5)
+vx %<>% tlsNormalize(keepGround = F)
+# vx %<>% ptm.voxels(d = 0.1, metrics_list = c('N', 'Planarity'))
+vx %<>% ptm.knn(30)
+vx %<>% ptm.radius(metrics_list = 'MeanDistance')
 
-vx = ptm.voxels(las, d = 0.15)
-idx = split(1:length(vx), vx)
+vx@data$MedianDistance %>% hist
+temp = lasfilter(vx, N > 3 & MeanDistance < .05 & Planarity < .2 & Verticality > 70 & Verticality < 100)
 
-temp = voxelMetrics(las2xyz(las), idx) %>% do.call(what = rbind) %>% as.data.table
-colnames(temp) = c('planarity', 'verticality', 'linearSaliency', 'planarSaliency', 'scattering', 'anisotropy', 'zrange', 'zsd')
-temp$VoxelID = names(idx) %>% as.double
-
-las@data$VoxelID = vx #%>% as.factor %>% as.double
-las@data = merge(las@data, temp, by='VoxelID')
-
-cpa = lidR::pastel.colors(las@data$VoxelID %>% unique %>% length)
-plot(las, color='VoxelID', colorPalette = cpa, size=2)
+plot(vx, size=.5, color='MedianDistance')
 
 
-
-las@data$trunk = with(las@data, {planarity < .05})
-plot(las, color='trunk')
-
-vxl = lasfilter(las, voxel == sample(unique(vx), 1) )
-apply(vxl %>% las2xyz, 2, function(x) diff(range(x)))
-plot(vxl) ; axes3d(col='white')
-
+cb = lasfilter(vx, VoxelID == 19)
+cb %>% las2xyz %>% temp_func
+cb %>% las2xyz %>% cov %>% eigen()
+cb@data[1,]
 
 n = 20
 d = 0.2

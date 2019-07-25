@@ -402,10 +402,11 @@ List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<un
 /////// TESTS
 
 // [[Rcpp::export]]
-SEXP pointMetrics(NumericMatrix& las, NumericMatrix& kIds){
+SEXP pointMetrics(NumericMatrix& las, NumericMatrix& kIds, LogicalVector& whichMetrics){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<vector<unsigned int> > idx = intmatrix2cpp(kIds);
-  return wrap(pointMetrics(cloud, idx));
+  vector<bool> wmt = Rcpp::as< vector<bool> >( whichMetrics );
+  return wrap( pointMetrics(cloud, idx, wmt) );
 }
 
 // [[Rcpp::export]]
@@ -415,9 +416,10 @@ SEXP voxelIndex(NumericMatrix& las, double d){
 }
 
 // [[Rcpp::export]]
-List voxelMetrics(NumericMatrix& las, List& voxelIds ){
+List voxelMetrics(NumericMatrix& las, List& voxelIds, LogicalVector& whichMetrics){
   typedef vector< vector<unsigned int> > vvint;
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vvint idx = Rcpp::as< vvint >( voxelIds );
-  return wrap( voxelMetrics(cloud, idx) );
+  vector<bool> wmt = Rcpp::as< vector<bool> >( whichMetrics );
+  return wrap( voxelMetrics(cloud, idx, wmt) );
 }

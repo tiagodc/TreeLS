@@ -43,7 +43,7 @@ void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, 
   }
 }
 
-vector<double> nnMetrics(vector<vector<double> >& xyz){
+vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
 
       vector<double> eVal;
       vector<vector<double> > eVec;
@@ -67,17 +67,31 @@ vector<double> nnMetrics(vector<vector<double> >& xyz){
       double zsd = sqrt( zsumsq / xyz[2].size() );
       double nobs = xyz[0].size();
 
-      vector<double> metrics = {
-        planarity,
-        verticality,
-        linearSaliency,
-        planarSaliency,
-        scattering,
-        anisotropy,
-        zrange,
-        zsd,
-        nobs
-      };
+      vector<double> metrics = {};
+      
+      if(which[0]) metrics.push_back(planarity);
+      if(which[1]) metrics.push_back(verticality);
+      if(which[2]) metrics.push_back(linearSaliency);
+      if(which[3]) metrics.push_back(planarSaliency);
+      if(which[4]) metrics.push_back(scattering);
+      if(which[5]) metrics.push_back(anisotropy);
+      if(which[6]) metrics.push_back(zrange);
+      if(which[7]) metrics.push_back(zsd);
+      if(which[8]) metrics.push_back(nobs);
+      
+      if(which[9]){
+        for(auto& v : eVal){
+          metrics.push_back(v);
+        }
+      }
+
+      if(which[10]){
+        for(auto& a : eVec){
+          for(auto& b : a){
+            metrics.push_back(b);
+          }
+        }
+      }
 
       return metrics;
 }

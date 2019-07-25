@@ -26,7 +26,9 @@
 
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
 
-point.metrics.names = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N')
+point.metrics.names = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValue1', 'EigenValue2', 'EigenValue3', 'EigenVector11', 'EigenVector21', 'EigenVector31', 'EigenVector12', 'EigenVector22', 'EigenVector32', 'EigenVector13', 'EigenVector23', 'EigenVector33')
+
+point.metrics.check = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance')
 
 tls.marker = 'tlsAttribute'
 
@@ -138,7 +140,7 @@ las2xyz = function(las){
   if(class(las)[1] != "LAS")
     stop("las must be a LAS object")
 
-  las = las@data[,1:3] %>% as.matrix
+  las = las@data[,c('X','Y','Z')] %>% as.matrix
   return(las)
 }
 
@@ -907,7 +909,9 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
   return(las)
 }
 
-ptm.voxels = function(las, d = .1, exact=F){
+ptm.voxels = function(las, d = .1, exact=F, metrics_list = point.metrics.check){
+
+  pickMetrics = ptmMetricsLog(metrics_list)
 
   if(exact){
 
@@ -932,9 +936,9 @@ ptm.voxels = function(las, d = .1, exact=F){
     vx = vx$id %>% as.double
   }
 
-  idx = split(1:length(vx), vx)
-  vtm = voxelMetrics(las2xyz(las), idx) %>% do.call(what = rbind) %>% as.data.table
-  colnames(vtm) = point.metrics.names
+  idx = split(0:(length(vx)-1), vx)
+  vtm = voxelMetrics(las2xyz(las), idx, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
+  colnames(vtm) = pickMetrics$names
 
   vtm$VoxelID = names(idx) %>% as.double
   las@data$VoxelID = vx
@@ -946,7 +950,7 @@ ptm.voxels = function(las, d = .1, exact=F){
 
 }
 
-ptm.knn = function(las, k = 30){
+ptm.knn = function(las, k = 30, metrics_list = point.metrics.check){
   zclass = splitByIndex(las)
   zuq = unique(zclass)
 
@@ -954,7 +958,7 @@ ptm.knn = function(las, k = 30){
   for(i in zuq){
     temp = lasfilter(las, zclass == i)
     knn = RANN::nn2(temp %>% las2xyz, k = k, treetype = 'kd', searchtype = 'standard')
-    ptm = ptmStatistics(las, knn)
+    ptm = ptmStatistics(las, knn, metrics_list)
     temp@data[,colnames(ptm)] = ptm
     df = rbind(df, temp@data)
   }
@@ -964,7 +968,7 @@ ptm.knn = function(las, k = 30){
   return(las)
 }
 
-ptm.radius = function(las, r = 0.1, max_k = 30){
+ptm.radius = function(las, r = 0.1, max_k = 30, metrics_list = point.metrics.check){
   zclass = splitByIndex(las)
   zuq = unique(zclass)
 
@@ -972,7 +976,7 @@ ptm.radius = function(las, r = 0.1, max_k = 30){
   for(i in zuq){
     temp = lasfilter(las, zclass == i)
     knn = RANN::nn2(las %>% las2xyz, k = max_k, treetype = 'kd', searchtype = 'radius', radius = r)
-    ptm = ptmStatistics(las, knn)
+    ptm = ptmStatistics(las, knn, metrics_list)
     temp@data[,colnames(ptm)] = ptm
     df = rbind(df, temp@data)
   }
@@ -982,21 +986,48 @@ ptm.radius = function(las, r = 0.1, max_k = 30){
   return(las)
 }
 
-ptmStatistics = function(las, knn){
+ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
+
+  pickMetrics = ptmMetricsLog(metrics_list)
+
   kid = knn$nn.idx
   kds = knn$nn.dists
   kds[kid == 0] = NA
 
-  ptm = pointMetrics(las %>% las2xyz, kid) %>% do.call(what = rbind) %>% as.data.table
-  colnames(ptm) = point.metrics.names
+  ptm = data.table()
 
-  ptm$MinDistance = suppressWarnings(kds[,-1] %>% apply(1, min, na.rm=T))
-  ptm$MaxDistance = suppressWarnings(kds[,-1] %>% apply(1, max, na.rm=T))
-  ptm$MeanDistance = kds[,-1] %>% rowMeans(na.rm=T)
+  if(any(pickMetrics$log[1:11])){
+    ptm =  pointMetrics(las %>% las2xyz, kid, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
+    colnames(ptm) = pickMetrics$names
+  }
+
+  if(pickMetrics$log[12]) ptm$MeanDistance = kds[,-1] %>% rowMeans(na.rm=T)
+  if(pickMetrics$log[13]) ptm$MedianDistance = suppressWarnings(kds[,-1] %>% apply(1, median, na.rm=T))
+  if(pickMetrics$log[14]) ptm$MinDistance = suppressWarnings(kds[,-1] %>% apply(1, min, na.rm=T))
+  if(pickMetrics$log[15]) ptm$MaxDistance = suppressWarnings(kds[,-1] %>% apply(1, max, na.rm=T))
 
   ptm = as.matrix(ptm)
   ptm[is.na(ptm)] = ptm[is.nan(ptm)] = ptm[is.null(ptm)] = ptm[is.infinite(ptm)] = 0
   ptm = as.data.table(ptm)
 
   return(ptm)
+}
+
+ptmMetricsLog = function(metrics_list){
+  metrics_log = point.metrics.check %in% metrics_list
+
+  if(all(!metrics_log)) stop('Please provide at least one known metric. See ?availablePointMetrics')
+
+  metrics_names = point.metrics.names[1:9][metrics_log[1:9]]
+  if(metrics_log[10]) metrics_names %<>% c(point.metrics.names[10:12])
+  if(metrics_log[11]) metrics_names %<>% c(point.metrics.names[13:21])
+
+  return(list(log = metrics_log, names = metrics_names))
+
+}
+
+availablePointMetrics = function(){
+  point.metrics.check %>% as.data.frame %>% print
+  cat('\n')
+  return(point.metrics.check)
 }

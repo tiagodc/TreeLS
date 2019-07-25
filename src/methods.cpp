@@ -705,7 +705,7 @@ vector<vector<vector<double> > > irlsPlotCircles(vector<vector<double> >& cloud,
 
 }
 
-vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx){
+vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx, vector<bool> which_metrics){
 
   unsigned int ncol = idx.size();
   unsigned int nrow = idx[0].size();
@@ -728,7 +728,7 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
     if(xyz[0].size() < 3){
       out.push_back({0});
     }else{
-      vector<double> metrics = nnMetrics(xyz);
+      vector<double> metrics = nnMetrics(xyz, which_metrics);
       out.push_back(metrics);
     }
   }
@@ -736,11 +736,12 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
   return out;
 }
 
-vector<vector<double> > voxelMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx){
+vector<vector<double> > voxelMetrics(vector<vector<double> >& cloud, vector<vector<unsigned int> >& idx, vector<bool> which_metrics){
 
   unsigned int nvoxels = idx.size();
   vector<vector<double> > out;
 
+  int i = 1;
   for(auto& vx : idx){   
 
     if(vx.size() < 3){
@@ -756,7 +757,7 @@ vector<vector<double> > voxelMetrics(vector<vector<double> >& cloud, vector<vect
       xyz[2].push_back( cloud[2][pt] );
     }
 
-    vector<double> metrics = nnMetrics(xyz);
+    vector<double> metrics = nnMetrics(xyz, which_metrics);
     out.push_back(metrics);
   }
 
