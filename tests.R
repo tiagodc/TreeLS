@@ -5,6 +5,7 @@ source('R/map_methods.R')
 source('R/stem_points_methods.R')
 source('R/stem_segmentation_methods.R')
 source('R/tree_points_methods.R')
+source('R/point_metrics_methods.R')
 
 require(magrittr)
 require(lidR)
@@ -18,21 +19,30 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-# las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
-las = readTLS('inst/extdata/pine.laz')
+las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
+# las = readTLS('inst/extdata/pine.laz')
 
-# las %<>% tlsAlter(c('-x','z','y'), T, T)
+las %<>% tlsAlter(c('-x','z','y'), T, T)
 xy = las@data[,.(mean(X),mean(Y))] %>% as.double
 vx = tlsCrop(las, xy[1], xy[2], 5)
 vx %<>% tlsNormalize(keepGround = F)
-# vx %<>% ptm.voxels(d = 0.1, metrics_list = c('N', 'Planarity'))
+vx %<>% ptm.voxels(d = 0.1)
 vx %<>% ptm.knn(30)
-vx %<>% ptm.radius(metrics_list = 'MeanDistance')
+# vx %<>% ptm.radius(metrics_list = 'MeanDistance')
+
+pt = vx@data$VoxelID %>% unique %>% length %>% pastel.colors
+
+plot(vx, color='Intensity')#, colorPalette=pt)
+
 
 vx@data$MedianDistance %>% hist
-temp = lasfilter(vx, N > 3 & MeanDistance < .05 & Planarity < .2 & Verticality > 70 & Verticality < 100)
+trunk = with(vx@data, N > 3 & MeanDistance < .05 & Planarity < .2 & Verticality > 80 & Verticality < 100)
+vx %<>% lasadddata(trunk,'trunk')
 
-plot(vx, size=.5, color='MedianDistance')
+temp = lasfilter(vx, N > 3 & MeanDistance < .05 & Planarity < .2 & Verticality > 80 & Verticality < 100)
+
+plot(vx, size=.5, color='trunk')
+plot(temp)
 
 
 cb = lasfilter(vx, VoxelID == 19)

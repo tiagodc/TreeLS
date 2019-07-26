@@ -696,7 +696,7 @@ tlsRotate = function(las){
 #' rgl::axes3d(col='white')
 #'
 #' @export
-tlsAlter = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate = FALSE){
+tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate = FALSE){
 
   isLAS(las)
 
@@ -864,8 +864,16 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 }
 
 
-####### NEW IMPLEMENTATIONS
-
+#' Classify areas of influence for individual trees
+#' @description Classify \code{LAS} points according to the region of influence calculated from a tree map.
+#' @template param-las
+#' @param map output from \code{\link{treeMap}} or \code{\link{treePositions}}.
+#' @param method segmentation algorithm - currently available: \code{\link{trees.voronoi}}.
+#' @return \code{LAS} object with a new TreeID field.
+#' @examples
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' @export
 treePoints = function(las, map, method=trees.voronoi()){
 
   isLAS(las)
@@ -886,7 +894,19 @@ treePoints = function(las, map, method=trees.voronoi()){
 
 }
 
-nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
+
+#' Filter isolated points
+#' @description Noise filtering algorithm based on point neighborhood distances.
+#' @template param-las
+#' @param d \code{numeric} - distance to search for neighboring points.
+#' @param n \code{integer} - number of points below which a neighborhood (within distance \emph{d}) will be assigned as noise
+#' @param max_points \code{numeric} - total number of points tolerated per point cloud chunk to apply knn search. If the input \code{LAS} is larger than \code{max_points}, knn search will be performed over point cloud slices (along the Z axis) with \emph{N} up to \code{max_points}.
+#' @template return-las
+#' @examples
+#' file = system.file("extdata", "spruce.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' @export
+nnFilter = function(las, d = 0.05, n = 2, max_points = 1.5E6){
 
   zclass = splitByIndex(las, max_size = max_points)
   keep = rep(T, nrow(las@data))
@@ -909,125 +929,39 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1E6){
   return(las)
 }
 
-ptm.voxels = function(las, d = .1, exact=F, metrics_list = point.metrics.check){
 
-  pickMetrics = ptmMetricsLog(metrics_list)
-
-  if(exact){
-
-    df = data.table()
-    offset = las@data[1,1:3]
-    for(var in c('X', 'Y', 'Z')){
-      dst = floor( (las[[var]] - offset[[var]]) / d )
-      df %<>% cbind(dst)
-    }
-
-    vx = paste(df[[1]], df[[2]], df[[3]], sep='_') %>% as.factor %>% as.integer
-
-  }else{
-
-    vx = voxelIndex(las2xyz(las), d)
-
-    uid = unique(vx)
-    vxid = data.table(hash = uid, id = 1:length(uid))
-
-    vx = data.table(hash = vx)
-    vx = merge(vx, vxid, by='hash', sort=F)
-    vx = vx$id %>% as.double
-  }
-
-  idx = split(0:(length(vx)-1), vx)
-  vtm = voxelMetrics(las2xyz(las), idx, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
-  colnames(vtm) = pickMetrics$names
-
-  vtm$VoxelID = names(idx) %>% as.double
-  las@data$VoxelID = vx
-  las@data = merge(las@data, vtm, by='VoxelID', sort=F)
-  las@data = las@data[,-c('VoxelID')]
-  las@data$VoxelID = vx
-
-  return(las)
-
-}
-
-ptm.knn = function(las, k = 30, metrics_list = point.metrics.check){
-  zclass = splitByIndex(las)
-  zuq = unique(zclass)
-
-  df = data.table()
-  for(i in zuq){
-    temp = lasfilter(las, zclass == i)
-    knn = RANN::nn2(temp %>% las2xyz, k = k, treetype = 'kd', searchtype = 'standard')
-    ptm = ptmStatistics(las, knn, metrics_list)
-    temp@data[,colnames(ptm)] = ptm
-    df = rbind(df, temp@data)
-  }
-
-  las@data = df
-  las = resetLAS(las)
-  return(las)
-}
-
-ptm.radius = function(las, r = 0.1, max_k = 30, metrics_list = point.metrics.check){
-  zclass = splitByIndex(las)
-  zuq = unique(zclass)
-
-  df = data.table()
-  for(i in zuq){
-    temp = lasfilter(las, zclass == i)
-    knn = RANN::nn2(las %>% las2xyz, k = max_k, treetype = 'kd', searchtype = 'radius', radius = r)
-    ptm = ptmStatistics(las, knn, metrics_list)
-    temp@data[,colnames(ptm)] = ptm
-    df = rbind(df, temp@data)
-  }
-
-  las@data = df
-  las = resetLAS(las)
-  return(las)
-}
-
-ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
-
-  pickMetrics = ptmMetricsLog(metrics_list)
-
-  kid = knn$nn.idx
-  kds = knn$nn.dists
-  kds[kid == 0] = NA
-
-  ptm = data.table()
-
-  if(any(pickMetrics$log[1:11])){
-    ptm =  pointMetrics(las %>% las2xyz, kid, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
-    colnames(ptm) = pickMetrics$names
-  }
-
-  if(pickMetrics$log[12]) ptm$MeanDistance = kds[,-1] %>% rowMeans(na.rm=T)
-  if(pickMetrics$log[13]) ptm$MedianDistance = suppressWarnings(kds[,-1] %>% apply(1, median, na.rm=T))
-  if(pickMetrics$log[14]) ptm$MinDistance = suppressWarnings(kds[,-1] %>% apply(1, min, na.rm=T))
-  if(pickMetrics$log[15]) ptm$MaxDistance = suppressWarnings(kds[,-1] %>% apply(1, max, na.rm=T))
-
-  ptm = as.matrix(ptm)
-  ptm[is.na(ptm)] = ptm[is.nan(ptm)] = ptm[is.null(ptm)] = ptm[is.infinite(ptm)] = 0
-  ptm = as.data.table(ptm)
-
-  return(ptm)
-}
-
-ptmMetricsLog = function(metrics_list){
-  metrics_log = point.metrics.check %in% metrics_list
-
-  if(all(!metrics_log)) stop('Please provide at least one known metric. See ?availablePointMetrics')
-
-  metrics_names = point.metrics.names[1:9][metrics_log[1:9]]
-  if(metrics_log[10]) metrics_names %<>% c(point.metrics.names[10:12])
-  if(metrics_log[11]) metrics_names %<>% c(point.metrics.names[13:21])
-
-  return(list(log = metrics_log, names = metrics_names))
-
-}
-
+#' Print available point metrics
+#' @description print available point metrics - for usage in \code{\link{pointMetrics}}.
+#' @return vector with available metrics names.
+#' @examples
+#' availablePointMetrics()
+#' @export
 availablePointMetrics = function(){
-  point.metrics.check %>% as.data.frame %>% print
+  temp = data.frame(METRIC = point.metrics.check, OBS = '')
+  temp$OBS %<>% as.character
+  temp$OBS[12:15] = '   calculated only on ptm.knn and ptm.radius methods'
+  print(temp)
   cat('\n')
-  return(point.metrics.check)
+  return(invisible(point.metrics.check))
+}
+
+
+#' Calculate metrics per point neighborhood
+#' @description Get a list of statistics per point neighborhood. Check out \code{\link{availablePointMetrics}} for information on the available metrics.
+#' @template param-las
+#' @param metrics_list list of metrics to be calculated - must match exactly names \code{availablePointMetrics()}.
+#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}}, \code{\link{ptm.knn}} and \code{\link{ptm.radius}}.
+#' @return \code{LAS} object with extra fields - one for each calculated metric.
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' @export
+pointMetrics = function(las, metrics_list, method = ptm.voxels()){
+
+  isLAS(las)
+
+  if(!hasAttribute(method, 'ptm_mtd'))
+    stop('invalid method: check ?pointMetrics')
+
+  return(method(las, metrics_list))
 }
