@@ -397,7 +397,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #'
 #' @importFrom raster raster extent res<-
 #' @export
-tlsNormalize = function(las, res=.5, keepGround=TRUE){
+tlsNormalize = function(las, res=.5, keep_ground=TRUE){
 
   isLAS(las)
 
@@ -412,11 +412,11 @@ tlsNormalize = function(las, res=.5, keepGround=TRUE){
   grid = las %>% extent %>% raster
   res(grid) = res
 
-  dtm = grid_terrain(las, res = grid, algorithm = knnidw())
+  dtm = suppressWarnings( grid_terrain(las, res = grid, algorithm = knnidw()) )
 
   las %<>% lasnormalize(dtm, na.rm=TRUE)
 
-  if(!keepGround) las %<>% lasfilter(Classification != 2)
+  if(!keep_ground) las %<>% lasfilter(Classification != 2)
 
   return(las)
 
@@ -889,6 +889,9 @@ treePoints = function(las, map, method=trees.voronoi()){
   if( map$TreeID %>% duplicated %>% any )
     stop('input map must have unique TreeIDs')
 
+  if(!hasAttribute(method, 'tpt_mtd'))
+    stop('invalid method: check ?treePoints')
+
   las %<>% method(map)
   return(las)
 
@@ -918,11 +921,11 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1.5E6){
 
     knn = rep(0, nrow(rnn))
     for(j in 1:ncol(rnn)){
-      temp = ifelse(rnn[,j] > d, 1, 0) %>% as.double
+      temp = ifelse(rnn[,j] > d, 0, 1) %>% as.double
       knn = knn + temp
     }
 
-    keep[bool] = knn < n
+    keep[bool] = knn >= n
   }
 
   las %<>% lasfilter(keep)
@@ -956,7 +959,7 @@ availablePointMetrics = function(){
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-pointMetrics = function(las, metrics_list, method = ptm.voxels()){
+pointMetrics = function(las, method = ptm.voxels(), metrics_list = point.metrics.check){
 
   isLAS(las)
 

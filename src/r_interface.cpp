@@ -402,7 +402,7 @@ List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<un
 /////// TESTS
 
 // [[Rcpp::export]]
-SEXP pointMetrics(NumericMatrix& las, NumericMatrix& kIds, LogicalVector& whichMetrics){
+SEXP pointMetricsCpp(NumericMatrix& las, NumericMatrix& kIds, LogicalVector& whichMetrics){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<vector<unsigned int> > idx = intmatrix2cpp(kIds);
   vector<bool> wmt = Rcpp::as< vector<bool> >( whichMetrics );

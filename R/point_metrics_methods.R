@@ -22,7 +22,7 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
   ptm = data.table()
 
   if(any(pickMetrics$log[1:11])){
-    ptm =  pointMetrics(las %>% las2xyz, kid, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
+    ptm =  pointMetricsCpp(las %>% las2xyz, kid, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
     colnames(ptm) = pickMetrics$names
   }
 
@@ -71,7 +71,8 @@ ptm.voxels = function(d = .1, exact=F){
     vtm = voxelMetrics(las2xyz(las), idx, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
     colnames(vtm) = pickMetrics$names
 
-    las@data = suppressWarnings( las@data[,-colnames(vtm)] )
+    keepNames = colnames(las@data)[ !( colnames(las@data) %in% colnames(vtm) ) ]
+    las@data = las@data[, ..keepNames]
     vtm$VoxelID = names(idx) %>% as.double
     las@data$VoxelID = vx
     las@data = merge(las@data, vtm, by='VoxelID', sort=F)
@@ -88,7 +89,6 @@ ptm.voxels = function(d = .1, exact=F){
 ptm.knn = function(k = 30){
 
   func = function(las, metrics_list){
-
     zclass = splitByIndex(las)
     zuq = unique(zclass)
 
@@ -96,7 +96,7 @@ ptm.knn = function(k = 30){
     for(i in zuq){
       temp = lasfilter(las, zclass == i)
       knn = RANN::nn2(temp %>% las2xyz, k = k, treetype = 'kd', searchtype = 'standard')
-      ptm = ptmStatistics(las, knn, metrics_list)
+      ptm = ptmStatistics(temp, knn, metrics_list)
       temp@data[,colnames(ptm)] = ptm
       df = rbind(df, temp@data)
     }
@@ -120,7 +120,7 @@ ptm.radius = function(r = 0.1, max_k = 30){
     for(i in zuq){
       temp = lasfilter(las, zclass == i)
       knn = RANN::nn2(las %>% las2xyz, k = max_k, treetype = 'kd', searchtype = 'radius', radius = r)
-      ptm = ptmStatistics(las, knn, metrics_list)
+      ptm = ptmStatistics(temp, knn, metrics_list)
       temp@data[,colnames(ptm)] = ptm
       df = rbind(df, temp@data)
     }

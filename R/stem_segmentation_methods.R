@@ -1,5 +1,5 @@
 #' Stem segmentation algorithm: RANSAC circle fit
-#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares circle fit algorithm in a RANSAC fashion over stem segments. Mode details are given in the sections below.
+#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares circle fit algorithm in a RANSAC fashion over stem segments. More details are given in the sections below.
 #' @template param-tol
 #' @template param-n-ransac
 #' @template param-conf
@@ -103,6 +103,30 @@ sgmt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
 
 }
 
+
+#' Stem segmentation algorithm: RANSAC cylinder fit
+#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares cylinder fit algorithm in a RANSAC fashion over stem segments. More details are given in the sections below.
+#' @template param-tol
+#' @template param-n-ransac
+#' @template param-conf
+#' @template param-inliers
+#' @section Output Fields:
+#'
+#' \itemize{
+#' \item \code{TreeID}:  unique tree IDs - available only for multiple stems
+#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{X}, \code{Y}: circle center coordinates
+#' \item \code{Radius}: estimated circles radii
+#' \item \code{Error}: least squares circle fit error
+#' \item \code{AvgHeight}: average height of stem segments
+#' \item \code{N}: number of points in the stem segments
+#' }
+#'
+#' @template section-circlefit
+#' @template section-ransac
+#' @template reference-thesis
+#' @template example-segmentation
+#' @export
 sgmt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
   params = list(
