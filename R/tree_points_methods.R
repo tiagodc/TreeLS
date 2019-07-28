@@ -11,8 +11,9 @@ trees.voronoi = function(){
     vPoly = dismo::voronoi(xymap[,2:3], xt)
     vPoly$id = xymap$TreeID
     names(vPoly) = 'TreeID'
+    crs(vPoly) = crs(las)
 
-    las %<>% lasmergespatial(vPoly, 'TreeID')
+    las = lasmergespatial(las, vPoly, 'TreeID')
     las@data$TreeID[las@data$Classification == 2] = 0
 
     las %<>% setAttribute('tree_points')

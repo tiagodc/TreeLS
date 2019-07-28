@@ -229,6 +229,28 @@ splitByIndex = function(las, var='Z', max_size = 1E6){
   return(zclass)
 }
 
+pan3d = function(button){
+  start <- list()
+
+  begin <- function(x, y) {
+    start$userMatrix <<- par3d("userMatrix")
+    start$viewport <<- par3d("viewport")
+    start$scale <<- par3d("scale")
+    start$projection <<- rgl.projection()
+    start$pos <<- rgl.window2user( x/start$viewport[3], 1 - y/start$viewport[4], 0.5,
+                                   projection=start$projection)
+  }
+
+  update <- function(x, y) {
+    xlat <- (rgl.window2user( x/start$viewport[3], 1 - y/start$viewport[4], 0.5,
+                              projection = start$projection) - start$pos)*start$scale
+    mouseMatrix <- translationMatrix(xlat[1], xlat[2], xlat[3])
+    par3d(userMatrix = start$userMatrix %*% t(mouseMatrix) )
+  }
+  rgl.setMouseCallbacks(button, begin, update)
+  cat("Pan set on button", button, "of rgl device",rgl.cur(),"\n")
+}
+
 
 #' Reset or create a \code{LAS} object depending on the input's type
 #' @description Reset the input's header if it is a \code{LAS} object, or generate a new \code{LAS} from a table-like input. For more information, checkout the \code{\link[lidR:LAS]{lidR::LAS}} description page.
