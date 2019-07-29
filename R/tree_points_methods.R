@@ -13,7 +13,11 @@ trees.voronoi = function(){
     names(vPoly) = 'TreeID'
     crs(vPoly) = crs(las)
 
-    las = lasmergespatial(las, vPoly, 'TreeID')
+    xysp = las@data[,.(X,Y)] %>% SpatialPoints %>% over(y = vPoly)
+    xysp = xysp[,1] %>% as.double
+    xysp[is.na(xysp)] = 0
+
+    las@data$TreeID = xysp
     las@data$TreeID[las@data$Classification == 2] = 0
 
     las %<>% setAttribute('tree_points')

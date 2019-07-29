@@ -37,7 +37,7 @@
 #' @template reference-thesis
 #' @template example-tree-map
 #' @export
-map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_radius = 0.25, min_density = 0.1, min_votes = 3){
+map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_d = 0.5, min_density = 0.1, min_votes = 3){
 
   if(hmax <= hmin)
     stop('hmax must be larger than hmin')
@@ -45,7 +45,7 @@ map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_ra
   params = list(
     hstep = hstep,
     pixel_size = pixel_size,
-    max_radius = max_radius,
+    max_d = max_d,
     min_density = min_density,
     min_votes = min_votes
   )
@@ -76,7 +76,7 @@ map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_ra
     if(hmin > rgz[2])
       stop('hmin is too high - above the point cloud')
 
-    map = stackMap(las %>% las2xyz, hmin, hmax, hstep, pixel_size, max_radius, min_density, min_votes) %>%
+    map = stackMap(las %>% las2xyz, hmin, hmax, hstep, pixel_size, max_d/2, min_density, min_votes) %>%
       do.call(what=cbind) %>% as.data.table
 
     map$Intensity %<>% as.integer
@@ -85,10 +85,74 @@ map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_ra
     map$TreePosition %<>% as.logical
     map %<>% LAS %>% setHeaderTLS
 
+    map %<>% setAttribute('map_hough')
     return(map)
   }
 
   func %<>% setAttribute('tls_map_mtd')
+  return(func)
+}
 
+
+map.eigen.knn = function(pln = .15, vrt = 15, mds = .05, max_d = .5, min_h = 2, min_n = 100){
+
+  func = function(las){
+    las = lasfilter(las, Classification != 2)
+    las = las@data[,.(X,Y,Z)] %>% toLAS
+    las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'MeanDistance'))
+
+    las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt & MeanDistance < mds) %>%
+      nnFilter(.1, 10)  %>% nnFilter(.25, 100)
+
+    las@data$TreeID = 0
+    maxdst = max_d*2
+    i = 1
+    while(any(las@data$TreeID == 0)){
+      xy = las@data[TreeID == 0,.(X,Y)][1,] %>% as.double
+      dst = las@data[,sqrt( (X-xy[1])^2 + (Y-xy[2])^2 )] %>% as.double
+      las@data[TreeID == 0 & dst < maxdst]$TreeID = i
+      i=i+1
+    }
+
+    hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
+    las = lasfilter(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
+
+    las %<>% setAttribute('map_eigen')
+    return(las)
+  }
+
+  func %<>% setAttribute('tls_map_mtd')
+  return(func)
+}
+
+
+map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .05, max_d = .5, min_h = 2, min_n = 100){
+
+  func = function(las){
+    las = lasfilter(las, Classification != 2)
+    las = las@data[,.(X,Y,Z)] %>% toLAS
+    las = pointMetrics(las, ptm.voxels(vxl), c('N', 'Planarity', 'Verticality'))
+
+    las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt) %>%
+      nnFilter(.1, 10)  %>% nnFilter(.25, 100)
+
+    las@data$TreeID = 0
+    maxdst = max_d*2
+    i = 1
+    while(any(las@data$TreeID == 0)){
+      xy = las@data[TreeID == 0,.(X,Y)][1,] %>% as.double
+      dst = las@data[,sqrt( (X-xy[1])^2 + (Y-xy[2])^2 )] %>% as.double
+      las@data[TreeID == 0 & dst < maxdst]$TreeID = i
+      i=i+1
+    }
+
+    hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
+    las = lasfilter(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
+
+    las %<>% setAttribute('map_eigen')
+    return(las)
+  }
+
+  func %<>% setAttribute('tls_map_mtd')
   return(func)
 }

@@ -486,11 +486,11 @@ treePositions = function(las, plot=T){
   if(!hasAttribute(las, 'tree_map'))
     stop('las is not a tree_map object: check ?treeMap')
 
-  las %<>% lasfilter(TreePosition)
+  if(hasAttribute(las, 'map_hough')){
+    las %<>% lasfilter(TreePosition)
+  }
 
-  pos = las@data[,c('TreeID', 'X', 'Y')]
-
-  # TreeID = NULL
+  pos = las@data[,.(X=mean(X), Y=mean(Y)),by=TreeID]
   pos = pos[order(TreeID)]
 
   pos %<>% setAttribute('tree_map_dt')
