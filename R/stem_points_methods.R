@@ -24,11 +24,11 @@
 #' tls = readTLS(file)
 #'
 #' ### identify stem points
-#' tls = stemPoints(tls, method = stem.hough(max_radius=.2))
+#' tls = stemPoints(tls, method = stm.hough(max_radius=.2))
 #' plot(tls, color='Stem')
 #'
 #' @export
-stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
+stm.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
   if(length(hbase) != 2)
     stop('hbase must be a numeric vector of length 2')
@@ -110,4 +110,42 @@ stem.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0
 
   return(func)
 
+}
+
+
+stm.eigen.knn = function(pln = .15, vrt = 15, mds = .05, max_d = .5, min_h = 2, min_n = 100){
+
+  func = function(las){
+    las@data$ptid_temp = 1:nrow(las@data)
+    lasthin = map.eigen.knn(pln, vrt, mds, max_d, min_h, min_n)(las)
+
+    las@data$Stem = las@data$ptid_temp %in% lasthin@data$ptid_temp
+    las@data = lasfull@data[,-c('ptid_temp')]
+    las@data$TreeID = 0
+    las@data[Stem]$TreeID = lasthin@data$TreeID
+
+    return(las)
+  }
+
+  func %<>% setAttribute('stem_pts_mtd')
+  return(func)
+}
+
+
+stm.eigen.voxel = function(pln = .15, vrt = 15, vxl = .05, max_d = .5, min_h = 2, min_n = 100){
+
+  func = function(las){
+    las@data$ptid_temp = 1:nrow(las@data)
+    lasthin = map.eigen.voxel(pln, vrt, vxl, max_d, min_h, min_n)(las)
+
+    las@data$Stem = las@data$ptid_temp %in% lasthin@data$ptid_temp
+    las@data = lasfull@data[,-c('ptid_temp')]
+    las@data$TreeID = 0
+    las@data[Stem]$TreeID = lasthin@data$TreeID
+
+    return(las)
+  }
+
+  func %<>% setAttribute('stem_pts_mtd')
+  return(func)
 }

@@ -98,7 +98,6 @@ map.eigen.knn = function(pln = .15, vrt = 15, mds = .05, max_d = .5, min_h = 2, 
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
-    las = las@data[,.(X,Y,Z)] %>% toLAS
     las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'MeanDistance'))
 
     las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt & MeanDistance < mds) %>%
@@ -130,7 +129,6 @@ map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .05, max_d = .5, min_h = 2
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
-    las = las@data[,.(X,Y,Z)] %>% toLAS
     las = pointMetrics(las, ptm.voxels(vxl), c('N', 'Planarity', 'Verticality'))
 
     las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt) %>%

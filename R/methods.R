@@ -519,7 +519,7 @@ treePositions = function(las, plot=T){
 #' ?stemSegmentation
 #'
 #' @export
-stemPoints = function(las, method = stem.hough()){
+stemPoints = function(las, method = stm.hough()){
 
   isLAS(las)
 
