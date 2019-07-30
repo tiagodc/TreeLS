@@ -216,6 +216,7 @@ class VoxelGrid{
     
     unordered_map<llint, unsigned int> counter;
     unordered_map<llint, array<unsigned int,3> > voxels;
+    unordered_map<llint, array<unsigned int,2> > pixels;
     double xoffset;
     double yoffset;
     double zoffset;
@@ -242,6 +243,14 @@ class VoxelGrid{
       return hash;
     }
 
+    llint pixelHasher(unsigned int nx, unsigned int ny){
+      llint tx = nx << 20;
+      llint ty = ny;
+
+      llint hash = tx + ty;
+      return hash;
+    }
+
     array<unsigned int,3> xyzOrder(double x, double y, double z){
       unsigned int nx = floor( (x - xoffset) / spacing );
       unsigned int ny = floor( (y - yoffset) / spacing );
@@ -251,16 +260,29 @@ class VoxelGrid{
       return nxyz;
     }
 
-    void updateRegistry(double x, double y, double z){
+    void updateVoxelRegistry(double x, double y, double z){
       array<unsigned int,3> vox = xyzOrder(x, y, z);
       llint hash = voxelHasher(vox[0], vox[1], vox[2]);
       counter[hash]++;
       voxels[hash] = vox;
     }
 
-    llint getHash(double x, double y, double z){
+    llint getVoxelHash(double x, double y, double z){
       array<unsigned int,3> vox = xyzOrder(x, y, z);
       llint hash = voxelHasher(vox[0], vox[1], vox[2]);
+      return hash;
+    }
+
+    void updatePixelRegistry(double x, double y, double z){
+      array<unsigned int,3> vox = xyzOrder(x, y, z);
+      llint hash = pixelHasher(vox[0], vox[1]);
+      counter[hash]++;
+      pixels[hash] = vox;
+    }
+
+    llint getPixelHash(double x, double y, double z){
+      array<unsigned int,3> vox = xyzOrder(x, y, z);
+      llint hash = pixelHasher(vox[0], vox[1]);
       return hash;
     }
 
