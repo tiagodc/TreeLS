@@ -162,14 +162,6 @@ vector<vector<double> > rmatrix2cpp(NumericMatrix& cloud){
     xyz[i].insert(xyz[i].begin(), tempcol.begin(), tempcol.end());
   }
 
-  // NumericMatrix::Column xcol = cloud( _, 0);
-  // NumericMatrix::Column ycol = cloud( _, 1);
-  // NumericMatrix::Column zcol = cloud( _, 2);
-  //
-  // xyz[0].insert(xyz[0].begin(), xcol.begin(), xcol.end());
-  // xyz[1].insert(xyz[1].begin(), ycol.begin(), ycol.end());
-  // xyz[2].insert(xyz[2].begin(), zcol.begin(), zcol.end());
-
   return xyz;
 }
 
@@ -307,6 +299,59 @@ vector<bool> voxelFilter(vector<vector<double> >& cloud, double voxel_spacing){
 
   return filter;
 
+}
+
+vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad){
+
+  typedef unsigned long long int llint;
+  
+  double xmin = *min_element(xyzNormals[0].begin(), xyzNormals[0].end()) - max_rad;
+  double ymin = *min_element(xyzNormals[1].begin(), xyzNormals[1].end()) - max_rad;
+  double zmin = *min_element(xyzNormals[2].begin(), xyzNormals[2].end()) - max_rad;
+
+  VoxelGrid voxelRegistry(xmin, ymin, zmin, voxel);
+
+  for(unsigned int i = 0; i < xyzNormals[0].size(); ++i){
+
+    double x  = xyzNormals[0][i];
+    double y  = xyzNormals[1][i];
+    double z  = xyzNormals[2][i];
+    double e1 = xyzNormals[3][i];
+    double e2 = xyzNormals[4][i];
+    double e3 = xyzNormals[5][i];
+    
+    llint centerHash = voxelRegistry.getHash(x, y, z);
+    unordered_set<llint> uniqueIds;
+
+    for(double d = -max_rad; d < max_rad + voxel; d += voxel){
+      double xtemp = x + d*e1;
+      double ytemp = y + d*e2;
+      double ztemp = z + d*e3;
+
+      llint hash = voxelRegistry.getHash(xtemp, ytemp, ztemp);
+      if(hash == centerHash) continue;
+
+      bool isFirst = uniqueIds.insert(hash).second;
+
+      if(isFirst) voxelRegistry.updateRegistry(xtemp, ytemp, ztemp);
+    }    
+  }
+
+  vector<vector<double> > nVoxel;
+  for(auto& vox : voxelRegistry.counter){
+    unsigned long long int hash = vox.first;
+    array<unsigned int, 3> nxyz = voxelRegistry.voxels[hash];
+
+    vector<double> row;
+    row.push_back(vox.second);
+    row.push_back(nxyz[0] * voxel + xmin);
+    row.push_back(nxyz[1] * voxel + ymin);
+    row.push_back(nxyz[2] * voxel + zmin);
+
+    nVoxel.push_back(row);
+  }
+
+  return nVoxel;
 }
 
 //// split point cloud according to some criterion

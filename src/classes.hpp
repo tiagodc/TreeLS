@@ -28,6 +28,8 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <unordered_map> 
+#include <unordered_set>
 #include <RcppArmadillo.h>
 
 using namespace std;
@@ -204,6 +206,62 @@ class HoughCenters{
       }
       avg_x = ax / circles.size();
       avg_y = ay / circles.size();
+    }
+
+};
+
+class VoxelGrid{
+  public:
+    typedef unsigned long long int llint;
+    
+    unordered_map<llint, unsigned int> counter;
+    unordered_map<llint, array<unsigned int,3> > voxels;
+    double xoffset;
+    double yoffset;
+    double zoffset;
+    double spacing;
+
+    VoxelGrid(double xmin, double ymin, double zmin, double voxel_size){
+      setGrid(xmin, ymin, zmin, voxel_size);
+    }
+
+    void setGrid(double xmin, double ymin, double zmin, double voxel_size){
+      xoffset = xmin;
+      yoffset = ymin;
+      zoffset = zmin;
+      spacing = voxel_size;
+    }
+
+    llint voxelHasher(unsigned int nx, unsigned int ny, unsigned int nz){
+    
+      llint tx = nx << 15;
+      llint ty = ny << 30;
+      llint tz = nz;
+
+      llint hash = tx + ty + tz;
+      return hash;
+    }
+
+    array<unsigned int,3> xyzOrder(double x, double y, double z){
+      unsigned int nx = floor( (x - xoffset) / spacing );
+      unsigned int ny = floor( (y - yoffset) / spacing );
+      unsigned int nz = floor( (z - zoffset) / spacing );
+      
+      array<unsigned int,3> nxyz = {nx, ny, nz};
+      return nxyz;
+    }
+
+    void updateRegistry(double x, double y, double z){
+      array<unsigned int,3> vox = xyzOrder(x, y, z);
+      llint hash = voxelHasher(vox[0], vox[1], vox[2]);
+      counter[hash]++;
+      voxels[hash] = vox;
+    }
+
+    llint getHash(double x, double y, double z){
+      array<unsigned int,3> vox = xyzOrder(x, y, z);
+      llint hash = voxelHasher(vox[0], vox[1], vox[2]);
+      return hash;
     }
 
 };
