@@ -20,47 +20,37 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 
 las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
-# las = readTLS('inst/extdata/pine.laz')
+las = readTLS('inst/extdata/pine.laz')
 
-las %<>% lasfilterduplicates()
-
-las %<>% tlsTransform(c('-x','z','y'), T, T)
+las %<>% tlsTransform(c('x','z','-y'), T, T)
 las %<>% tlsNormalize(keep_ground = F)
 
-
-map = treeMap(las, map.eigen.voxel(.2,20,.07))
+map = treeMap(las, map.eigen.knn())
 # plot(map)
 
-tree = lasfilter(map, TreeID == 18)
-# plot(tree)
+# map$TreeID %>% unique
+# tree = map %>% lasfilter(TreeID == 5)
 
-voxel_size = .07
+tree=map
+
+voxel_size = .05
 max_radius = .25
 
-minxyz = tree@data[,1:3] %>% apply(2,min) %>% as.double
+tree %<>% pointMetrics(ptm.knn())
+toco = lasfilter(tree, Z > 5 & Z < 7)
+plot(toco)
 
-vxid = tree@data[,.N,by=VoxelID]
-vxid = vxid$VoxelID[vxid$N %>% which.max]
+# a = toco@data[N > 3,.(X = mean(X), Y=mean(Y), Z=mean(Z), e1=mean(EigenVector13), e2=mean(EigenVector23), e3=mean(EigenVector33)), by=VoxelID]
+# a = a[,-1] %>% as.matrix
+a = toco@data[,.(X,Y,Z,EigenVector13,EigenVector23,EigenVector33)] %>% as.matrix
 
-vx = lasfilter(tree, VoxelID == vxid)
-normal = eigen(vx@data[,1:3] %>% cov)$vectors[,3] %>% as.double
-center = vx@data[,1:3] %>% colMeans %>% as.double
+b = hough3d(a, voxel_size) %>% do.call(what = rbind)
+px = cbind(b[,-1]) %>% toLAS()
+px@data$hough = b[,1]
+px = lasfilter(px, hough > 100 & X < 1e4 & Y < 1e4)
 
-dists = seq(-max_radius, max_radius+voxel_size, by=voxel_size)
-xs = center[1] + dists*normal[1]
-ys = center[2] + dists*normal[2]
-zs = center[3] + dists*normal[3]
+px@data %>% apply(2,range)
 
-xv = floor( (xs - minxyz[1]) / voxel_size )
-yv = floor( (ys - minxyz[2]) / voxel_size )
-zv = floor( (zs - minxyz[3]) / voxel_size )
-
-xyzv = cbind(xv,yv,zv)
-vx = floor( (center - minxyz) / voxel_size )
-
-plot(vx, clear_artifacts=F, size=3)
-lines3d(rbind(minpt,maxpt),color='white',lwd=2)
-
-tree %<>% pointMetrics(ptm.voxels(.07))
-a = tree@data[N > 3,.(X = mean(X), Y=mean(Y), Z=mean(Z), e1=mean(EigenVector13), e2=mean(EigenVector23), e3=mean(EigenVector33)), by=VoxelID]
+plot(px, color='hough', clear_artifacts=F, size=3)
+rgl.points(toco@data)
 

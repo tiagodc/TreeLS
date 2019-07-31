@@ -277,7 +277,7 @@ class VoxelGrid{
       array<unsigned int,3> vox = xyzOrder(x, y, z);
       llint hash = pixelHasher(vox[0], vox[1]);
       counter[hash]++;
-      pixels[hash] = vox;
+      pixels[hash] = { vox[0], vox[1] };
     }
 
     llint getPixelHash(double x, double y, double z){

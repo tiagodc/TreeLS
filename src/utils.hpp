@@ -69,6 +69,8 @@ vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
 
 double vecAngle(vector<double>& a, vector<double>& b);
 
-vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad);
+vector<vector<double> > voxelCounter2d(vector<vector<double> >& xyzNormals, double voxel, double max_rad);
+
+vector<vector<double> > voxelCounter3d(vector<vector<double> >& xyzNormals, double voxel, double max_rad);
 
 #endif // UTILS_HPP

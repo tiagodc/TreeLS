@@ -301,7 +301,7 @@ vector<bool> voxelFilter(vector<vector<double> >& cloud, double voxel_spacing){
 
 }
 
-vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad){
+vector<vector<double> > voxelCounter2d(vector<vector<double> >& xyzNormals, double voxel, double max_rad){
 
   typedef unsigned long long int llint;
   
@@ -320,7 +320,7 @@ vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double
     double e2 = xyzNormals[4][i];
     double e3 = xyzNormals[5][i];
     
-    llint centerHash = voxelRegistry.getHash(x, y, z);
+    llint centerHash = voxelRegistry.getPixelHash(x, y, z);
     unordered_set<llint> uniqueIds;
 
     for(double d = -max_rad; d < max_rad + voxel; d += voxel){
@@ -328,12 +328,65 @@ vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double
       double ytemp = y + d*e2;
       double ztemp = z + d*e3;
 
-      llint hash = voxelRegistry.getHash(xtemp, ytemp, ztemp);
+      llint hash = voxelRegistry.getPixelHash(xtemp, ytemp, ztemp);
       if(hash == centerHash) continue;
 
       bool isFirst = uniqueIds.insert(hash).second;
 
-      if(isFirst) voxelRegistry.updateRegistry(xtemp, ytemp, ztemp);
+      if(isFirst) voxelRegistry.updatePixelRegistry(xtemp, ytemp, ztemp);
+    }    
+  }
+
+  vector<vector<double> > nVoxel;
+  for(auto& vox : voxelRegistry.counter){
+    unsigned long long int hash = vox.first;
+    array<unsigned int, 2> nxyz = voxelRegistry.pixels[hash];
+
+    vector<double> row;
+    row.push_back(vox.second);
+    row.push_back(nxyz[0] * voxel + xmin);
+    row.push_back(nxyz[1] * voxel + ymin);
+    // row.push_back(nxyz[2] * voxel + zmin);
+
+    nVoxel.push_back(row);
+  }
+
+  return nVoxel;
+}
+
+vector<vector<double> > voxelCounter3d(vector<vector<double> >& xyzNormals, double voxel, double max_rad){
+
+  typedef unsigned long long int llint;
+  
+  double xmin = *min_element(xyzNormals[0].begin(), xyzNormals[0].end()) - max_rad;
+  double ymin = *min_element(xyzNormals[1].begin(), xyzNormals[1].end()) - max_rad;
+  double zmin = *min_element(xyzNormals[2].begin(), xyzNormals[2].end()) - max_rad;
+
+  VoxelGrid voxelRegistry(xmin, ymin, zmin, voxel);
+
+  for(unsigned int i = 0; i < xyzNormals[0].size(); ++i){
+
+    double x  = xyzNormals[0][i];
+    double y  = xyzNormals[1][i];
+    double z  = xyzNormals[2][i];
+    double e1 = xyzNormals[3][i];
+    double e2 = xyzNormals[4][i];
+    double e3 = xyzNormals[5][i];
+    
+    llint centerHash = voxelRegistry.getVoxelHash(x, y, z);
+    unordered_set<llint> uniqueIds;
+
+    for(double d = -max_rad; d < max_rad + voxel; d += voxel){
+      double xtemp = x + d*e1;
+      double ytemp = y + d*e2;
+      double ztemp = z + d*e3;
+
+      llint hash = voxelRegistry.getVoxelHash(xtemp, ytemp, ztemp);
+      if(hash == centerHash) continue;
+
+      bool isFirst = uniqueIds.insert(hash).second;
+
+      if(isFirst) voxelRegistry.updateVoxelRegistry(xtemp, ytemp, ztemp);
     }    
   }
 

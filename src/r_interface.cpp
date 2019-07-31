@@ -427,5 +427,11 @@ List voxelMetrics(NumericMatrix& las, List& voxelIds, LogicalVector& whichMetric
 // [[Rcpp::export]]
 SEXP hough3d(NumericMatrix& las, double voxel=0.05, double rad = 0.25){
   vector<vector<double> > xyz = rmatrix2cpp(las);
-  return wrap( voxelCounter(xyz, voxel, rad) );
+  return wrap( voxelCounter3d(xyz, voxel, rad) );
 }
+
+SEXP hough2d(NumericMatrix& las, double voxel=0.05, double rad = 0.25){
+  vector<vector<double> > xyz = rmatrix2cpp(las);
+  return wrap( voxelCounter2d(xyz, voxel, rad) );
+}
+
