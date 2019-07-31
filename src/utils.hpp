@@ -33,6 +33,8 @@ vector<bool> cropCloudFilter(vector<vector<double> > cloud, double xCenter, doub
 
 vector<vector<vector<double> > > getChunks(vector<vector<double> >& cloud, vector<unsigned int>& identifier);
 
+vector<vector<vector<double> > > getFullChunks(vector<vector<double> >& cloud, vector<unsigned int>& identifier);
+
 vector<double> getMinMax(vector<vector<double> >& xyz);
 
 vector<vector<vector<double> > > getSlices(vector<vector<double> >& cloud, double zmin = 1, double zmax=3, double zstep = 0.5);
@@ -69,8 +71,6 @@ vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
 
 double vecAngle(vector<double>& a, vector<double>& b);
 
-vector<vector<double> > voxelCounter2d(vector<vector<double> >& xyzNormals, double voxel, double max_rad);
-
-vector<vector<double> > voxelCounter3d(vector<vector<double> >& xyzNormals, double voxel, double max_rad);
+vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d = false);
 
 #endif // UTILS_HPP

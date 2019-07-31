@@ -68,7 +68,7 @@ vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
       double nobs = xyz[0].size();
 
       vector<double> metrics = {};
-      
+
       if(which[0]) metrics.push_back(planarity);
       if(which[1]) metrics.push_back(verticality);
       if(which[2]) metrics.push_back(linearSaliency);
@@ -78,7 +78,7 @@ vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
       if(which[6]) metrics.push_back(zrange);
       if(which[7]) metrics.push_back(zsd);
       if(which[8]) metrics.push_back(nobs);
-      
+
       if(which[9]){
         for(auto& v : eVal){
           metrics.push_back(v);
@@ -301,108 +301,81 @@ vector<bool> voxelFilter(vector<vector<double> >& cloud, double voxel_spacing){
 
 }
 
-vector<vector<double> > voxelCounter2d(vector<vector<double> >& xyzNormals, double voxel, double max_rad){
+vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d){
 
   typedef unsigned long long int llint;
-  
+
   double xmin = *min_element(xyzNormals[0].begin(), xyzNormals[0].end()) - max_rad;
   double ymin = *min_element(xyzNormals[1].begin(), xyzNormals[1].end()) - max_rad;
   double zmin = *min_element(xyzNormals[2].begin(), xyzNormals[2].end()) - max_rad;
 
   VoxelGrid voxelRegistry(xmin, ymin, zmin, voxel);
 
-  for(unsigned int i = 0; i < xyzNormals[0].size(); ++i){
+  vector<double> origCounts;
+  vector<double> origDists;
 
-    double x  = xyzNormals[0][i];
-    double y  = xyzNormals[1][i];
-    double z  = xyzNormals[2][i];
-    double e1 = xyzNormals[3][i];
-    double e2 = xyzNormals[4][i];
-    double e3 = xyzNormals[5][i];
-    
-    llint centerHash = voxelRegistry.getPixelHash(x, y, z);
-    unordered_set<llint> uniqueIds;
+  for(unsigned int k = 0; k < 2; ++k){
+    for(unsigned int i = 0; i < xyzNormals[0].size(); ++i){
 
-    for(double d = -max_rad; d < max_rad + voxel; d += voxel){
-      double xtemp = x + d*e1;
-      double ytemp = y + d*e2;
-      double ztemp = z + d*e3;
+      double x  = xyzNormals[0][i];
+      double y  = xyzNormals[1][i];
+      double z  = xyzNormals[2][i];
+      double e1 = xyzNormals[3][i];
+      double e2 = xyzNormals[4][i];
+      double e3 = xyzNormals[5][i];
 
-      llint hash = voxelRegistry.getPixelHash(xtemp, ytemp, ztemp);
-      if(hash == centerHash) continue;
+      llint centerHash = is2d ? voxelRegistry.getPixelHash(x, y, z) : voxelRegistry.getVoxelHash(x, y, z);
+      unordered_set<llint> uniqueIds;
+      unsigned int maxCount = 0;
+      double mainDist;
 
-      bool isFirst = uniqueIds.insert(hash).second;
+      for(double d = -max_rad; d < max_rad + voxel; d += voxel){
+        double xtemp = x + d*e1;
+        double ytemp = y + d*e2;
+        double ztemp = z + d*e3;
 
-      if(isFirst) voxelRegistry.updatePixelRegistry(xtemp, ytemp, ztemp);
-    }    
+        llint hash = is2d ? voxelRegistry.getPixelHash(xtemp, ytemp, ztemp) : voxelRegistry.getVoxelHash(xtemp, ytemp, ztemp);
+        if(hash == centerHash) continue;
+
+        if(k == 0){
+          bool isFirst = uniqueIds.insert(hash).second;
+          
+          if(isFirst){
+            if(is2d){
+              voxelRegistry.updatePixelRegistry(xtemp, ytemp, ztemp);
+            }else{
+              voxelRegistry.updateVoxelRegistry(xtemp, ytemp, ztemp);
+            }
+          }
+        }else{
+          unsigned int tempCount = voxelRegistry.counter[hash];
+          if(tempCount > maxCount){
+            maxCount = tempCount;
+            mainDist = abs(d);
+          }
+        }
+      }
+
+      if(k == 1){
+        origCounts.push_back(maxCount);
+        origDists.push_back(mainDist);
+      }
+    }
   }
 
-  vector<vector<double> > nVoxel;
-  for(auto& vox : voxelRegistry.counter){
-    unsigned long long int hash = vox.first;
-    array<unsigned int, 2> nxyz = voxelRegistry.pixels[hash];
+  vector<vector<double> > nVoxel = { origCounts, origDists };
+  // for(auto& vox : voxelRegistry.counter){
+  //   unsigned long long int hash = vox.first;
+  //   array<unsigned int, 2> nxyz = voxelRegistry.pixels[hash];
 
-    vector<double> row;
-    row.push_back(vox.second);
-    row.push_back(nxyz[0] * voxel + xmin);
-    row.push_back(nxyz[1] * voxel + ymin);
-    // row.push_back(nxyz[2] * voxel + zmin);
+  //   vector<double> row;
+  //   row.push_back(vox.second);
+  //   row.push_back(nxyz[0] * voxel + xmin);
+  //   row.push_back(nxyz[1] * voxel + ymin);
+  //   // row.push_back(nxyz[2] * voxel + zmin);
 
-    nVoxel.push_back(row);
-  }
-
-  return nVoxel;
-}
-
-vector<vector<double> > voxelCounter3d(vector<vector<double> >& xyzNormals, double voxel, double max_rad){
-
-  typedef unsigned long long int llint;
-  
-  double xmin = *min_element(xyzNormals[0].begin(), xyzNormals[0].end()) - max_rad;
-  double ymin = *min_element(xyzNormals[1].begin(), xyzNormals[1].end()) - max_rad;
-  double zmin = *min_element(xyzNormals[2].begin(), xyzNormals[2].end()) - max_rad;
-
-  VoxelGrid voxelRegistry(xmin, ymin, zmin, voxel);
-
-  for(unsigned int i = 0; i < xyzNormals[0].size(); ++i){
-
-    double x  = xyzNormals[0][i];
-    double y  = xyzNormals[1][i];
-    double z  = xyzNormals[2][i];
-    double e1 = xyzNormals[3][i];
-    double e2 = xyzNormals[4][i];
-    double e3 = xyzNormals[5][i];
-    
-    llint centerHash = voxelRegistry.getVoxelHash(x, y, z);
-    unordered_set<llint> uniqueIds;
-
-    for(double d = -max_rad; d < max_rad + voxel; d += voxel){
-      double xtemp = x + d*e1;
-      double ytemp = y + d*e2;
-      double ztemp = z + d*e3;
-
-      llint hash = voxelRegistry.getVoxelHash(xtemp, ytemp, ztemp);
-      if(hash == centerHash) continue;
-
-      bool isFirst = uniqueIds.insert(hash).second;
-
-      if(isFirst) voxelRegistry.updateVoxelRegistry(xtemp, ytemp, ztemp);
-    }    
-  }
-
-  vector<vector<double> > nVoxel;
-  for(auto& vox : voxelRegistry.counter){
-    unsigned long long int hash = vox.first;
-    array<unsigned int, 3> nxyz = voxelRegistry.voxels[hash];
-
-    vector<double> row;
-    row.push_back(vox.second);
-    row.push_back(nxyz[0] * voxel + xmin);
-    row.push_back(nxyz[1] * voxel + ymin);
-    row.push_back(nxyz[2] * voxel + zmin);
-
-    nVoxel.push_back(row);
-  }
+  //   nVoxel.push_back(row);
+  // }
 
   return nVoxel;
 }
@@ -432,6 +405,30 @@ vector<vector<vector<double> > > getChunks(vector<vector<double> >& cloud, vecto
   return store;
 
 }
+
+vector<vector<vector<double> > > getFullChunks(vector<vector<double> >& cloud, vector<unsigned int>& identifier){
+
+  set<unsigned int> uniqueIds;
+  uniqueIds.insert(identifier.begin(), identifier.end());
+  unsigned int nlayers = uniqueIds.size();
+  unsigned int ncols = cloud.size();
+
+  vector<vector<vector<double> > > store(nlayers, vector<vector<double> >(ncols));
+
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+    unsigned int id = identifier[i];
+    set<unsigned int>::iterator it = find(uniqueIds.begin(), uniqueIds.end(), id);
+    unsigned int pos = distance(uniqueIds.begin(), it);
+
+    for(unsigned int j = 0; j < ncols; ++j){
+      store[pos][j].push_back( cloud[j][i] );
+    }
+  }
+
+  return store;
+
+}
+
 
 //// split point cloud into horizontal slices
 vector<vector<vector<double> > > getSlices(NumericMatrix& cloud, double zmin, double zmax, double zstep){

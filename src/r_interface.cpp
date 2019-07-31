@@ -425,13 +425,15 @@ List voxelMetrics(NumericMatrix& las, List& voxelIds, LogicalVector& whichMetric
 }
 
 // [[Rcpp::export]]
-SEXP hough3d(NumericMatrix& las, double voxel=0.05, double rad = 0.25){
+SEXP treeEigenHough2d(NumericMatrix& las, NumericVector& ids, double voxel=0.05, double rad = 0.25){
   vector<vector<double> > xyz = rmatrix2cpp(las);
-  return wrap( voxelCounter3d(xyz, voxel, rad) );
+  vector<unsigned int> stdIds(ids.begin(), ids.end());
+  return wrap( treeEigenHough2d(xyz, stdIds, voxel, rad) );
 }
 
-SEXP hough2d(NumericMatrix& las, double voxel=0.05, double rad = 0.25){
+// [[Rcpp::export]]
+SEXP voxelCounter2d(NumericMatrix& las, double voxel=0.05, double rad = 0.25){
   vector<vector<double> > xyz = rmatrix2cpp(las);
-  return wrap( voxelCounter2d(xyz, voxel, rad) );
+  return wrap( voxelCounter(xyz, voxel, rad, true) );
 }
 

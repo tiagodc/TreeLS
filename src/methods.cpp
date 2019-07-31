@@ -373,6 +373,18 @@ vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1, dou
 
 }
 
+vector<vector<vector<double> > > treeEigenHough2d(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& seg_id, double voxel_size, double max_rad){
+
+  vector<vector<vector<double> > > splitTree = getFullChunks(cppEigenCloud, seg_id);
+  vector<vector<vector<double> > > results;
+
+  for(auto& seg : splitTree){
+    results.push_back( voxelCounter(seg, voxel_size, max_rad, true) );
+  }
+
+  return results;
+}
+
 // single stem methods
 vector<vector<double> > ransacStemCircle(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
 
@@ -776,7 +788,7 @@ vector<unsigned long long int> voxelIndex(vector<vector<double> >& cloud, double
   vector<llint> indexer(cloud[0].size());
 
   for(unsigned int i = 0; i < indexer.size(); ++i){
-    indexer[i] = voxelRegistry.getHash(cloud[0][i], cloud[1][i], cloud[2][i]);
+    indexer[i] = voxelRegistry.getVoxelHash(cloud[0][i], cloud[1][i], cloud[2][i]);
   }
 
   llint mindex = *min_element(indexer.begin(), indexer.end());

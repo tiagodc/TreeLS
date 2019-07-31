@@ -286,6 +286,12 @@ class VoxelGrid{
       return hash;
     }
 
+    unsigned int getCount(double x, double y, double z, bool voxel=true){
+      array<unsigned int,3> vox = xyzOrder(x, y, z);
+      llint hash = voxel ? voxelHasher(vox[0], vox[1], vox[2]) : pixelHasher(vox[0], vox[1]);
+      return counter[hash];
+    }
+
 };
 
 #endif // CLASSES_HPP
