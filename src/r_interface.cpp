@@ -425,8 +425,10 @@ List voxelMetrics(NumericMatrix& las, List& voxelIds, LogicalVector& whichMetric
 }
 
 // [[Rcpp::export]]
-SEXP treeEigenHough(NumericMatrix& las, NumericVector& ids, double voxel=0.05, double rad = 0.25, bool is2d = false){
+SEXP treeEigenHough(NumericMatrix& las, NumericVector& ids, NumericVector& split_by, double voxel=0.05, double rad = 0.25, bool is2d = false, bool getSpace = false){
   vector<vector<double> > xyz = rmatrix2cpp(las);
   vector<unsigned int> stdIds(ids.begin(), ids.end());
-  return wrap( treeEigenHough(xyz, stdIds, voxel, rad, is2d) );
+  vector<unsigned int> splitter(split_by.begin(), split_by.end());
+
+  return wrap( treeEigenHough(xyz, stdIds, splitter, voxel, rad, is2d, getSpace) );
 }

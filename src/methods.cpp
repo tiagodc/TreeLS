@@ -373,19 +373,21 @@ vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1, dou
 
 }
 
-vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& seg_id, double voxel_size, double max_rad, bool is2d, bool getSpace){
+vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d, bool getSpace){
 
-  vector<vector<vector<double> > > splitTree = getFullChunks(cppEigenCloud, seg_id);
+  IndexedCloudParts treeCloud(cppEigenCloud, pointId, segId);
   vector<vector<vector<double> > > results;
 
-  set<unsigned int> uid(seg_id.begin(), seg_id.end());
-  vector<unsigned int> vid(uid.begin(), uid.end());
+  for(unordered_map<unsigned int, vector<vector<double> > >::iterator seg = treeCloud.parts.begin(); seg != treeCloud.parts.end(); ++seg){
 
-  for(vector<vector<vector<double> > >::iterator seg = splitTree.begin(); seg != splitTree.end(); seg++){
-    vector<vector<double> > vals = voxelCounter(*seg, voxel_size, max_rad, is2d, getSpace);
-    unsigned int i = distance(splitTree.begin(), seg);
-    vector<double> id = { (double)vid[i] };
-    if(!getSpace) vals.push_back(id);
+    unsigned int id = seg->first;
+    vector<vector<double> > vals = voxelCounter(seg->second, voxel_size, max_rad, is2d, getSpace);
+
+    if(!getSpace){
+      vals.push_back( treeCloud.ids2double(id) );
+    };
+    
+    vals.push_back({ (double)id });
     results.push_back(vals);
   }
 

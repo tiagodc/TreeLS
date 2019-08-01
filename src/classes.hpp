@@ -28,7 +28,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
-#include <unordered_map> 
+#include <unordered_map>
 #include <unordered_set>
 #include <RcppArmadillo.h>
 
@@ -213,7 +213,7 @@ class HoughCenters{
 class VoxelGrid{
   public:
     typedef unsigned long long int llint;
-    
+
     unordered_map<llint, unsigned int> counter;
     unordered_map<llint, array<unsigned int,3> > voxels;
     unordered_map<llint, array<unsigned int,2> > pixels;
@@ -234,7 +234,7 @@ class VoxelGrid{
     }
 
     llint voxelHasher(unsigned int nx, unsigned int ny, unsigned int nz){
-    
+
       llint tx = nx << 15;
       llint ty = ny << 30;
       llint tz = nz;
@@ -255,7 +255,7 @@ class VoxelGrid{
       unsigned int nx = floor( (x - xoffset) / spacing );
       unsigned int ny = floor( (y - yoffset) / spacing );
       unsigned int nz = floor( (z - zoffset) / spacing );
-      
+
       array<unsigned int,3> nxyz = {nx, ny, nz};
       return nxyz;
     }
@@ -292,6 +292,82 @@ class VoxelGrid{
       return counter[hash];
     }
 
+};
+
+class IndexedCloudParts{
+  public:
+    unordered_map<unsigned int, vector<vector<double> > > parts;
+    unordered_map<unsigned int, vector<unsigned int> > ids;
+    set<unsigned int> segmentIds;
+
+    IndexedCloudParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier, vector<unsigned int>& splitter){
+      getUniqueIndex(identifier);
+      populateParts(fullCloud, identifier, splitter);
+    }
+
+    IndexedCloudParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier){
+      getUniqueIndex(identifier);
+      populateParts(fullCloud, identifier);
+    }
+
+    void getUniqueIndex(vector<unsigned int>& identifier){
+      segmentIds.insert(identifier.begin(), identifier.end());
+    }
+
+    void splitIds(vector<unsigned int>& identifier, vector<unsigned int>& splitter){
+      for(unsigned int i = 0; i < identifier.size(); ++i){
+        unsigned int sp = splitter[i];
+        ids[sp].push_back( identifier[i] );
+      }
+    }
+
+    vector<double> ids2double(unsigned int key){
+      vector<unsigned int>& vals = ids[key];
+      vector<double> convertVals(vals.begin(), vals.end());
+      return convertVals;
+    }
+
+    void populateParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier, vector<unsigned int>& splitter){
+      populateParts(fullCloud, splitter);
+      splitIds(identifier, splitter);
+    }
+
+    void populateParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier){
+
+      for(unsigned int i = 0; i < identifier.size(); ++i){
+        unsigned int id = identifier[i];
+
+        if(parts.find(id) == parts.end()){
+          vector<vector<double> > temp(fullCloud.size());
+          parts[id] = temp;
+        }
+
+        for(unsigned int j = 0; j < fullCloud.size(); ++j){
+          parts[id][j].push_back( fullCloud[j][i] );
+        }
+      }
+    }
+
+    // Rcpp::List makeRList(){
+    //   Rcpp::List sendList;
+
+    //   for(auto& p : parts){
+
+    //     string name = to_string( p.first );
+    //     vector<double> floatIds;]
+
+    //     for(auto& i : ids[p.first]){
+    //       floatIds.push_back( (double)i );
+    //     }
+
+    //     vector<vector<double> > piece = p.second;
+    //     piece.push_back( floatIds );
+
+    //     sendList[name] = Rcpp::wrap( piece );
+    //   }
+
+    //   return sendList;
+    // }
 };
 
 #endif // CLASSES_HPP

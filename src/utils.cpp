@@ -447,19 +447,19 @@ vector<vector<vector<double> > > getFullChunks(vector<vector<double> >& cloud, v
 }
 
 vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector<unsigned int>& split_by){
-  
+
   set<unsigned int> usp(split_by.begin(), split_by.end());
   vector<vector<unsigned int> > parts(usp.size());
 
-  for(unsigned int i = 0; i < to_split.size(), ++i){
+  for(unsigned int i = 0; i < to_split.size(); ++i){
     unsigned int val = to_split[i];
     unsigned int idx = split_by[i];
 
-    vector<unsigned int>::iterator it = find(usp.begin(), usp.end(), idx);
+    set<unsigned int>::iterator it = find(usp.begin(), usp.end(), idx);
     unsigned int dst = distance(usp.begin(), it);
 
-    parts[dst].push_back(val);    
-  } 
+    parts[dst].push_back(val);
+  }
 
   return parts;
 
