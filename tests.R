@@ -20,7 +20,7 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 
 las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
-# las = readTLS('inst/extdata/pine.laz')
+las = readTLS('inst/extdata/pine.laz')
 
 las %<>% tlsTransform(c('-x','z','y'), T, T)
 las %<>% tlsNormalize(keep_ground = F)
@@ -69,7 +69,7 @@ las@data$Segment[las@data$Z < 0] = 0
 # dups = duplicated(voxels$VoxelID)
 # voxels = voxels[!dups]
 
-voxels = las@data[order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
+voxels = las@data[order(Segment, PointID), .(Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
 
 ids = voxels$Segment
 trids = voxels$TreeID
@@ -79,7 +79,7 @@ a = split(voxels, trids) %>% lapply(function(x){
   as.matrix(x[,-c(1:3)]) %>% treeEigenHough(x$Segment, vxl, max_d, F)
 })
 
-# b = treeEigenHough(a, ids, vxl/2, max_d/2, is2d = T)
+b = treeEigenHough(a, ids, vxl, max_d/2, is2d = T)
 b = a[[1]]
 
 sids = ids %>% unique %>% sort

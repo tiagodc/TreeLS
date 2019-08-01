@@ -71,6 +71,8 @@ vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
 
 double vecAngle(vector<double>& a, vector<double>& b);
 
-vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d = false);
+vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d = false, bool sendSpace = false);
+
+vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector<unsigned int>& split_by);
 
 #endif // UTILS_HPP

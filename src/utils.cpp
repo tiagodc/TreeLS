@@ -301,7 +301,7 @@ vector<bool> voxelFilter(vector<vector<double> >& cloud, double voxel_spacing){
 
 }
 
-vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d){
+vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d, bool sendSpace){
 
   typedef unsigned long long int llint;
 
@@ -313,8 +313,9 @@ vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double
 
   vector<double> origCounts;
   vector<double> origDists;
+  unsigned int nk = sendSpace ? 1 : 2;
 
-  for(unsigned int k = 0; k < 2; ++k){
+  for(unsigned int k = 0; k < nk; ++k){
     for(unsigned int i = 0; i < xyzNormals[0].size(); ++i){
 
       double x  = xyzNormals[0][i];
@@ -339,7 +340,7 @@ vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double
 
         if(k == 0){
           bool isFirst = uniqueIds.insert(hash).second;
-          
+
           if(isFirst){
             if(is2d){
               voxelRegistry.updatePixelRegistry(xtemp, ytemp, ztemp);
@@ -363,19 +364,35 @@ vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double
     }
   }
 
-  vector<vector<double> > nVoxel = { origCounts, origDists };
-  // for(auto& vox : voxelRegistry.counter){
-  //   unsigned long long int hash = vox.first;
-  //   array<unsigned int, 2> nxyz = voxelRegistry.pixels[hash];
+  vector<vector<double> > nVoxel;
 
-  //   vector<double> row;
-  //   row.push_back(vox.second);
-  //   row.push_back(nxyz[0] * voxel + xmin);
-  //   row.push_back(nxyz[1] * voxel + ymin);
-  //   // row.push_back(nxyz[2] * voxel + zmin);
+  if(!sendSpace){
 
-  //   nVoxel.push_back(row);
-  // }
+    nVoxel = { origCounts, origDists };
+
+  }else{
+    for(auto& vox : voxelRegistry.counter){
+      unsigned long long int hash = vox.first;
+      array<unsigned int, 3> nxyz;
+      array<unsigned int, 2> nxy;
+
+      vector<double> row;
+      row.push_back(vox.second);
+
+      if(is2d){
+        nxy = voxelRegistry.pixels[hash];
+        row.push_back(nxy[0] * voxel + xmin);
+        row.push_back(nxy[1] * voxel + ymin);
+      }else{
+        nxyz = voxelRegistry.voxels[hash];
+        row.push_back(nxyz[0] * voxel + xmin);
+        row.push_back(nxyz[1] * voxel + ymin);
+        row.push_back(nxyz[2] * voxel + zmin);
+      }
+
+      nVoxel.push_back(row);
+    }
+  }
 
   return nVoxel;
 }
@@ -429,6 +446,24 @@ vector<vector<vector<double> > > getFullChunks(vector<vector<double> >& cloud, v
 
 }
 
+vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector<unsigned int>& split_by){
+  
+  set<unsigned int> usp(split_by.begin(), split_by.end());
+  vector<vector<unsigned int> > parts(usp.size());
+
+  for(unsigned int i = 0; i < to_split.size(), ++i){
+    unsigned int val = to_split[i];
+    unsigned int idx = split_by[i];
+
+    vector<unsigned int>::iterator it = find(usp.begin(), usp.end(), idx);
+    unsigned int dst = distance(usp.begin(), it);
+
+    parts[dst].push_back(val);    
+  } 
+
+  return parts;
+
+};
 
 //// split point cloud into horizontal slices
 vector<vector<vector<double> > > getSlices(NumericMatrix& cloud, double zmin, double zmax, double zstep){
