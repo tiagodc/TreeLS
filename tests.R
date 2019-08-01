@@ -44,14 +44,12 @@ las@data$PointID = 1:nrow(las@data)
 las = lasfilter(las, Classification != 2)
 # las = pointMetrics(las, ptm.voxels(vxl, F), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
 
-t1 = Sys.time()
-laslist = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
-  lapply(pointMetrics, method = ptm.knn(), metrics_list=c('N', 'Planarity', 'Verticality', 'EigenVectors')) %>%
-  lapply(function(x) x@data) %>% do.call(what=rbind) %>% LAS
-t2 = Sys.time()
-print(t2-t1)
-
-gc()
+# t1 = Sys.time()
+# laslist = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
+#   lapply(pointMetrics, method = ptm.knn(), metrics_list=c('N', 'Planarity', 'Verticality', 'EigenVectors')) %>%
+#   lapply(function(x) x@data) %>% do.call(what=rbind) %>% LAS
+# t2 = Sys.time()
+# print(t2-t1)
 
 t1 = Sys.time()
 las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
@@ -71,21 +69,23 @@ las@data$Segment[las@data$Z < 0] = 0
 
 voxels = las@data[order(Segment, PointID), .(Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
 
-ids = voxels$Segment
-trids = voxels$TreeID
-# a = voxels[,-c(1:2)] %>% as.matrix
+sgs = voxels$Segment
+ids = voxels$PointID
+# trids = voxels$TreeID
+a = voxels[,-c(1:2)] %>% as.matrix
 
-a = split(voxels, trids) %>% lapply(function(x){
-  as.matrix(x[,-c(1:3)]) %>% treeEigenHough(x$Segment, vxl, max_d, F)
-})
+# a = split(voxels, trids) %>% lapply(function(x){
+#   as.matrix(x[,-c(1:3)]) %>% treeEigenHough(x$Segment, vxl, max_d, F)
+# })
 
-b = treeEigenHough(a, ids, vxl, max_d/2, is2d = T)
-b = a[[1]]
+b = treeEigenHough(a, ids, sgs, vxl, max_d/2, T, T)
+# b = b[[1]]
 
 sids = ids %>% unique %>% sort
-segs = 1:length(b) %>% lapply(function(x){
-  data.table(PointID = voxels[Segment == sids[[x]]]$PointID, Votes = b[[x]][[1]], Radius = b[[x]][[2]])
-}) %>% do.call(what=rbind)
+segs = b %>% lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
+colnames(segs) = c('Votes','Radius','PointID', 'Segment')
+
+segs = lapply(b, function(x) rev(x)[-1] %>% do.call(what=rbind) %>% cbind(rev(x)[1])) %>% do.call(what=rbind) %>% as.data.table()
 
 voxels = merge(voxels, segs, by='PointID', sort=F)
 las@data = merge(las@data, voxels[,.(PointID, Votes, Radius)], by='PointID', sort=F)
@@ -94,7 +94,8 @@ plot(las, size=2, color='Votes')
 voxels$Votes %>% hist
 
 temp = lasfilter(las, Votes > 50)
-plot(temp, size=3, color='Radius')
+plot(temp, size=3, color='Votes', clear_artifacts=F)
+rgl.points(las@data[,.(X,Y,Z)], size=.5)
 
 b[[1]][[1]] %>% length
 
