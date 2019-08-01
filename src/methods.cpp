@@ -373,13 +373,13 @@ vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1, dou
 
 }
 
-vector<vector<vector<double> > > treeEigenHough2d(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& seg_id, double voxel_size, double max_rad){
+vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& seg_id, double voxel_size, double max_rad, bool is2d){
 
   vector<vector<vector<double> > > splitTree = getFullChunks(cppEigenCloud, seg_id);
   vector<vector<vector<double> > > results;
 
   for(auto& seg : splitTree){
-    results.push_back( voxelCounter(seg, voxel_size, max_rad, true) );
+    results.push_back( voxelCounter(seg, voxel_size, max_rad, is2d) );
   }
 
   return results;

@@ -20,12 +20,12 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 
 las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
-las = readTLS('inst/extdata/pine.laz')
+# las = readTLS('inst/extdata/pine.laz')
 
 las %<>% tlsTransform(c('-x','z','y'), T, T)
 las %<>% tlsNormalize(keep_ground = F)
 
-map = treeMap(las, map.eigen.voxel(vxl = .05))
+map = treeMap(las, map.eigen.knn())
 
 las = treePoints(las, map)
 
@@ -38,9 +38,25 @@ min_h = 2
 min_n = 100
 
 lasfull = las
+# las = lasfilter(lasfull, TreeID == 10)
 
+las@data$PointID = 1:nrow(las@data)
 las = lasfilter(las, Classification != 2)
-las = pointMetrics(las, ptm.voxels(vxl, F), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
+# las = pointMetrics(las, ptm.voxels(vxl, F), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
+
+t1 = Sys.time()
+laslist = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
+  lapply(pointMetrics, method = ptm.knn(), metrics_list=c('N', 'Planarity', 'Verticality', 'EigenVectors')) %>%
+  lapply(function(x) x@data) %>% do.call(what=rbind) %>% LAS
+t2 = Sys.time()
+print(t2-t1)
+
+gc()
+
+t1 = Sys.time()
+las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
+t2 = Sys.time()
+print(t2-t1)
 
 las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt) %>% nnFilter(vxl*2, 10)
 # las = lasfilter(las, TreeID == 36)
@@ -49,28 +65,35 @@ stemSeg = seq(0, max(las$Z)+hstep, hstep)
 las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
 las@data$Segment[las@data$Z < 0] = 0
 
-voxels = las@data[order(Segment, VoxelID), .(X=mean(X), Y=mean(Y), Z=mean(Z), e1=mean(EigenVector13), e2=mean(EigenVector23), e3=mean(EigenVector33)), by=.(Segment, VoxelID)]
-dups = duplicated(voxels$VoxelID)
-voxels = voxels[!dups]
+# voxels = las@data[order(Segment, VoxelID), .(X=mean(X), Y=mean(Y), Z=mean(Z), e1=mean(EigenVector13), e2=mean(EigenVector23), e3=mean(EigenVector33)), by=.(Segment, VoxelID)]
+# dups = duplicated(voxels$VoxelID)
+# voxels = voxels[!dups]
+
+voxels = las@data[order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
 
 ids = voxels$Segment
-a = voxels[,-c(1:2)] %>% as.matrix
+trids = voxels$TreeID
+# a = voxels[,-c(1:2)] %>% as.matrix
 
-b = treeEigenHough2d(a, ids, vxl/2, max_d/2)
+a = split(voxels, trids) %>% lapply(function(x){
+  as.matrix(x[,-c(1:3)]) %>% treeEigenHough(x$Segment, vxl, max_d, F)
+})
+
+# b = treeEigenHough(a, ids, vxl/2, max_d/2, is2d = T)
+b = a[[1]]
 
 sids = ids %>% unique %>% sort
 segs = 1:length(b) %>% lapply(function(x){
-  data.table(VoxelID = voxels[Segment == sids[[x]]]$VoxelID, Votes = b[[x]][[1]], Radius = b[[x]][[2]])
+  data.table(PointID = voxels[Segment == sids[[x]]]$PointID, Votes = b[[x]][[1]], Radius = b[[x]][[2]])
 }) %>% do.call(what=rbind)
 
-voxels = merge(voxels, segs, by='VoxelID', sort=F)
-las@data = merge(las@data, voxels[,.(VoxelID, Votes, Radius)], by='VoxelID', sort=F)
-
+voxels = merge(voxels, segs, by='PointID', sort=F)
+las@data = merge(las@data, voxels[,.(PointID, Votes, Radius)], by='PointID', sort=F)
 
 plot(las, size=2, color='Votes')
 voxels$Votes %>% hist
 
-temp = lasfilter(las, Votes > 20)
+temp = lasfilter(las, Votes > 50)
 plot(temp, size=3, color='Radius')
 
 b[[1]][[1]] %>% length

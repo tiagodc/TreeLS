@@ -56,6 +56,6 @@ vector<vector<double> > voxelMetrics(vector<vector<double> >& cloud, vector<vect
 
 vector<unsigned long long int> voxelIndex(vector<vector<double> >& cloud, double voxel_spacing=0.05);
 
-vector<vector<vector<double> > > treeEigenHough2d(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& seg_id, double voxel_size, double max_rad);
+vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& seg_id, double voxel_size, double max_rad, bool is2d = true);
 
 #endif // METHODS_HPP
