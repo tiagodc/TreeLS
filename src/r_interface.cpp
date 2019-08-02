@@ -432,3 +432,14 @@ SEXP treeEigenHough(NumericMatrix& las, NumericVector& ids, NumericVector& split
 
   return wrap( treeEigenHough(xyz, stdIds, splitter, voxel, rad, is2d, getSpace) );
 }
+
+// [[Rcpp::export]]
+SEXP plotEigenHough(NumericMatrix& las, NumericVector& ids, NumericVector& split_by, NumericVector& resplit_by, double voxel=0.05, double rad = 0.25, bool is2d = false, bool getSpace = false){
+  
+  vector<vector<double> > xyz = rmatrix2cpp(las);
+  vector<unsigned int> stdIds(ids.begin(), ids.end());
+  vector<unsigned int> splitter1(split_by.begin(), split_by.end());
+  vector<unsigned int> splitter2(resplit_by.begin(), resplit_by.end());
+
+  return wrap( plotEigenHough(xyz, stdIds, splitter1, splitter2, voxel, rad, is2d, getSpace) );
+}

@@ -58,4 +58,6 @@ vector<unsigned long long int> voxelIndex(vector<vector<double> >& cloud, double
 
 vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d = true, bool getSpace = false);
 
+vector<vector<vector<double> > > plotEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& treeId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d = true, bool getSpace = false);
+
 #endif // METHODS_HPP

@@ -376,12 +376,15 @@ vector<HoughCenters> treeHough(vector<vector<double> >& cppCloud, double h1, dou
 vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d, bool getSpace){
 
   IndexedCloudParts treeCloud(cppEigenCloud, pointId, segId);
+  cppEigenCloud.clear();
+  cppEigenCloud.shrink_to_fit();
+
   vector<vector<vector<double> > > results;
 
-  for(unordered_map<unsigned int, vector<vector<double> > >::iterator seg = treeCloud.parts.begin(); seg != treeCloud.parts.end(); ++seg){
+  for(auto& seg : treeCloud.parts){
 
-    unsigned int id = seg->first;
-    vector<vector<double> > vals = voxelCounter(seg->second, voxel_size, max_rad, is2d, getSpace);
+    unsigned int id = seg.first;
+    vector<vector<double> > vals = voxelCounter(seg.second.cloud, voxel_size, max_rad, is2d, getSpace);
 
     if(!getSpace){
       vals.push_back( treeCloud.ids2double(id) );
@@ -804,4 +807,28 @@ vector<unsigned long long int> voxelIndex(vector<vector<double> >& cloud, double
   for(auto& i : indexer) i -= mindex;
 
   return indexer;
+}
+
+vector<vector<vector<double> > > plotEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& treeId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d, bool getSpace){
+
+  IndexedCloudParts plotCloud(cppEigenCloud, pointId, treeId, segId);
+  cppEigenCloud.clear();
+  cppEigenCloud.shrink_to_fit();
+  
+  vector<vector<vector<double> > > plotResults;
+
+  for(auto& tree : plotCloud.parts){
+
+    unsigned int id = tree.first;
+
+    vector<vector<vector<double> > > calcTree = treeEigenHough(tree.second.cloud, tree.second.uniqueIds, tree.second.indexer, voxel_size, max_rad, is2d, getSpace);
+
+    for(auto& temp : calcTree){
+      temp.push_back({ (double)id });
+    }
+
+    plotResults.insert(plotResults.end(), calcTree.begin(), calcTree.end());
+  }
+
+  return plotResults;
 }

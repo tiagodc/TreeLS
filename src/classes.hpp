@@ -294,35 +294,79 @@ class VoxelGrid{
 
 };
 
+class IndexedCloud{
+  public:
+    vector<vector<double> > cloud;
+    vector<unsigned int> uniqueIds;
+    vector<unsigned int> indexer;
+    unsigned int identifier;
+
+    // IndexedCloud(vector<vector<double> >& cld, vector<unsigned int>& idx){
+    //   fillCloud(cld, idx);
+    // }
+
+    // IndexedCloud(vector<vector<double> >& cld, vector<unsigned int>& idx, vector<unsigned int>& ids){
+    //   fillCloud(cld, idx, ids);
+    // }
+
+    // IndexedCloud(unsigned int& i, vector<vector<double> >& cld, vector<unsigned int>& idx, vector<unsigned int>& ids){
+    //   fillCloud(i, cld, idx, ids);
+    // }
+
+    void fillCloud(vector<vector<double> >& cld, vector<unsigned int>& idx){
+      cloud = cld;
+      indexer = idx;
+    }
+
+    void fillCloud(vector<vector<double> >& cld, vector<unsigned int>& idx, vector<unsigned int>& ids){
+      cloud = cld;
+      indexer = idx;
+      uniqueIds = ids;
+    }
+
+    void fillCloud(unsigned int& i, vector<vector<double> >& cld, vector<unsigned int>& idx, vector<unsigned int>& ids){
+      identifier = i;
+      cloud = cld;
+      indexer = idx;
+      uniqueIds = ids;
+    }
+
+};
+
 class IndexedCloudParts{
   public:
-    unordered_map<unsigned int, vector<vector<double> > > parts;
-    unordered_map<unsigned int, vector<unsigned int> > ids;
+    unordered_map<unsigned int, IndexedCloud > parts;
     set<unsigned int> segmentIds;
 
+    IndexedCloudParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier, vector<unsigned int>& splitter, vector<unsigned int>& subSplitter){
+      setUniqueIndex(identifier);
+      populateParts(fullCloud, identifier, splitter);
+      fillSecondIndexer(subSplitter, splitter);
+    }
+
     IndexedCloudParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier, vector<unsigned int>& splitter){
-      getUniqueIndex(identifier);
+      setUniqueIndex(identifier);
       populateParts(fullCloud, identifier, splitter);
     }
 
     IndexedCloudParts(vector<vector<double> >& fullCloud, vector<unsigned int>& identifier){
-      getUniqueIndex(identifier);
+      setUniqueIndex(identifier);
       populateParts(fullCloud, identifier);
     }
 
-    void getUniqueIndex(vector<unsigned int>& identifier){
+    void setUniqueIndex(vector<unsigned int>& identifier){
       segmentIds.insert(identifier.begin(), identifier.end());
     }
 
     void splitIds(vector<unsigned int>& identifier, vector<unsigned int>& splitter){
       for(unsigned int i = 0; i < identifier.size(); ++i){
         unsigned int sp = splitter[i];
-        ids[sp].push_back( identifier[i] );
+        parts[sp].uniqueIds.push_back( identifier[i] );
       }
     }
 
     vector<double> ids2double(unsigned int key){
-      vector<unsigned int>& vals = ids[key];
+      vector<unsigned int>& vals = parts[key].uniqueIds;
       vector<double> convertVals(vals.begin(), vals.end());
       return convertVals;
     }
@@ -339,35 +383,21 @@ class IndexedCloudParts{
 
         if(parts.find(id) == parts.end()){
           vector<vector<double> > temp(fullCloud.size());
-          parts[id] = temp;
+          parts[id].cloud = temp;
+          parts[id].identifier = id;
         }
 
         for(unsigned int j = 0; j < fullCloud.size(); ++j){
-          parts[id][j].push_back( fullCloud[j][i] );
+          parts[id].cloud[j].push_back( fullCloud[j][i] );
         }
       }
     }
 
-    // Rcpp::List makeRList(){
-    //   Rcpp::List sendList;
-
-    //   for(auto& p : parts){
-
-    //     string name = to_string( p.first );
-    //     vector<double> floatIds;]
-
-    //     for(auto& i : ids[p.first]){
-    //       floatIds.push_back( (double)i );
-    //     }
-
-    //     vector<vector<double> > piece = p.second;
-    //     piece.push_back( floatIds );
-
-    //     sendList[name] = Rcpp::wrap( piece );
-    //   }
-
-    //   return sendList;
-    // }
+    void fillSecondIndexer(vector<unsigned int>& sub_id, vector<unsigned int>& identifier){
+      for(unsigned int i = 0; i < identifier.size(); ++i){
+        parts[ identifier[i] ].indexer.push_back( sub_id[i] );
+      }
+    }
 };
 
 #endif // CLASSES_HPP

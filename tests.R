@@ -67,25 +67,26 @@ las@data$Segment[las@data$Z < 0] = 0
 # dups = duplicated(voxels$VoxelID)
 # voxels = voxels[!dups]
 
-voxels = las@data[order(Segment, PointID), .(Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
+voxels = las@data[order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
 
 sgs = voxels$Segment
 ids = voxels$PointID
-# trids = voxels$TreeID
-a = voxels[,-c(1:2)] %>% as.matrix
+tds = voxels$TreeID
+a = voxels[,-c(1:3)] %>% as.matrix
 
 # a = split(voxels, trids) %>% lapply(function(x){
 #   as.matrix(x[,-c(1:3)]) %>% treeEigenHough(x$Segment, vxl, max_d, F)
 # })
 
-b = treeEigenHough(a, ids, sgs, vxl, max_d/2, T, T)
+b = plotEigenHough(a, ids, tds, sgs, vxl, max_d/2, T, F)
+# b = treeEigenHough(a, ids, sgs, vxl, max_d/2, F, F)
 # b = b[[1]]
 
 sids = ids %>% unique %>% sort
 segs = b %>% lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
-colnames(segs) = c('Votes','Radius','PointID', 'Segment')
+colnames(segs) = c('Votes','Radius','PointID', 'Segment', 'TreeID')
 
-segs = lapply(b, function(x) rev(x)[-1] %>% do.call(what=rbind) %>% cbind(rev(x)[1])) %>% do.call(what=rbind) %>% as.data.table()
+# segs = lapply(b, function(x) rev(x)[-1] %>% do.call(what=rbind) %>% cbind(rev(x)[1])) %>% do.call(what=rbind) %>% as.data.table()
 
 voxels = merge(voxels, segs, by='PointID', sort=F)
 las@data = merge(las@data, voxels[,.(PointID, Votes, Radius)], by='PointID', sort=F)
@@ -93,7 +94,7 @@ las@data = merge(las@data, voxels[,.(PointID, Votes, Radius)], by='PointID', sor
 plot(las, size=2, color='Votes')
 voxels$Votes %>% hist
 
-temp = lasfilter(las, Votes > 50)
+temp = lasfilter(las, Votes > 200)
 plot(temp, size=3, color='Votes', clear_artifacts=F)
 rgl.points(las@data[,.(X,Y,Z)], size=.5)
 
