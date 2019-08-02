@@ -13,7 +13,7 @@ require(rgl)
 require(data.table)
 require(dismo)
 require(deldir)
-require(RANN)
+require(nabor)
 
 rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Stem', 'Segment', 'gpstime', 'AvgHeight', 'Radius'))
 
@@ -23,7 +23,7 @@ las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025
 las = readTLS('inst/extdata/pine.laz')
 
 las %<>% tlsTransform(c('-x','z','y'), T, T)
-las %<>% tlsNormalize(keep_ground = F)
+las %<>% tlsNormalize(keep_ground = T)
 
 map = treeMap(las, map.eigen.knn())
 
@@ -44,12 +44,14 @@ las@data$PointID = 1:nrow(las@data)
 las = lasfilter(las, Classification != 2)
 # las = pointMetrics(las, ptm.voxels(vxl, F), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
 
-# t1 = Sys.time()
-# laslist = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
-#   lapply(pointMetrics, method = ptm.knn(), metrics_list=c('N', 'Planarity', 'Verticality', 'EigenVectors')) %>%
-#   lapply(function(x) x@data) %>% do.call(what=rbind) %>% LAS
-# t2 = Sys.time()
-# print(t2-t1)
+t1 = Sys.time()
+laslist = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
+  lapply(pointMetrics, method = ptm.knn(), metrics_list=c('N', 'Planarity', 'Verticality', 'EigenVectors')) %>%
+  lapply(function(x) x@data) %>% do.call(what=rbind) %>% LAS
+t2 = Sys.time()
+print(t2-t1)
+
+gc()
 
 t1 = Sys.time()
 las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
@@ -91,12 +93,15 @@ colnames(segs) = c('Votes','Radius','PointID', 'Segment', 'TreeID')
 voxels = merge(voxels, segs, by='PointID', sort=F)
 las@data = merge(las@data, voxels[,.(PointID, Votes, Radius)], by='PointID', sort=F)
 
-plot(las, size=2, color='Votes')
+plot(las, size=2, color='Votes', clear_artifacts=F)
+rgl.points(tlsSample(las2, randomize(.2))@data, size=.5)
+pan3d(2)
 voxels$Votes %>% hist
 
-temp = lasfilter(las, Votes > 200)
-plot(temp, size=3, color='Votes', clear_artifacts=F)
-rgl.points(las@data[,.(X,Y,Z)], size=.5)
+temp = lasfilter(las, Votes > 100)
+plot(temp, size=2, color='Votes', clear_artifacts=F)
+rgl.points(tlsSample(las2, randomize(.2))@data, size=.5)
+pan3d(2)
 
 b[[1]][[1]] %>% length
 

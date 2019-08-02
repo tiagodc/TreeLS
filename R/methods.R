@@ -28,7 +28,7 @@
 
 point.metrics.names = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValue1', 'EigenValue2', 'EigenValue3', 'EigenVector11', 'EigenVector21', 'EigenVector31', 'EigenVector12', 'EigenVector22', 'EigenVector32', 'EigenVector13', 'EigenVector23', 'EigenVector33')
 
-point.metrics.check = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance')
+point.metrics.check = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance', 'VarDistance', 'SdDistance')
 
 tls.marker = 'tlsAttribute'
 
@@ -939,7 +939,7 @@ nnFilter = function(las, d = 0.05, n = 2, max_points = 1.5E6){
   for(i in unique(zclass)){
     bool = zclass == i
     xyz = las@data[bool,.(X,Y,Z)]
-    rnn = RANN::nn2(data = xyz, k = n+1, treetype = 'kd')$nn.dists[,-1] %>% as.data.frame
+    rnn = nabor::knn(data = xyz, k = n+1)$nn.dists[,-1] %>% as.data.frame
 
     knn = rep(0, nrow(rnn))
     for(j in 1:ncol(rnn)){

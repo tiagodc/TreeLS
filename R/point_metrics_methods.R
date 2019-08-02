@@ -26,10 +26,13 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
     colnames(ptm) = pickMetrics$names
   }
 
-  if(pickMetrics$log[12]) ptm$MeanDistance = kds[,-1] %>% rowMeans(na.rm=T)
-  if(pickMetrics$log[13]) ptm$MedianDistance = suppressWarnings(kds[,-1] %>% apply(1, median, na.rm=T))
-  if(pickMetrics$log[14]) ptm$MinDistance = suppressWarnings(kds[,-1] %>% apply(1, min, na.rm=T))
-  if(pickMetrics$log[15]) ptm$MaxDistance = suppressWarnings(kds[,-1] %>% apply(1, max, na.rm=T))
+  distMetrics = point.metrics.check[ 12:17 ][ pickMetrics$log[12:17] ]
+  if(length(distMetrics) > 0){
+    kds[is.na(kds)] = 0
+    dtm = cppFastApply(kds[,-1], distMetrics) %>% do.call(what=rbind) %>% as.data.table
+    colnames(dtm) = distMetrics
+    ptm = cbind(ptm, dtm)
+  }
 
   ptm = as.matrix(ptm)
   ptm[is.na(ptm)] = ptm[is.nan(ptm)] = ptm[is.null(ptm)] = ptm[is.infinite(ptm)] = 0
@@ -86,7 +89,7 @@ ptm.voxels = function(d = .1, exact=F){
   return(func)
 }
 
-ptm.knn = function(k = 30){
+ptm.knn = function(k = 30, r = 0){
 
   func = function(las, metrics_list){
     zclass = splitByIndex(las)
@@ -95,31 +98,7 @@ ptm.knn = function(k = 30){
     df = data.table()
     for(i in zuq){
       temp = lasfilter(las, zclass == i)
-      knn = RANN::nn2(temp %>% las2xyz, k = k, treetype = 'kd', searchtype = 'standard')
-      ptm = ptmStatistics(temp, knn, metrics_list)
-      temp@data[,colnames(ptm)] = ptm
-      df = rbind(df, temp@data)
-    }
-
-    las@data = df
-    las = resetLAS(las)
-    return(las)
-  }
-
-  func %<>% setAttribute('ptm_mtd')
-  return(func)
-}
-
-ptm.radius = function(r = 0.1, max_k = 30){
-
-  func = function(las, metrics_list){
-    zclass = splitByIndex(las)
-    zuq = unique(zclass)
-
-    df = data.table()
-    for(i in zuq){
-      temp = lasfilter(las, zclass == i)
-      knn = RANN::nn2(las %>% las2xyz, k = max_k, treetype = 'kd', searchtype = 'radius', radius = r)
+      knn = nabor::knn(temp %>% las2xyz, k = k+1, radius = r)
       ptm = ptmStatistics(temp, knn, metrics_list)
       temp@data[,colnames(ptm)] = ptm
       df = rbind(df, temp@data)

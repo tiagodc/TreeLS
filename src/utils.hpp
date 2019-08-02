@@ -49,6 +49,8 @@ double mad(vector<double> x, double c = 1.4826);
 
 double median(vector<double> x);
 
+double variance(vector<double>& x);
+
 vector<vector<unsigned int> > partitionIndex(vector<unsigned int>& identifier, vector<unsigned int>& partitioner);
 
 vector<vector<double> > partitionIndex(vector<unsigned int>& identifier, vector<double>& partitioner);
@@ -74,5 +76,7 @@ double vecAngle(vector<double>& a, vector<double>& b);
 vector<vector<double> > voxelCounter(vector<vector<double> >& xyzNormals, double voxel, double max_rad, bool is2d = false, bool sendSpace = false);
 
 vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector<unsigned int>& split_by);
+
+vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string>& funcList);
 
 #endif // UTILS_HPP

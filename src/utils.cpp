@@ -51,7 +51,7 @@ vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
       eigenDecomposition(xyz, &eVal, &eVec);
 
       vector<double> z = {0,0,1};
-      double zmean = accumulate(xyz[2].begin(), xyz[2].end(), 0) / xyz[2].size();
+      double zmean = accumulate(xyz[2].begin(), xyz[2].end(), 0.0) / xyz[2].size();
       double zmax = *max_element(xyz[2].begin(), xyz[2].end());
       double zmin = *min_element(xyz[2].begin(), xyz[2].end());
       double zsumsq = 0;
@@ -149,6 +149,16 @@ double vecAngle(vector<double>& a, vector<double>& b){
   double ang  = dotprod / ( sqrt(asqsum) * sqrt(bsqsum) );
   double cang = acos(ang) * 180/PI;
   return cang;
+}
+
+double variance(vector<double>& x){
+  double mean = accumulate(x.begin(), x.end(), 0.0) / x.size();
+  double var = 0.0;
+  for(auto& i : x){
+    var += pow(i - mean, 2);
+  }
+  var /= x.size();
+  return var;
 }
 
 // conversions
@@ -585,5 +595,43 @@ vector<double> idSortUnique(vector<unsigned int>& identifier, vector<double>& va
   }
 
   return store;
+
+}
+
+vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string>& funcList){
+  
+  vector<vector<double> > calc( matrix[0].size(), vector<double>(funcList.size(), 0) ); 
+  
+  for(unsigned int i = 0; i < matrix[0].size(); ++i){
+
+    vector<double> row;
+    for(unsigned int k = 0; k < matrix.size(); ++k){
+      double temp = matrix[k][i];
+      if(temp < 0.00000001) break;
+      row.push_back(temp);
+    }
+
+    if(row.empty()) continue;
+
+    unsigned int j = 0;
+    for(auto& f : funcList){
+
+      if(f == "MedianDistance"){
+        calc[i][j++] = median(row);          
+      }else if(f == "MinDistance"){
+        calc[i][j++] = *min_element(row.begin(), row.end());
+      }else if(f == "MaxDistance"){
+        calc[i][j++] = *max_element(row.begin(), row.end());
+      }else if(f == "MeanDistance"){
+        calc[i][j++] = accumulate(row.begin(), row.end(), 0.0) / row.size();
+      }else if(f == "VarDistance"){
+        calc[i][j++] = variance(row);
+      }else if(f == "SdDistance"){
+        calc[i][j++] = sqrt(variance(row));
+      }  
+    }
+  }
+
+  return calc;
 
 }
