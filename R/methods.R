@@ -931,25 +931,30 @@ treePoints = function(las, map, method=trees.voronoi()){
 #' file = system.file("extdata", "spruce.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-nnFilter = function(las, d = 0.05, n = 2, max_points = 1.5E6){
+nnFilter = function(las, d = 0.05, n = 2){
 
-  zclass = splitByIndex(las, max_size = max_points)
-  keep = rep(T, nrow(las@data))
-
-  for(i in unique(zclass)){
-    bool = zclass == i
-    xyz = las@data[bool,.(X,Y,Z)]
-    rnn = nabor::knn(data = xyz, k = n+1)$nn.dists[,-1] %>% as.data.frame
-
-    knn = rep(0, nrow(rnn))
-    for(j in 1:ncol(rnn)){
-      temp = ifelse(rnn[,j] > d, 0, 1) %>% as.double
-      knn = knn + temp
-    }
-
-    keep[bool] = knn >= n
+  rnn = nabor::knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
+  
+  keep = rep(T, nrow(las@data))  
+  for(j in 1:ncol(rnn)){
+    keep = keep & rnn[,j] < d
   }
+  # zclass = splitByIndex(las, max_size = max_points)
+  # keep = rep(T, nrow(las@data))
 
+  # for(i in unique(zclass)){
+  #   bool = zclass == i
+  #   xyz = las@data[bool,.(X,Y,Z)]
+  #   rnn = nabor::knn(data = xyz, k = n+1)$nn.dists[,-1] %>% as.data.frame
+
+  #   knn = rep(0, nrow(rnn))
+  #   for(j in 1:ncol(rnn)){
+  #     temp = ifelse(rnn[,j] > d, 0, 1) %>% as.double
+  #     knn = knn + temp
+  #   }
+
+  #   keep[bool] = knn >= n
+  # }
   las %<>% lasfilter(keep)
   return(las)
 }

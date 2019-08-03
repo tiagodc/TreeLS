@@ -17,7 +17,7 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
 
   kid = knn$nn.idx
   kds = knn$nn.dists
-  kds[kid == 0] = NA
+  kds[kid == 0] = 0
 
   ptm = data.table()
 
@@ -28,7 +28,6 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
 
   distMetrics = point.metrics.check[ 12:17 ][ pickMetrics$log[12:17] ]
   if(length(distMetrics) > 0){
-    kds[is.na(kds)] = 0
     dtm = cppFastApply(kds[,-1], distMetrics) %>% do.call(what=rbind) %>% as.data.table
     colnames(dtm) = distMetrics
     ptm = cbind(ptm, dtm)
@@ -92,20 +91,24 @@ ptm.voxels = function(d = .1, exact=F){
 ptm.knn = function(k = 30, r = 0){
 
   func = function(las, metrics_list){
-    zclass = splitByIndex(las)
-    zuq = unique(zclass)
 
-    df = data.table()
-    for(i in zuq){
-      temp = lasfilter(las, zclass == i)
-      knn = nabor::knn(temp %>% las2xyz, k = k+1, radius = r)
-      ptm = ptmStatistics(temp, knn, metrics_list)
-      temp@data[,colnames(ptm)] = ptm
-      df = rbind(df, temp@data)
-    }
+    k = nabor::knn(las %>% las2xyz, k = k+1, radius = r)
+    ptm = ptmStatistics(las, k, metrics_list)
+    las@data[,colnames(ptm)] = ptm
+    # zclass = splitByIndex(las)
+    # zuq = unique(zclass)
 
-    las@data = df
-    las = resetLAS(las)
+    # df = data.table()
+    # for(i in zuq){
+    #   temp = lasfilter(las, zclass == i)
+    #   knn = nabor::knn(temp %>% las2xyz, k = k+1, radius = r)
+    #   ptm = ptmStatistics(temp, knn, metrics_list)
+    #   temp@data[,colnames(ptm)] = ptm
+    #   df = rbind(df, temp@data)
+    # }
+
+    # las@data = df
+    # las = resetLAS(las)
     return(las)
   }
 

@@ -741,7 +741,7 @@ vector<vector<double> > pointMetrics(vector<vector<double> >& cloud, vector<vect
 
     for(unsigned int j = 0; j < ncol; ++j){
 
-      unsigned int cell = idx[j][i];
+      int cell = idx[j][i];
       if(cell-- == 0) break;
 
       xyz[0].push_back( cloud[0][cell] );
