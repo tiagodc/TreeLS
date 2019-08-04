@@ -20,14 +20,23 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 
 las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
-las = readTLS('inst/extdata/pine.laz')
+# las = readTLS('inst/extdata/pine.laz')
 
 las %<>% tlsTransform(c('-x','z','y'), T, T)
-las %<>% tlsNormalize(keep_ground = T)
+las %<>% tlsNormalize(keep_ground = F)
 
 map = treeMap(las, map.eigen.knn())
 
 las = treePoints(las, map)
+
+t1 = Sys.time()
+las = stemPoints(las, stm.eigen.knn(dvt = .1))
+t2 = Sys.time()
+print(t2-t1)
+
+th = las@data[las@data$Stem, .(max(Z), .N), by='TreeID']
+temp = lasfilter(las, Stem)
+plot(temp, color="VotesWeight")
 
 hstep = .5
 pln = .2
