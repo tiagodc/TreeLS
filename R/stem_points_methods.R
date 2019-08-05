@@ -113,7 +113,7 @@ stm.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.
 }
 
 
-stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5, dvt = .25, v3d = F){
+stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5, dvt = .2, v3d = F){
 
   func = function(las){
 
@@ -134,16 +134,29 @@ stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5,
     las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
     las@data$Segment[las@data$Z < 0] = 0
 
-    points = las@data[Stem & order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
+    if(hasField(las, 'TreeID')){
+      points = las@data[Stem & order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
 
-    sgs = points$Segment
-    ids = points$PointID
-    tds = points$TreeID
+      tds = points$TreeID
+      sgs = points$Segment
+      ids = points$PointID
 
-    votes = points[,-c(1:3)] %>% as.matrix %>% plotEigenHough(ids, tds, sgs, vxl, max_d/2, !v3d, F) %>%
-      lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
+      votes = points[,-c(1:3)] %>% as.matrix %>% plotEigenHough(ids, tds, sgs, vxl, max_d/2, !v3d, F) %>%
+        lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
 
-    colnames(votes) = c('Votes','Radius','PointID', 'Segment', 'TreeID')
+      colnames(votes) = c('Votes','Radius','PointID', 'Segment', 'TreeID')
+
+    }else{
+      points = las@data[Stem & order(Segment, PointID), .(Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
+
+      sgs = points$Segment
+      ids = points$PointID
+
+      votes = points[,-c(1:2)] %>% as.matrix %>% treeEigenHough(ids, sgs, vxl, max_d/2, !v3d, F) %>%
+        lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
+
+      colnames(votes) = c('Votes','Radius','PointID', 'Segment')
+    }
 
     keepcols = !(colnames(las@data) %in% c('Votes', 'Radius', 'MaxVotes'))
     keepcols = colnames(las@data)[keepcols]
@@ -151,12 +164,17 @@ stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5,
     las@data = merge(las@data, votes[,.(PointID, Votes, Radius)], by='PointID', sort=F, all.x=T)
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 
-    maxVotes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
-    las@data = merge(las@data, maxVotes, by='TreeID', sort=F, all.x=T)
-    las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
+    if(hasField(las, 'TreeID')){
+      maxVotes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
+      las@data = merge(las@data, maxVotes, by='TreeID', sort=F, all.x=T)
+      las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
+      las@data$MaxVotes = NULL
+    }else{
+      las@data$VotesWeight = las@data$Votes / max(las@data$Votes)
+    }
+
     las@data$Stem = las@data$VotesWeight > dvt
 
-    las@data$Votes = las@data$MaxVotes = NULL
     return(las)
   }
 
@@ -165,16 +183,60 @@ stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5,
 }
 
 
-stm.eigen.voxel = function(pln = .15, vrt = 15, vxl = .05, max_d = .5, min_h = 2, min_n = 100){
+stm.eigen.voxel = function(hstep = .5, pln = .2, vrt = 20, vxl = .1, max_d = .5, dvt = .2, v3d = F){
 
   func = function(las){
-    las@data$ptid_temp = 1:nrow(las@data)
-    lasthin = map.eigen.voxel(pln, vrt, vxl, max_d, min_h, min_n)(las)
 
-    las@data$Stem = las@data$ptid_temp %in% lasthin@data$ptid_temp
-    las@data = lasfull@data[,-c('ptid_temp')]
-    las@data$TreeID = 0
-    las@data[Stem]$TreeID = lasthin@data$TreeID
+    mtrlst = c('N', 'Planarity', 'Verticality', 'EigenVectors')
+
+    las = pointMetrics(las, ptm.voxels(vxl), mtrlst)
+
+    las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < pln & abs(Verticality - 90) < vrt)
+
+    stemSeg = seq(0, max(las$Z)+hstep, hstep)
+    las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
+    las@data$Segment[las@data$Z < 0] = 0
+
+    if(hasField(las, 'TreeID')){
+      voxels = las@data[Stem & order(TreeID, Segment), .(TreeID = mean(TreeID), Segment = mean(Segment), X = mean(X), Y = mean(Y), Z = mean(Z), EigenVector13 = mean(EigenVector13), EigenVector23 = mean(EigenVector23), EigenVector33 = mean(EigenVector33)), by = VoxelID]
+
+      tds = voxels$TreeID
+      sgs = voxels$Segment
+      ids = voxels$VoxelID
+
+      votes = voxels[,-c(1:3)] %>% as.matrix %>% plotEigenHough(ids, tds, sgs, vxl, max_d/2, !v3d, F) %>%
+        lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
+
+      colnames(votes) = c('Votes','Radius','VoxelID', 'Segment', 'TreeID')
+
+    }else{
+      voxels = las@data[Stem & order(Segment), .(Segment = mean(Segment), X = mean(X), Y = mean(Y), Z = mean(Z), EigenVector13 = mean(EigenVector13), EigenVector23 = mean(EigenVector23), EigenVector33 = mean(EigenVector33)), by = VoxelID]
+
+      sgs = voxels$Segment
+      ids = voxels$VoxelID
+
+      votes = voxels[,-c(1:2)] %>% as.matrix %>% treeEigenHough(ids, sgs, vxl, max_d/2, !v3d, F) %>%
+        lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
+
+      colnames(votes) = c('Votes','Radius','VoxelID', 'Segment')
+    }
+
+    keepcols = !(colnames(las@data) %in% c('Votes', 'Radius', 'MaxVotes'))
+    keepcols = colnames(las@data)[keepcols]
+    las@data = las@data[,..keepcols]
+    las@data = merge(las@data, votes[,.(VoxelID, Votes, Radius)], by='VoxelID', sort=F, all.x=T)
+    las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
+
+    if(hasField(las, 'TreeID')){
+      maxVotes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
+      las@data = merge(las@data, maxVotes, by='TreeID', sort=F, all.x=T)
+      las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
+      las@data$MaxVotes = NULL
+    }else{
+      las@data$VotesWeight = las@data$Votes / max(las@data$Votes)
+    }
+
+    las@data$Stem = las@data$VotesWeight > dvt
 
     return(las)
   }

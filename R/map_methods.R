@@ -94,7 +94,7 @@ map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_d 
 }
 
 
-map.eigen.knn = function(pln = .15, vrt = 15, mds = .05, max_d = .5, min_h = 2, min_n = 100){
+map.eigen.knn = function(pln = .15, vrt = 15, mds = .1, max_d = .5, min_h = 2, min_n = 100){
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
@@ -125,7 +125,7 @@ map.eigen.knn = function(pln = .15, vrt = 15, mds = .05, max_d = .5, min_h = 2, 
 }
 
 
-map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .05, max_d = .5, min_h = 2, min_n = 100){
+map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .1, max_d = .5, min_h = 2, min_n = 100){
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
