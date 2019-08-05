@@ -4,7 +4,7 @@
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-trees.voronoi = function(){
+trp.voronoi = function(){
 
   func = function(las, xymap){
     xt = extent(las) + c(-1,1,-1,1)
@@ -29,3 +29,21 @@ trees.voronoi = function(){
   return(func)
 }
 
+trp.clip = function(r = 1, circle=T){
+  func = function(las, xymap){
+
+    las@data$TreeID = 0
+    for(i in 1:nrow(xymap)){
+      x = xymap$X[i]
+      y = xymap$Y[i]
+      id = xymap$TreeID[i]
+      bool = RCropCloud(las %>% las2xyz, x, y, r, circle, F)
+      las@data$TreeID[bool] = id
+    }
+    las %<>% setAttribute('tree_points')
+    return(las)
+  }
+
+  func %<>% setAttribute('tpt_mtd')
+  return(func)
+}

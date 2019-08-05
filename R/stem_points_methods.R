@@ -68,31 +68,32 @@ stm.hough = function(hstep=0.5, max_radius=0.25, hbase = c(1,2.5), pixel_size=0.
     if(min(las$Z) > 5)
       message("point cloud doesn't look normalized (Z values too high) - check ?tlsNormalize")
 
-    groundPts = if(las %>% hasField('Classification')){
-      las$Classification == 2
+    surveyPts = if(las %>% hasField('Classification')){
+      las$Classification != 2
     }else{
-      rep(F, las@data %>% nrow)
+      rep(T, las@data %>% nrow)
     }
 
     if(!hasField(las, 'TreeID')){
       message('no TreeID field found with tree_points signature: performing single stem point classification')
-      results = houghStemPoints(las2xyz(las)[!groundPts,], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+      results = houghStemPoints(las2xyz(las)[surveyPts,], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
     }else{
       message('performing point classification on multiple stems')
-      results = houghStemPlot(las2xyz(las)[!groundPts,], las@data$TreeID[!groundPts], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
+      surveyPts = surveyPts & las$TreeID > 0
+      results = houghStemPlot(las2xyz(las)[surveyPts,], las@data$TreeID[surveyPts], hbase[1], hbase[2], hstep, max_radius, pixel_size, min_density, min_votes)
     }
 
     las@data$Stem = F
-    las@data$Stem[!groundPts] = results$Stem
+    las@data$Stem[surveyPts] = results$Stem
 
     las@data$Segment = 0
-    las@data$Segment[!groundPts] = results$Segment
+    las@data$Segment[surveyPts] = results$Segment
 
     las@data$Radius = 0
-    las@data$Radius[!groundPts] = results$Radius
+    las@data$Radius[surveyPts] = results$Radius
 
     las@data$Votes = 0
-    las@data$Votes[!groundPts] = results$Votes
+    las@data$Votes[surveyPts] = results$Votes
 
     las %<>% resetLAS
 
@@ -133,13 +134,17 @@ stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5,
       las = pointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < pln & abs(Verticality - 90) < vrt)
+    las@data$Stem = with(las@data, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt)
+    if(hasField(las, 'Classification')){
+      las@data$Stem = las@data$Stem & las@data$Classification != 2
+    }
 
     stemSeg = seq(0, max(las$Z)+hstep, hstep)
     las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
     las@data$Segment[las@data$Z < 0] = 0
 
     if(hasField(las, 'TreeID')){
+      las@data$Stem = las@data$Stem & las@data$TreeID > 0
       points = las@data[Stem & order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
 
       tds = points$TreeID

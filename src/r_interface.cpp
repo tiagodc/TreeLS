@@ -450,3 +450,24 @@ SEXP cppFastApply(NumericMatrix& matrix, StringVector& funcList){
   vector<string> funcs(funcList.begin(), funcList.end());
   return wrap( fastApply(cppmat, funcs) );
 }
+
+// [[Rcpp::export]]
+SEXP cppCircleFit(NumericMatrix& las){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<double> pars;
+  
+  pars = irlsCircleFit(las);
+  pars = eigenCircle(cloud);
+  pars = nmCircleFit(cloud);
+  pars = ransacCircle(cloud);
+}
+
+// [[Rcpp::export]]
+SEXP cppCylinderFit(NumericMatrix& las){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<double> pars;
+  
+  pars = irlsCylinder(cloud);
+  pars = nmCylinderFit(cloud);
+  pars = ransacCylinder(cloud);
+}

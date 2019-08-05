@@ -19,113 +19,58 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-las = readTLS('test_data/ento_u_clip.laz')#, filter='-keep_random_fraction 0.025')
-# las = readTLS('inst/extdata/pine.laz')
+las = readTLS('test_data/ento_u_clip.laz') %>% tlsTransform(c('-x','z','y'), T, T) %>% tlsNormalize(keep_ground = F)
 
-las %<>% tlsTransform(c('-x','z','y'), T, T)
-las %<>% tlsNormalize(keep_ground = F)
+las = pointMetrics(las, ptm.knn())
+thin = tlsSample(las, voxelize(.025))
 
-map = treeMap(las, map.eigen.knn())
+map1 = treeMap(las, map.eigen.knn(mds = .1)) #eigen.knn(mds = .1))
+# map2 = treeMap(thin, map.hough()) #eigen.knn(mds = .1))
+eigen_map_ento.rds
 
-las = treePoints(las, map)
 
-t1 = Sys.time()
-las = stemPoints(las, stm.eigen.knn(dvt = .1))
-t2 = Sys.time()
-print(t2-t1)
+las = treePoints(las, map1, trp.clip(2, F))
 
-th = las@data[las@data$Stem, .(max(Z), .N), by='TreeID']
-temp = lasfilter(las, Stem)
-plot(temp, color="VotesWeight")
+las = stemPoints(las, stm.hough(max_radius = .3, hstep = .3))
+# las@data$Stem = with(las@data, Votes > 3 & VotesWeight > .2)
 
-hstep = .5
-pln = .2
-vrt = 20
-vxl = .05
-max_d = .5
-min_h = 2
-min_n = 100
+df = stemSegmentation(las, sgmt.ransac.circle())
 
-lasfull = las
-# las = lasfilter(lasfull, TreeID == 10)
+tlsPlot(las, df) ; pan3d(2)
 
-las@data$PointID = 1:nrow(las@data)
-las = lasfilter(las, Classification != 2)
-# las = pointMetrics(las, ptm.voxels(vxl, F), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
+# pal = las@data$TreeID %>% unique %>% length %>% pastel.colors
+# plot(las, color='TreeID', colorPalette=pal)
 
-t1 = Sys.time()
-laslist = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
-  lapply(pointMetrics, method = ptm.knn(), metrics_list=c('N', 'Planarity', 'Verticality', 'EigenVectors')) %>%
-  lapply(function(x) x@data) %>% do.call(what=rbind) %>% LAS
-t2 = Sys.time()
-print(t2-t1)
+# plot(map2, clear_artifacts=F)
+# rgl.points(map1@data[,.(X,Y,Z)])
+# rgl.points(thin@data[,.(X,Y,Z)], size=.5, color='grey')
+# pan3d(2)
 
-gc()
 
-t1 = Sys.time()
-las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'EigenVectors'))
-t2 = Sys.time()
-print(t2-t1)
+#####################################
 
-las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt) %>% nnFilter(vxl*2, 10)
-# las = lasfilter(las, TreeID == 36)
+inv = read.csv('../case_tls/inv_entomologia.csv', sep=';', dec=',')
+names(inv)[1] = 'FID'
 
-stemSeg = seq(0, max(las$Z)+hstep, hstep)
-las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
-las@data$Segment[las@data$Z < 0] = 0
+inv = inv[inv$CAP > 0,]
 
-# voxels = las@data[order(Segment, VoxelID), .(X=mean(X), Y=mean(Y), Z=mean(Z), e1=mean(EigenVector13), e2=mean(EigenVector23), e3=mean(EigenVector33)), by=.(Segment, VoxelID)]
-# dups = duplicated(voxels$VoxelID)
-# voxels = voxels[!dups]
+df = stemSegmentation(las, sgmt.irls.cylinder())
+tlsInv = df[AvgHeight > 1 & AvgHeight < 1.6, .(dbh = 200*mean(Radius)), by=TreeID]
+tlsInv = tlsInv[TreeID %in% inv$Rmap,]
 
-voxels = las@data[order(TreeID, Segment, PointID), .(TreeID, Segment, PointID, X, Y, Z, EigenVector13, EigenVector23, EigenVector33)]
+allInv = merge(inv, tlsInv, by.x='Rmap', by.y='TreeID', all=T)
+allInv$DAP %>% mean
+allInv$dbh %>% mean(na.rm=T)
+allInv$diff = allInv$dbh - allInv$DAP
 
-sgs = voxels$Segment
-ids = voxels$PointID
-tds = voxels$TreeID
-a = voxels[,-c(1:3)] %>% as.matrix
+allInv = allInv[ !(allInv$Rmap %in% c(-1, 7, 27, 48, 26)) ,]
 
-# a = split(voxels, trids) %>% lapply(function(x){
-#   as.matrix(x[,-c(1:3)]) %>% treeEigenHough(x$Segment, vxl, max_d, F)
-# })
+mae = (sum(allInv$diff, na.rm=T) / nrow(allInv)) %T>% print
+rmse = sqrt(sum( allInv$diff ^2, na.rm=T ) / nrow(allInv)) %T>% print
 
-b = plotEigenHough(a, ids, tds, sgs, vxl, max_d/2, T, F)
-# b = treeEigenHough(a, ids, sgs, vxl, max_d/2, F, F)
-# b = b[[1]]
+plot(dbh ~ DAP, data=allInv, cex=0)
+text(allInv$DAP, allInv$dbh, allInv$Rmap)
+abline(0,1,col='red',lwd=2)
 
-sids = ids %>% unique %>% sort
-segs = b %>% lapply(function(x) x %>% do.call(what=cbind)) %>% do.call(what=rbind) %>% as.data.table
-colnames(segs) = c('Votes','Radius','PointID', 'Segment', 'TreeID')
-
-# segs = lapply(b, function(x) rev(x)[-1] %>% do.call(what=rbind) %>% cbind(rev(x)[1])) %>% do.call(what=rbind) %>% as.data.table()
-
-voxels = merge(voxels, segs, by='PointID', sort=F)
-las@data = merge(las@data, voxels[,.(PointID, Votes, Radius)], by='PointID', sort=F)
-
-plot(las, size=2, color='Votes', clear_artifacts=F)
-rgl.points(tlsSample(las2, randomize(.2))@data, size=.5)
-pan3d(2)
-voxels$Votes %>% hist
-
-temp = lasfilter(las, Votes > 100)
-plot(temp, size=2, color='Votes', clear_artifacts=F)
-rgl.points(tlsSample(las2, randomize(.2))@data, size=.5)
-pan3d(2)
-
-b[[1]][[1]] %>% length
-
-rgl.points(voxels[,4:6], size=.5)
-
-las@data$TreeID = 0
-maxdst = max_d*2
-i = 1
-while(any(las@data$TreeID == 0)){
-  xy = las@data[TreeID == 0,.(X,Y)][1,] %>% as.double
-  dst = las@data[,sqrt( (X-xy[1])^2 + (Y-xy[2])^2 )] %>% as.double
-  las@data[TreeID == 0 & dst < maxdst]$TreeID = i
-  i=i+1
-}
-
-hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-las = lasfilter(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
-
+100 * rmse / mean(allInv$DAP)
+100 * mae / mean(allInv$DAP)
