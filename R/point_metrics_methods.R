@@ -40,7 +40,7 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
   return(ptm)
 }
 
-ptm.voxels = function(d = .1, exact=F){
+ptm.voxel = function(d = .1, exact=F){
 
   func = function(las, metrics_list){
 

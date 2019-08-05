@@ -119,6 +119,7 @@ stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5,
 
     las@data$PointID = 1:nrow(las@data)
     mtrlst = c('N', 'Planarity', 'Verticality', 'EigenVectors')
+    mtrnames = c(mtrlst[-4], 'EigenVector13', 'EigenVector23', 'EigenVector33')
 
     # if(hasField(las, 'TreeID')){
     #   las@data = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
@@ -126,7 +127,11 @@ stm.eigen.knn = function(hstep = .5, pln = .2, vrt = 20, vxl = .025, max_d = .5,
     #     lapply(function(x) x@data) %>% do.call(what=rbind) %>% as.data.table
     # }
 
-    las = pointMetrics(las, ptm.knn(), mtrlst)
+    checkPtMetrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!checkPtMetrics){
+      message('Calculating knn pointMetrics')
+      las = pointMetrics(las, ptm.knn(), mtrlst)
+    }
 
     las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < pln & abs(Verticality - 90) < vrt)
 
@@ -188,8 +193,13 @@ stm.eigen.voxel = function(hstep = .5, pln = .2, vrt = 20, vxl = .1, max_d = .5,
   func = function(las){
 
     mtrlst = c('N', 'Planarity', 'Verticality', 'EigenVectors')
+    mtrnames = c(mtrlst[-4], 'EigenVector13', 'EigenVector23', 'EigenVector33', 'VoxelID')
 
-    las = pointMetrics(las, ptm.voxels(vxl), mtrlst)
+    checkPtMetrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!checkPtMetrics){
+      message('Calculating voxel pointMetrics')
+      las = pointMetrics(las, ptm.voxel(vxl), mtrlst)
+    }
 
     las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < pln & abs(Verticality - 90) < vrt)
 

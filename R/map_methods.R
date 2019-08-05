@@ -98,7 +98,14 @@ map.eigen.knn = function(pln = .15, vrt = 15, mds = .1, max_d = .5, min_h = 2, m
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
-    las = pointMetrics(las, ptm.knn(), c('N', 'Planarity', 'Verticality', 'MeanDistance'))
+
+    mtrlst = c('N', 'Planarity', 'Verticality', 'MeanDistance')
+
+    checkPtMetrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!checkPtMetrics){
+      message('Calculating knn pointMetrics')
+      las = pointMetrics(las, ptm.knn(), mtrlst)
+    }
 
     las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt & MeanDistance < mds) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
@@ -129,7 +136,13 @@ map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .1, max_d = .5, min_h = 2,
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
-    las = pointMetrics(las, ptm.voxels(vxl), c('N', 'Planarity', 'Verticality'))
+    mtrlst = c('N', 'Planarity', 'Verticality')
+
+    checkPtMetrics = c(mtrlst, 'VoxelID') %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!checkPtMetrics){
+      message('Calculating voxel pointMetrics')
+      las = pointMetrics(las, ptm.voxel(vxl), mtrlst)
+    }
 
     las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
