@@ -452,22 +452,37 @@ SEXP cppFastApply(NumericMatrix& matrix, StringVector& funcList){
 }
 
 // [[Rcpp::export]]
-SEXP cppCircleFit(NumericMatrix& las){
+SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, double p = 0.99, double inliers = 0.8){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
+
+  if(method == "irls"){
+    pars = irlsCircleFit(las);
+  }else if(method == "qr"){
+    pars = eigenCircle(cloud);
+  }else if(method == "nm"){
+    pars = nmCircleFit(cloud);
+  }else if(method == "ransac"){
+    pars = ransacCircle(cloud, n, p, inliers);
+  }
+
+  return wrap( pars );
   
-  pars = irlsCircleFit(las);
-  pars = eigenCircle(cloud);
-  pars = nmCircleFit(cloud);
-  pars = ransacCircle(cloud);
 }
 
 // [[Rcpp::export]]
-SEXP cppCylinderFit(NumericMatrix& las){
+SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
-  
-  pars = irlsCylinder(cloud);
-  pars = nmCylinderFit(cloud);
-  pars = ransacCylinder(cloud);
+
+  if(method == "irls"){
+    vector<double> initPars = {0, PI/2, 0, 0, 0};
+    pars = irlsCylinder(cloud, initPars);
+  }else if(method == "nm"){
+    pars = nmCylinderFit(cloud);
+  }else if(method == "ransac"){
+    pars = ransacCylinder(cloud, n, p, inliers);
+  }
+
+  return wrap( pars );
 }
