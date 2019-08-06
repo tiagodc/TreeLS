@@ -934,8 +934,8 @@ treePoints = function(las, map, method=trees.voronoi()){
 nnFilter = function(las, d = 0.05, n = 2){
 
   rnn = nabor::knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
-  
-  keep = rep(T, nrow(las@data))  
+
+  keep = rep(T, nrow(las@data))
   for(j in 1:ncol(rnn)){
     keep = keep & rnn[,j] < d
   }
@@ -994,4 +994,22 @@ pointMetrics = function(las, method = ptm.voxels(), metrics_list = point.metrics
     stop('invalid method: check ?pointMetrics')
 
   return(method(las, metrics_list))
+}
+
+circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99){
+  pars = cppCircleFit(las %>% las2xyz, method, n, p, inliers)
+  pars[3] = pars[3] * 200
+
+  names(pars)[1:4] = c('X','Y','d', 'err')
+  if(length(pars) == 5) names(pars)[5] = 'err2'
+  pars = pars %>% t %>% as.data.frame
+  return(pars)
+}
+
+cylinderFit = function(las, method = 'ransac', n=5, inliers=.8, p=.99){
+  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers)
+  pars[5] = pars[5] * 200
+  names(pars) = c('rho','theta','phi', 'alpha', 'd', 'err')
+  pars = pars %>% t %>% as.data.frame
+  return(pars)
 }

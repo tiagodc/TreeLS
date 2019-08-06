@@ -20,7 +20,6 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 
 las = readTLS('test_data/ento_u_clip.laz') %>% tlsTransform(c('-x','z','y'), T, T) %>% tlsNormalize(keep_ground = F)
-map1 = readRDS('../case_tls/eigen_map_ento.rds')
 
 # las = pointMetrics(las, ptm.knn())
 # thin = tlsSample(las, voxelize(.025))
@@ -28,15 +27,14 @@ map1 = readRDS('../case_tls/eigen_map_ento.rds')
 # map1 = treeMap(las, map.eigen.knn(mds = .1)) #eigen.knn(mds = .1))
 # map2 = treeMap(thin, map.hough()) #eigen.knn(mds = .1))
 
-las = treePoints(las, map1, trp.clip(2, F))
 
 # las = stemPoints(las, stm.hough(max_radius = .3, hstep = .3))
-las = stemPoints(las, stm.eigen.knn(hstep = .3, max_d = .6))
+# las = stemPoints(las, stm.eigen.knn(hstep = .3, max_d = .6))
 # las@data$Stem = with(las@data, Votes > 3 & VotesWeight > .2)
 
-df = stemSegmentation(las, sgmt.ransac.circle())
+# df = stemSegmentation(las, sgmt.ransac.circle())
 
-tlsPlot(las, df) ; pan3d(2)
+# tlsPlot(las, df) ; pan3d(2)
 
 # pal = las@data$TreeID %>% unique %>% length %>% pastel.colors
 # plot(las, color='TreeID', colorPalette=pal)
@@ -49,85 +47,223 @@ tlsPlot(las, df) ; pan3d(2)
 
 #####################################
 
+map1 = readRDS('../case_tls/eigen_map_ento.rds')
+las = treePoints(las, map1, trp.clip(2, F))
+las = pointMetrics(las, ptm.knn())
+
 inv = read.csv('../case_tls/inv_entomologia.csv', sep=';', dec=',')
 names(inv)[1] = 'FID'
 
 inv = inv[inv$CAP > 0,]
 
-df = stemSegmentation(las, sgmt.irls.circle())
-tlsInv = df[AvgHeight > 1 & AvgHeight < 1.6, .(dbh = 200*mean(Radius)), by=TreeID]
-tlsInv = tlsInv[TreeID %in% inv$Rmap,]
+gps = c(1, .5, .33)
+stmpts = c('hough', 'eigen knn')
+dbhmode = c('stem segmentation', 'section extraction')
+dbhshape = c('circle', 'cylinder')
+dbhseg = c('irls', 'ransac', 'nm', 'qr')
+dbhint = list(c(1,1.6), c(1.1, 1.5), c(1.2,1.4))
+nransac = c(5,10,15,20)
+iterransac = c(1, 10, 30, 50, 100)
+dbhdiff = c(999,4,3,2)
+dbhstat = c('mean', 'median')
 
-allInv = merge(inv, tlsInv, by.x='Rmap', by.y='TreeID', all=T)
-allInv$DAP %>% mean
-allInv$dbh %>% mean(na.rm=T)
-allInv$diff = allInv$dbh - allInv$DAP
+# h = gps[1]
+# i = stmpts[1]
+# j = dbhmode[2]
+# k = dbhshape[1]
+# l = dbhseg[2]
+# m = dbhint[[1]]
+# n = nransac[2]
+# o = iterransac[2]
+# p = dbhdiff[1]
+# q = dbhstat[1]
 
-# allInv = allInv[ !(allInv$Rmap %in% c(-1, 7, 27, 48, 26)) ,]
+results = list()
+count = 1
 
-mae = (sum(allInv$diff, na.rm=T) / nrow(allInv)) %T>% print
-rmse = sqrt(sum( allInv$diff ^2, na.rm=T ) / nrow(allInv)) %T>% print
+for(h in gps){
+  paste('gps time filter:', h, '\n') %>% cat
 
-plot(dbh ~ DAP, data=allInv, cex=0)
-text(allInv$DAP, allInv$dbh, allInv$Rmap)
-abline(0,1,col='red',lwd=2)
+  gpslas = gpsTimeFilter(las, to=h)
 
-100 * rmse / mean(allInv$DAP)
-100 * mae / mean(allInv$DAP)
+  for(i in stmpts){
+    paste('stem classification:', i, '\n') %>% cat
 
-dbhClouds = list()
-tids = inv$Rmap
+    if(i == 'hough'){
+      gpslas = stemPoints(gpslas, stm.hough(hstep = .3, max_radius = .3, hbase = c(1.5,3)))
+    }else{
+      gpslas = stemPoints(gpslas, stm.eigen.knn(.3, max_d = .6))
+    }
 
-for(i in tids){
-  print(i)
-  if(i == -1) next
-  dbhClouds[[i]] = lasfilter(las, TreeID == i & Z < 1.4 & Z > 1.2)
+    for(j in dbhmode){
+      paste('.. dbh origin:', j, '\n') %>% cat
+
+      for(k in dbhshape){
+        paste('.. .. shape fit:', k, '\n') %>% cat
+
+        for(l in dbhseg){
+          if(j == 'stem segmentation' & l %in% c('nm', 'qr')) next
+          if(k == 'cylinder' & l == 'qr') next
+          paste('.. .. .. algorithm:', l, '\n') %>% cat
+
+          for(m in dbhint){
+            if(j == 'stem segmentation' & m[[1]] > 1) next
+            paste('.. .. .. .. Z interval:', paste(m, collapse = ' - '), '\n') %>% cat
+
+            for(n in nransac){
+              if(l != 'ransac' & n > 5) next
+              paste('.. .. .. .. .. ransac n:', n, '\n') %>% cat
+
+              for(o in iterransac){
+                if(j == 'stem segmentation' & o > 1) next
+                if(l != 'ransac' & o > 1) next
+                if(n > 10 & o > 1) next
+                paste('.. .. .. .. .. .. ransac iterations:', o, '\n') %>% cat
+
+                # for(p in dbhdiff){
+                #   paste('.. .. .. .. .. .. .. outlier cut:', p, '\n') %>% cat
+
+                  for(q in dbhstat){
+                    if(j == 'stem segmentation' & q == 'median') next
+                    if(l != 'ransac' & q == 'median') next
+                    if(o == 1 & q == 'median') next
+                    paste('.. .. .. .. .. .. .. .. dbh center:', q, '\n') %>% cat
+
+                    if(j == 'stem segmentation'){
+                      if(k == 'circle'){
+                        mtd = if(l == 'irls') sgmt.irls.circle() else sgmt.ransac.circle(n = n)
+                      }else{
+                        mtd = if(l == 'irls') sgmt.irls.cylinder() else sgmt.ransac.cylinder(n = n)
+                      }
+
+                      segdata = stemSegmentation(gpslas, mtd)
+                      dbhdata = segdata[AvgHeight > m[1] & AvgHeight < m[2], .(d = mean(Radius)*200), by= TreeID]
+
+                    }else{
+                      ids = unique(gpslas@data$TreeID)
+                      ids = ids[ids %in% inv$Rmap]
+                      mtd = if(k == 'circle') circleFit else cylinderFit
+                      segdata = lapply(ids, function(x) lasfilter(gpslas, Z > m[[1]] & Z < m[[2]] & Stem & TreeID == x))
+
+                      if(o == 1){
+                        dbhdata = lapply(segdata, function(x) mtd(x, method=l, n=n)) %>% do.call(what = rbind) %>% as.data.table
+                      }else{
+                        dbhdata = lapply(segdata, function(x){ lapply(1:o, function(y) mtd(x, method=l, n=n)) %>% do.call(what = rbind) %>% apply(2, get(q)) }) %>%
+                          do.call(what = rbind) %>% as.data.table
+                      }
+
+                      dbhdata$TreeID = ids
+                    }
+
+                    for(p in dbhdiff){
+                      paste('.. .. .. .. .. .. .. outlier cut:', p, '\n') %>% cat
+
+                    tlsInv = merge(inv, dbhdata, by.x='Rmap', by.y='TreeID')
+                    tlsInv$diff = with(tlsInv, d - DAP)
+                    tlsInv = tlsInv[abs(tlsInv$diff) < p,]
+
+                    nf = nrow(inv)
+                    nr = nrow(tlsInv)
+                    np = nr / nf
+                    mae  = mean(tlsInv$diff)
+                    rmse = sqrt( sum(tlsInv$diff^2) / nr )
+
+                    fieldMean   = mean(tlsInv$DAP)
+                    fieldMedian = median(tlsInv$DAP)
+                    lidarMean   = mean(tlsInv$d)
+                    lidarMedian = median(tlsInv$d)
+
+                    pmae  = 100 * mae / fieldMean
+                    prmse = 100 * rmse / fieldMean
+
+                    tempResult = data.frame(
+                      gpstime_filter = h,
+                      stem_classification = i,
+                      dbh_pick = j,
+                      shape = k,
+                      algorithm= l,
+                      height_interval = m[[2]] - m[[1]],
+                      ransac_n = n,
+                      ransac_iter = o,
+                      outlier_cut = p,
+                      ransac_summary = q,
+                      field_mean = fieldMean,
+                      field_median = fieldMedian,
+                      lidar_mean = lidarMean,
+                      lidar_median = lidarMedian,
+                      n_trees = nf,
+                      n_trees_lidar = nr,
+                      n_trees_ratio = np,
+                      rmse = rmse,
+                      prmse = prmse,
+                      mae = mae,
+                      pmae = pmae
+                    )
+
+                    results[[count]] = list(summary = tempResult, raw = tlsInv)
+                    count = count+1
+
+                    paste('\n\n\n',
+                          'time stamp percentile:    ', h, '\n',
+                          'Stem classification:      ', i, '\n',
+                          'DBH measure process:      ', j, '\n',
+                          'Shape pattern:            ', k, '\n',
+                          'Shape fitting algorithm:  ', l, '\n',
+                          'DBH search height:        ', paste(m, collapse = '-'), 'm \n',
+                          'RANSAC samples:           ', n, '\n',
+                          'RANSAC trials:            ', o, '\n',
+                          'outlier cut:              ', p, '\n',
+                          'RANSAC summary statistic: ', q, '\n',
+                          '\nmean: \n',
+                          '... field:                ', fieldMean %>% round(2), '\n',
+                          '... LiDAR:                ', lidarMean %>% round(2), '\n',
+                          '\nmedian: \n',
+                          '... field:                ', fieldMedian %>% round(2), '\n',
+                          '... LiDAR:                ', lidarMedian %>% round(2), '\n',
+                          '\nn trees: \n',
+                          '... field:                ', nf, '\n',
+                          '... LiDAR:                ', nr, '\n',
+                          '... ratio:                ', np %>% round(2), '\n',
+                          '\nRMSE: \n',
+                          '... absolute:             ', rmse %>% round(2), '\n',
+                          '... relative (%):         ', prmse %>% round(2), '\n',
+                          '\nMAE: \n',
+                          '... absolute:             ', mae %>% round(2), '\n',
+                          '... relative (%):         ', pmae %>% round(2), '\n',
+                    '\n\n\n') %>% cat
+
+                    par(mfrow=c(1,3), oma=c(0,0,1,0))
+
+                    plot(tlsInv$d ~ tlsInv$DAP, pch=20, main='', xlab='Field DBH (cm)', ylab='LiDAR DBH (cm)', cex=.25)
+                    text(tlsInv$DAP, tlsInv$d, tlsInv$Rmap)
+                    abline(0, 1, col='red', lwd=2)
+
+                    hist(tlsInv$diff, main='', xlab='DBH residuals (cm)')
+
+                    maxd = tlsInv$DAP %>% c(tlsInv$d) %>% max
+                    brk = seq(0, maxd + 2, by=2)
+
+                    hist(tlsInv$DAP, brk, col=rgb(1,0,0,.25), xlim=c(5,maxd), ylim=c(0,.2), freq=F, xlab='DBH (cm)', main='')
+                    hist(tlsInv$d, brk, col=rgb(0,0,1,.25), add=T, freq=F)
+
+                    fieldQuant = qnorm(1:999 / 1000, mean(tlsInv$DAP), sd(tlsInv$DAP))
+                    fieldDen   = dnorm(fieldQuant, mean(tlsInv$DAP), sd(tlsInv$DAP))
+                    lines(fieldQuant, fieldDen, col='red', lwd=2)
+
+                    lidarQuant = qnorm(1:999 / 1000, mean(tlsInv$d), sd(tlsInv$d))
+                    lidarDen   = dnorm(lidarQuant, mean(tlsInv$d), sd(tlsInv$d))
+                    lines(lidarQuant, lidarDen, col='blue', lwd=2)
+
+                    legend('topright', fill = c('red','blue'), legend = c('Field', 'LiDAR'), cex=1.2)
+                    title(main=paste(l, k), outer=T)
+
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
-
-dbhEsts = list()
-var = 'V3'
-for(i in 1:length(dbhClouds)){
-  temp = dbhClouds[[i]]
-  if(is.null(temp)) next
-  print(i)
-  temp %<>% lasfilter(Stem)
-
-  # pars = lapply(1:100, function(x) cppCircleFit(temp %>% las2xyz, 'ransac', n = 15)) %>% do.call(what=rbind) %>% as.data.frame
-  # pars$V5 = i
-  # pars[,var] = pars[,var] * 200
-
-  pars = cppCylinderFit(temp %>% las2xyz, 'ransac', n = 15)
-  pars[5] = pars[5] * 200
-  pars = c(pars, i)
-  dbhEsts[[i]] = pars #%>% apply(2,median)
-}
-
-dbhEsts %<>% do.call(what=rbind) %>% as.data.frame
-
-inv$Rmap
-n = 32
-inv[inv$Rmap == n,]
-dbhEsts[[n]]$V3 %>% hist
-dbhEsts[[n]]$V3 %>% mean
-dbhEsts[[n]]$V3 %>% median
-
-plot(Y~X, lasfilter(dbhClouds[[n]], Stem)@data, pch=20, cex=.5, asp=1)
-plot(dbhClouds[[n]], color="Stem")
-
-var='V5'
-allInv = merge(inv, dbhEsts, by.x='Rmap', by.y='V7', all=T)
-allInv = allInv[ !(allInv$Rmap %in% c(26, 7, 27, 23)) ,]
-# allInv[,var] = allInv[,var]*200
-allInv$DAP %>% mean
-allInv[,var] %>% mean(na.rm=T)
-allInv[,var] %>% median(na.rm=T)
-allInv$diff = allInv[,var] - allInv$DAP
-
-plot(allInv[,var] ~ allInv$DAP, cex=0)
-text(allInv$DAP, allInv[,var], allInv$Rmap)
-abline(0,1,col='red',lwd=2)
-
-hist(allInv$diff)
-
-mae = (sum(allInv$diff, na.rm=T) / nrow(allInv)) %T>% print
-rmse = sqrt(sum( allInv$diff ^2, na.rm=T ) / nrow(allInv)) %T>% print
