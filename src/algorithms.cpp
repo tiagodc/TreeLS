@@ -145,8 +145,8 @@ vector<double> irlsCircle(vector<vector<double> >& las, vector<double> initPars,
 
   while(!converge){
     bool success = optim::nm(init,nmCircleDist,&las);
+    if(!success) break;
     double err = nmCircleDist(init, nullptr, &las);
-
     vector<double> werr = circleDists(las, init);
     tukeyBiSq(werr);
     las[3] = werr;

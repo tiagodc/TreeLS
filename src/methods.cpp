@@ -558,7 +558,6 @@ vector<vector<double> > irlsStemCircle(vector<vector<double> >& cloud, vector<un
   vector< vector<double> > estimates;
 
   for(unsigned int i = 0; i < stemSlices.size(); ++i){
-
     vector<vector<double> >& slice = stemSlices[i];
 
     if(slice[0].size() <= 3) continue;

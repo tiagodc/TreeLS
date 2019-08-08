@@ -56,10 +56,10 @@ names(inv)[1] = 'FID'
 
 inv = inv[inv$CAP > 0,]
 
-gps = c(1, .5, .33)
+gps = c(.5, .33)
 stmpts = c('hough', 'eigen knn')
-dbhmode = c('stem segmentation', 'section extraction')
-dbhshape = c('circle', 'cylinder')
+dbhmode = c('section extraction', 'stem segmentation')
+dbhshape = c('cylinder', 'circle')
 dbhseg = c('irls', 'ransac', 'nm', 'qr')
 dbhint = list(c(1,1.6), c(1.1, 1.5), c(1.2,1.4))
 nransac = c(5,10,15,20)
@@ -69,12 +69,12 @@ dbhstat = c('mean', 'median')
 
 # h = gps[1]
 # i = stmpts[1]
-# j = dbhmode[2]
-# k = dbhshape[1]
-# l = dbhseg[2]
+# j = dbhmode[1]
+# k = dbhshape[2]
+# l = dbhseg[1]
 # m = dbhint[[1]]
-# n = nransac[2]
-# o = iterransac[2]
+# n = nransac[3]
+# o = iterransac[1]
 # p = dbhdiff[1]
 # q = dbhstat[1]
 
@@ -87,7 +87,7 @@ for(h in gps){
   gpslas = gpsTimeFilter(las, to=h)
 
   for(i in stmpts){
-    paste('stem classification:', i, '\n') %>% cat
+    paste('.. stem classification:', i, '\n') %>% cat
 
     if(i == 'hough'){
       gpslas = stemPoints(gpslas, stm.hough(hstep = .3, max_radius = .3, hbase = c(1.5,3)))
@@ -96,67 +96,70 @@ for(h in gps){
     }
 
     for(j in dbhmode){
-      paste('.. dbh origin:', j, '\n') %>% cat
+      paste('.. .. dbh origin:', j, '\n') %>% cat
 
       for(k in dbhshape){
-        paste('.. .. shape fit:', k, '\n') %>% cat
+        if(h == .5 & k == "cylinder") next
+        paste('.. .. .. shape fit:', k, '\n') %>% cat
 
         for(l in dbhseg){
           if(j == 'stem segmentation' & l %in% c('nm', 'qr')) next
           if(k == 'cylinder' & l == 'qr') next
-          paste('.. .. .. algorithm:', l, '\n') %>% cat
+          paste('.. .. .. .. algorithm:', l, '\n') %>% cat
 
           for(m in dbhint){
             if(j == 'stem segmentation' & m[[1]] > 1) next
-            paste('.. .. .. .. Z interval:', paste(m, collapse = ' - '), '\n') %>% cat
+            paste('.. .. .. .. .. Z interval:', paste(m, collapse = ' - '), '\n') %>% cat
 
             for(n in nransac){
               if(l != 'ransac' & n > 5) next
-              paste('.. .. .. .. .. ransac n:', n, '\n') %>% cat
+              paste('.. .. .. .. .. .. ransac n:', n, '\n') %>% cat
 
               for(o in iterransac){
                 if(j == 'stem segmentation' & o > 1) next
                 if(l != 'ransac' & o > 1) next
-                if(n > 10 & o > 1) next
-                paste('.. .. .. .. .. .. ransac iterations:', o, '\n') %>% cat
+                if(k == 'cylinder' & o > 30) next
+                paste('.. .. .. .. .. .. .. ransac iterations:', o, '\n') %>% cat
 
-                # for(p in dbhdiff){
-                #   paste('.. .. .. .. .. .. .. outlier cut:', p, '\n') %>% cat
+                if(j == 'stem segmentation'){
+                  if(k == 'circle'){
+                    mtd = if(l == 'irls') sgmt.irls.circle() else sgmt.ransac.circle(n = n)
+                  }else{
+                    mtd = if(l == 'irls') sgmt.irls.cylinder() else sgmt.ransac.cylinder(n = n)
+                  }
 
-                  for(q in dbhstat){
-                    if(j == 'stem segmentation' & q == 'median') next
-                    if(l != 'ransac' & q == 'median') next
-                    if(o == 1 & q == 'median') next
-                    paste('.. .. .. .. .. .. .. .. dbh center:', q, '\n') %>% cat
+                  segdata = stemSegmentation(gpslas, mtd)
+                  dbhdata = segdata[AvgHeight > m[1] & AvgHeight < m[2], .(d = mean(Radius)*200), by= TreeID]
 
-                    if(j == 'stem segmentation'){
-                      if(k == 'circle'){
-                        mtd = if(l == 'irls') sgmt.irls.circle() else sgmt.ransac.circle(n = n)
-                      }else{
-                        mtd = if(l == 'irls') sgmt.irls.cylinder() else sgmt.ransac.cylinder(n = n)
-                      }
+                }else{
+                  ids = unique(gpslas@data$TreeID)
+                  ids = ids[ids %in% inv$Rmap]
+                  mtd = if(k == 'circle') circleFit else cylinderFit
+                  segdata = lapply(ids, function(x) lasfilter(gpslas, Z > m[[1]] & Z < m[[2]] & Stem & TreeID == x))
 
-                      segdata = stemSegmentation(gpslas, mtd)
-                      dbhdata = segdata[AvgHeight > m[1] & AvgHeight < m[2], .(d = mean(Radius)*200), by= TreeID]
+                  ids = ids[sapply(segdata, function(x) nrow(x@data)) >= 3]
 
-                    }else{
-                      ids = unique(gpslas@data$TreeID)
-                      ids = ids[ids %in% inv$Rmap]
-                      mtd = if(k == 'circle') circleFit else cylinderFit
-                      segdata = lapply(ids, function(x) lasfilter(gpslas, Z > m[[1]] & Z < m[[2]] & Stem & TreeID == x))
+                  if(o == 1){
+                    dbhdata = lapply(segdata, function(x) mtd(x, method=l, n=n)) %>% do.call(what = rbind) %>% as.data.table
+                    dbhdata$TreeID = ids
+                  }else{
+                    dbhlist = lapply(segdata, function(x){ lapply(1:o, function(y) mtd(x, method=l, n=n)) %>% do.call(what = rbind) })
+                  }
+                }
 
-                      if(o == 1){
-                        dbhdata = lapply(segdata, function(x) mtd(x, method=l, n=n)) %>% do.call(what = rbind) %>% as.data.table
-                      }else{
-                        dbhdata = lapply(segdata, function(x){ lapply(1:o, function(y) mtd(x, method=l, n=n)) %>% do.call(what = rbind) %>% apply(2, get(q)) }) %>%
-                          do.call(what = rbind) %>% as.data.table
-                      }
+                for(q in dbhstat){
+                  if(j == 'stem segmentation' & q == 'median') next
+                  if(l != 'ransac' & q == 'median') next
+                  if(o == 1 & q == 'median') next
+                  paste('.. .. .. .. .. .. .. .. dbh center:', q, '\n') %>% cat
 
-                      dbhdata$TreeID = ids
-                    }
+                  if(o > 1 & j == 'section extraction'){
+                    dbhdata = lapply(dbhlist, function(x) apply(x,2,get(q))) %>% do.call(what = rbind) %>% as.data.table
+                    dbhdata$TreeID = ids
+                  }
 
-                    for(p in dbhdiff){
-                      paste('.. .. .. .. .. .. .. outlier cut:', p, '\n') %>% cat
+                  for(p in dbhdiff){
+                    paste('.. .. .. .. .. .. .. .. .. outlier cut:', p, '\n') %>% cat
 
                     tlsInv = merge(inv, dbhdata, by.x='Rmap', by.y='TreeID')
                     tlsInv$diff = with(tlsInv, d - DAP)
@@ -229,7 +232,8 @@ for(h in gps){
                           '... relative (%):         ', prmse %>% round(2), '\n',
                           '\nMAE: \n',
                           '... absolute:             ', mae %>% round(2), '\n',
-                          '... relative (%):         ', pmae %>% round(2), '\n',
+                          '... relative (%):         ', pmae %>% round(2), '\n\n',
+                          Sys.time(),
                     '\n\n\n') %>% cat
 
                     par(mfrow=c(1,3), oma=c(0,0,1,0))
@@ -256,6 +260,8 @@ for(h in gps){
 
                     legend('topright', fill = c('red','blue'), legend = c('Field', 'LiDAR'), cex=1.2)
                     title(main=paste(l, k), outer=T)
+
+                    gc()
 
                   }
                 }

@@ -475,6 +475,12 @@ SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 1
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
 
+  double nmax = 100;
+  if(method != "ransac" && cloud[0].size() > nmax){
+    double prop = nmax / (double)cloud[0].size();
+    cloud = randomPoints(cloud, prop);
+  }
+
   if(method == "irls"){
     vector<double> initPars = {0, PI/2, 0, 0, 0};
     pars = irlsCylinder(cloud, initPars);

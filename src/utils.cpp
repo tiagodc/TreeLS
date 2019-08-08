@@ -113,14 +113,13 @@ double median(vector<double> x){
   return x[i];
 }
 
-void tukeyBiSq(vector<double>& werrors, double b){
+void tukeyBiSq(vector<double>& werrors, double b){  
   double s = mad(werrors);
 
-  for(auto& i : werrors){
+  for(auto& i : werrors){    
     i /= s;
     i = abs(i) > b ? 0 : pow(1-(i/b)*(i/b),2);
   }
-
 }
 
 vector<double> xprod(vector<double>& a, vector<double>& b){
@@ -599,9 +598,9 @@ vector<double> idSortUnique(vector<unsigned int>& identifier, vector<double>& va
 }
 
 vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string>& funcList){
-  
-  vector<vector<double> > calc( matrix[0].size(), vector<double>(funcList.size(), 0) ); 
-  
+
+  vector<vector<double> > calc( matrix[0].size(), vector<double>(funcList.size(), 0) );
+
   for(unsigned int i = 0; i < matrix[0].size(); ++i){
 
     vector<double> row;
@@ -617,7 +616,7 @@ vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string
     for(auto& f : funcList){
 
       if(f == "MedianDistance"){
-        calc[i][j++] = median(row);          
+        calc[i][j++] = median(row);
       }else if(f == "MinDistance"){
         calc[i][j++] = *min_element(row.begin(), row.end());
       }else if(f == "MaxDistance"){
@@ -628,7 +627,7 @@ vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string
         calc[i][j++] = variance(row);
       }else if(f == "SdDistance"){
         calc[i][j++] = sqrt(variance(row));
-      }  
+      }
     }
   }
 
