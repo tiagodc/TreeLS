@@ -6,6 +6,7 @@ source('R/stem_points_methods.R')
 source('R/stem_segmentation_methods.R')
 source('R/tree_points_methods.R')
 source('R/point_metrics_methods.R')
+source('R/plot_extras.R')
 
 require(magrittr)
 require(lidR)
@@ -77,6 +78,8 @@ dbhEsts = lapply(dbhClouds, function(x) lapply(1:30, function(y) circleFit(x, me
 # dbhEsts = lapply(dbhClouds, cylinderFit, method='ransac', n=15) %>% do.call(what=rbind)
 dbhEsts$TreeID = names(dbhClouds) %>% as.double
 
+dbhTest = dbhClouds %>% sapply(function(x) (x@data[,.(X,Y)] %>% dist %>% quantile(.95)) * 100)
+
 tlsInv = merge(inv, dbhEsts, by.x='Rmap', by.y='TreeID') %>% as.data.table
 tlsInv$diff = tlsInv$d - tlsInv$DAP
 
@@ -86,15 +89,25 @@ plot(d ~ DAP, data=tlsInv, cex=.3, pch=20)
 abline(0,1,col='red',lwd=2)
 text(tlsInv$DAP, tlsInv$d, tlsInv$Rmap)
 
-for(i in 1:nrow(tlsInv)){
-  row = tlsInv[i,]
-  cld = dbhClouds[[ row[[1]] %>% as.character ]]
-  plot(Y~X, data=cld@data,pch=20,cex=1, asp=1, main=paste('tree',row$Rmap))
-  points(row$X, row$Y, col='red', cex=2, pch=3)
-  xp = cos(seq(0, 2*pi, length.out = 36)) * (row$d/200) + row$X
-  yp = sin(seq(0, 2*pi, length.out = 36)) * (row$d/200) + row$Y
-  lines(xp, yp, col='red', lwd=2)
+for(i in nrow(dbhEsts):1){
+  row = dbhEsts[i,]
+  cld = dbhClouds[[i]]
+  tlsPlot.dh(cld,row)
 }
+
+#24, 3, 62, 34, 35, 7, 50, 61, 52, 40, 23, 55, 58, 64
+i = 26
+cld = dbhClouds[[i %>% as.character]]
+cld = lasfilter(las, Z > 1.1 & Z < 1.5 & Stem & TreeID == i & VotesWeight > .33) #%>% gpsTimeFilter(from=.5)
+tlsPlot.dh(cld, dbhEsts[dbhEsts$TreeID == i,1:3])
+tlsInv[Rmap == i]
+
+redo = cld %>% cylinderFit('ransac', n=15, inliers = .9)
+tlsPlot.dh(cld, redo)
+
+cld@data[,.(X,Y)] %>% apply(2,function(x) x %>% quantile(c(.025, .975)) %>% diff)
+
+(cld@data[,.(X,Y)] %>% dist %>% quantile(.95))
 
 mean(tlsInv$DAP)
 (mean(tlsInv$d) + median(tlsInv$d))/2
@@ -118,7 +131,7 @@ lastemp = lasfilter(las, Z > 1.1 & Z < 1.5 & TreeID == 23 & Stem & VotesWeight >
 
 tlsInv[Rmap == 23]
 pars = lapply(1:1, function(x){
-  xp = cylinderFit(lastemp, 'ransac', n=15, inliers = .9)
+  xp = circleFit(lastemp, 'ransac', n=15, inliers = .9)
   # xp[2] %<>% abs
   # if(xp[3] < 0) xp[3] = xp[3] + 180
   return(xp)
@@ -156,16 +169,7 @@ ptsz = -20:20/100
 
 ptring = lapply(ptsz, function(x) cbind(ptsx,ptsy,x)) %>% do.call(what=rbind)
 
-xprod = function(a, b){
 
-  x = c(
-    a[2]*b[3] - a[3]*b[2],
-    a[3]*b[1] - a[1]*b[3],
-    a[1]*b[2] - a[2]*b[1]
-  )
-
-  return(x);
-}
 v = xprod(a,c(0,0,1))
 vx = matrix(c(0,-v[3],v[2],v[3],0,-v[1],-v[2],v[1],0),ncol=3,byrow = T)
 
