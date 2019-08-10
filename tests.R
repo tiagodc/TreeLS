@@ -150,11 +150,11 @@ lines3d(data.frame(qa, qa+a*.2) %>% t, color='red', lwd=3)
 lines3d(data.frame(0, qa) %>% t, color='green', lwd=3)
 rgl.points(pt3d, col='white')
 
-ptsx = cos(seq(0,2*pi,length.out = 360)) * r
-ptsy = sin(seq(0,2*pi,length.out = 360)) * r
-ptsz = -10:10/100
+ptsx = cos(seq(0,2*pi,length.out = 54)) * r
+ptsy = sin(seq(0,2*pi,length.out = 54)) * r
+ptsz = -20:20/100
 
-ptring = expand.grid(ptsx,ptsy,ptsz) #cbind(ptsx,ptsy,ptsz)
+ptring = lapply(ptsz, function(x) cbind(ptsx,ptsy,x)) %>% do.call(what=rbind)
 
 xprod = function(a, b){
 
@@ -176,7 +176,9 @@ ptring[,1] = ptring[,1] + qa[1]
 ptring[,2] = ptring[,2] + qa[2]
 ptring[,3] = ptring[,3] + qa[3]
 
-spheres3d(ptring[,1], ptring[,2], ptring[,3],.01,col='yellow')
+# rgl.points(ptring[,1], ptring[,2], ptring[,3],size=4,col='orange')
+
+spheres3d(ptring[,1], ptring[,2], ptring[,3],.01,col='orange')
 
 pars %>% print
 plot(ptring[,1:2],asp=1)
