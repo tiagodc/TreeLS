@@ -634,3 +634,13 @@ vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string
   return calc;
 
 }
+
+vector<unsigned int> sortIndexes(vector<double>& values) {
+
+  vector<unsigned int> idx(values.size());
+  iota(idx.begin(), idx.end(), 0);
+
+  sort(idx.begin(), idx.end(), [&values](unsigned int i1, unsigned int i2) {return values[i1] < values[i2];});
+
+  return idx;
+}

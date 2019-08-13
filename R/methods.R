@@ -996,10 +996,10 @@ pointMetrics = function(las, method = ptm.voxels(), metrics_list = point.metrics
   return(method(las, metrics_list))
 }
 
-circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99){
+circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'qr'
-  pars = cppCircleFit(las %>% las2xyz, method, n, p, inliers)
+  pars = cppCircleFit(las %>% las2xyz, method, n, p, inliers, n_best)
   pars[3] = pars[3] * 200
   names(pars)[1:4] = c('X','Y','d', 'err')
   if(length(pars) == 5) names(pars)[5] = 'err2'

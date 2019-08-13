@@ -79,4 +79,6 @@ vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector
 
 vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string>& funcList);
 
+vector<unsigned int> sortIndexes(vector<double>& values);
+
 #endif // UTILS_HPP

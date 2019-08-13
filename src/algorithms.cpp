@@ -66,12 +66,13 @@ vector<double> eigenCircle(vector<vector<double> >& cloud){
 
 }
 
-vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples, double pConfidence, double pInliers){
+vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples, double pConfidence, double pInliers, unsigned int nBest){
   
   unsigned int kIterations = ceil(5 * log(1 - pConfidence) / log(1 - pow( pInliers, nSamples)));
   vector< vector<double> > allCircles( 4, vector<double>(kIterations) );
   unsigned int best = 0;
-  
+  if(kIterations < nBest) nBest = 0;
+
   Eigen::Matrix<double, Eigen::Dynamic, 3> tempMatrix;
   tempMatrix.resize(nSamples, 3);
 
@@ -125,8 +126,30 @@ vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSample
       best = k;
 
   }
+  
+  vector<double> bestFit;
+  
+  if(nBest > 0){    
+    double x = 0.0;
+    double y = 0.0;
+    double rad = 0.0;
+    double err = 0.0;
+    unsigned int counter = 0;
 
-  vector<double> bestFit = { allCircles[0][best] , allCircles[1][best] , allCircles[2][best] , allCircles[3][best] };
+    for(auto& k : sortIndexes(allCircles[3])){
+      x += allCircles[0][k];
+      y += allCircles[1][k];
+      rad += allCircles[2][k];
+      err += allCircles[3][k];
+      if(counter++ >= nBest){
+        bestFit = { x / nBest, y / nBest, rad / nBest, err / nBest };
+        break;
+      }
+    }
+
+  }else{
+    bestFit = { allCircles[0][best] , allCircles[1][best] , allCircles[2][best] , allCircles[3][best] };
+  }
 
   return bestFit;
 

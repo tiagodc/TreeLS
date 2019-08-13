@@ -452,7 +452,7 @@ SEXP cppFastApply(NumericMatrix& matrix, StringVector& funcList){
 }
 
 // [[Rcpp::export]]
-SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, double p = 0.99, double inliers = 0.8){
+SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, double p = 0.99, double inliers = 0.8, unsigned int nbest = 0){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
 
@@ -463,7 +463,7 @@ SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, 
   }else if(method == "nm"){
     pars = nmCircleFit(cloud);
   }else if(method == "ransac"){
-    pars = ransacCircle(cloud, n, p, inliers);
+    pars = ransacCircle(cloud, n, p, inliers, nbest);
   }
 
   return wrap( pars );

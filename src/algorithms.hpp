@@ -46,7 +46,7 @@ vector<double> nmCylinderFit(vector<vector<double> >& las);
 
 vector<double> nmCylinderInit(vector<vector<double> >& las);
 
-vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8);
+vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, unsigned int nBest = 0);
 
 vector<double> ransacCylinder(vector<vector<double> >& las, unsigned int nSamples=10, double pConfidence=0.99, double pInliers=0.8);
 
