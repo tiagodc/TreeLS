@@ -102,13 +102,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // houghStemPlot
-List houghStemPlot(NumericMatrix& las, NumericMatrix& treePositions, double h1, double h2, double hstep, double radius, double pixel, double density, unsigned int votes);
-RcppExport SEXP _TreeLS_houghStemPlot(SEXP lasSEXP, SEXP treePositionsSEXP, SEXP h1SEXP, SEXP h2SEXP, SEXP hstepSEXP, SEXP radiusSEXP, SEXP pixelSEXP, SEXP densitySEXP, SEXP votesSEXP) {
+List houghStemPlot(NumericMatrix& las, vector<unsigned int> pointIds, double h1, double h2, double hstep, double radius, double pixel, double density, unsigned int votes);
+RcppExport SEXP _TreeLS_houghStemPlot(SEXP lasSEXP, SEXP pointIdsSEXP, SEXP h1SEXP, SEXP h2SEXP, SEXP hstepSEXP, SEXP radiusSEXP, SEXP pixelSEXP, SEXP densitySEXP, SEXP votesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix& >::type treePositions(treePositionsSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int> >::type pointIds(pointIdsSEXP);
     Rcpp::traits::input_parameter< double >::type h1(h1SEXP);
     Rcpp::traits::input_parameter< double >::type h2(h2SEXP);
     Rcpp::traits::input_parameter< double >::type hstep(hstepSEXP);
@@ -116,7 +116,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type pixel(pixelSEXP);
     Rcpp::traits::input_parameter< double >::type density(densitySEXP);
     Rcpp::traits::input_parameter< unsigned int >::type votes(votesSEXP);
-    rcpp_result_gen = Rcpp::wrap(houghStemPlot(las, treePositions, h1, h2, hstep, radius, pixel, density, votes));
+    rcpp_result_gen = Rcpp::wrap(houghStemPlot(las, pointIds, h1, h2, hstep, radius, pixel, density, votes));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -134,9 +134,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// ransacStem
-List ransacStem(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
-RcppExport SEXP _TreeLS_ransacStem(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
+// ransacStemCircle
+List ransacStemCircle(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
+RcppExport SEXP _TreeLS_ransacStemCircle(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -147,13 +147,60 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
     Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
     Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(ransacStem(las, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+    rcpp_result_gen = Rcpp::wrap(ransacStemCircle(las, segments, radii, nSamples, pConfidence, pInliers, tolerance));
     return rcpp_result_gen;
 END_RCPP
 }
-// ransacPlot
-List ransacPlot(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
-RcppExport SEXP _TreeLS_ransacPlot(SEXP lasSEXP, SEXP treeIdSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
+// irlsStemCylinder
+List irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance);
+RcppExport SEXP _TreeLS_irlsStemCylinder(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nPointsSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nPoints(nPointsSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(irlsStemCylinder(las, segments, radii, nPoints, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// irlsStemCircle
+List irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double tolerance);
+RcppExport SEXP _TreeLS_irlsStemCircle(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(irlsStemCircle(las, segments, radii, nSamples, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ransacStemCylinder
+List ransacStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
+RcppExport SEXP _TreeLS_ransacStemCylinder(SEXP lasSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
+    Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
+    Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(ransacStemCylinder(las, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ransacPlotCircles
+List ransacPlotCircles(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
+RcppExport SEXP _TreeLS_ransacPlotCircles(SEXP lasSEXP, SEXP treeIdSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -165,7 +212,173 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
     Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
     Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
-    rcpp_result_gen = Rcpp::wrap(ransacPlot(las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+    rcpp_result_gen = Rcpp::wrap(ransacPlotCircles(las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ransacPlotCylinders
+List ransacPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance);
+RcppExport SEXP _TreeLS_ransacPlotCylinders(SEXP lasSEXP, SEXP treeIdSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type treeId(treeIdSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
+    Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
+    Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(ransacPlotCylinders(las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// irlsPlotCylinders
+List irlsPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance);
+RcppExport SEXP _TreeLS_irlsPlotCylinders(SEXP lasSEXP, SEXP treeIdSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nPointsSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type treeId(treeIdSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nPoints(nPointsSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(irlsPlotCylinders(las, treeId, segments, radii, nPoints, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// irlsPlotCircles
+List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance);
+RcppExport SEXP _TreeLS_irlsPlotCircles(SEXP lasSEXP, SEXP treeIdSEXP, SEXP segmentsSEXP, SEXP radiiSEXP, SEXP nPointsSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type treeId(treeIdSEXP);
+    Rcpp::traits::input_parameter< vector<unsigned int>& >::type segments(segmentsSEXP);
+    Rcpp::traits::input_parameter< vector<double>& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nPoints(nPointsSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(irlsPlotCircles(las, treeId, segments, radii, nPoints, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pointMetricsCpp
+SEXP pointMetricsCpp(NumericMatrix& las, NumericMatrix& kIds, LogicalVector& whichMetrics);
+RcppExport SEXP _TreeLS_pointMetricsCpp(SEXP lasSEXP, SEXP kIdsSEXP, SEXP whichMetricsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type kIds(kIdsSEXP);
+    Rcpp::traits::input_parameter< LogicalVector& >::type whichMetrics(whichMetricsSEXP);
+    rcpp_result_gen = Rcpp::wrap(pointMetricsCpp(las, kIds, whichMetrics));
+    return rcpp_result_gen;
+END_RCPP
+}
+// voxelIndex
+SEXP voxelIndex(NumericMatrix& las, double d);
+RcppExport SEXP _TreeLS_voxelIndex(SEXP lasSEXP, SEXP dSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< double >::type d(dSEXP);
+    rcpp_result_gen = Rcpp::wrap(voxelIndex(las, d));
+    return rcpp_result_gen;
+END_RCPP
+}
+// voxelMetrics
+List voxelMetrics(NumericMatrix& las, List& voxelIds, LogicalVector& whichMetrics);
+RcppExport SEXP _TreeLS_voxelMetrics(SEXP lasSEXP, SEXP voxelIdsSEXP, SEXP whichMetricsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< List& >::type voxelIds(voxelIdsSEXP);
+    Rcpp::traits::input_parameter< LogicalVector& >::type whichMetrics(whichMetricsSEXP);
+    rcpp_result_gen = Rcpp::wrap(voxelMetrics(las, voxelIds, whichMetrics));
+    return rcpp_result_gen;
+END_RCPP
+}
+// treeEigenHough
+SEXP treeEigenHough(NumericMatrix& las, NumericVector& ids, NumericVector& split_by, double voxel, double rad, bool is2d, bool getSpace);
+RcppExport SEXP _TreeLS_treeEigenHough(SEXP lasSEXP, SEXP idsSEXP, SEXP split_bySEXP, SEXP voxelSEXP, SEXP radSEXP, SEXP is2dSEXP, SEXP getSpaceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type ids(idsSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type split_by(split_bySEXP);
+    Rcpp::traits::input_parameter< double >::type voxel(voxelSEXP);
+    Rcpp::traits::input_parameter< double >::type rad(radSEXP);
+    Rcpp::traits::input_parameter< bool >::type is2d(is2dSEXP);
+    Rcpp::traits::input_parameter< bool >::type getSpace(getSpaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(treeEigenHough(las, ids, split_by, voxel, rad, is2d, getSpace));
+    return rcpp_result_gen;
+END_RCPP
+}
+// plotEigenHough
+SEXP plotEigenHough(NumericMatrix& las, NumericVector& ids, NumericVector& split_by, NumericVector& resplit_by, double voxel, double rad, bool is2d, bool getSpace);
+RcppExport SEXP _TreeLS_plotEigenHough(SEXP lasSEXP, SEXP idsSEXP, SEXP split_bySEXP, SEXP resplit_bySEXP, SEXP voxelSEXP, SEXP radSEXP, SEXP is2dSEXP, SEXP getSpaceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type ids(idsSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type split_by(split_bySEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type resplit_by(resplit_bySEXP);
+    Rcpp::traits::input_parameter< double >::type voxel(voxelSEXP);
+    Rcpp::traits::input_parameter< double >::type rad(radSEXP);
+    Rcpp::traits::input_parameter< bool >::type is2d(is2dSEXP);
+    Rcpp::traits::input_parameter< bool >::type getSpace(getSpaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(plotEigenHough(las, ids, split_by, resplit_by, voxel, rad, is2d, getSpace));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cppFastApply
+SEXP cppFastApply(NumericMatrix& matrix, StringVector& funcList);
+RcppExport SEXP _TreeLS_cppFastApply(SEXP matrixSEXP, SEXP funcListSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type matrix(matrixSEXP);
+    Rcpp::traits::input_parameter< StringVector& >::type funcList(funcListSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppFastApply(matrix, funcList));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cppCircleFit
+SEXP cppCircleFit(NumericMatrix& las, string method, unsigned int n, double p, double inliers, unsigned int nbest);
+RcppExport SEXP _TreeLS_cppCircleFit(SEXP lasSEXP, SEXP methodSEXP, SEXP nSEXP, SEXP pSEXP, SEXP inliersSEXP, SEXP nbestSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< string >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type inliers(inliersSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nbest(nbestSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppCircleFit(las, method, n, p, inliers, nbest));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cppCylinderFit
+SEXP cppCylinderFit(NumericMatrix& las, string method, unsigned int n, double p, double inliers);
+RcppExport SEXP _TreeLS_cppCylinderFit(SEXP lasSEXP, SEXP methodSEXP, SEXP nSEXP, SEXP pSEXP, SEXP inliersSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< string >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type inliers(inliersSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppCylinderFit(las, method, n, p, inliers));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -179,8 +392,22 @@ static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_houghStemPoints", (DL_FUNC) &_TreeLS_houghStemPoints, 8},
     {"_TreeLS_houghStemPlot", (DL_FUNC) &_TreeLS_houghStemPlot, 9},
     {"_TreeLS_getCircleRansac", (DL_FUNC) &_TreeLS_getCircleRansac, 4},
-    {"_TreeLS_ransacStem", (DL_FUNC) &_TreeLS_ransacStem, 7},
-    {"_TreeLS_ransacPlot", (DL_FUNC) &_TreeLS_ransacPlot, 8},
+    {"_TreeLS_ransacStemCircle", (DL_FUNC) &_TreeLS_ransacStemCircle, 7},
+    {"_TreeLS_irlsStemCylinder", (DL_FUNC) &_TreeLS_irlsStemCylinder, 5},
+    {"_TreeLS_irlsStemCircle", (DL_FUNC) &_TreeLS_irlsStemCircle, 5},
+    {"_TreeLS_ransacStemCylinder", (DL_FUNC) &_TreeLS_ransacStemCylinder, 7},
+    {"_TreeLS_ransacPlotCircles", (DL_FUNC) &_TreeLS_ransacPlotCircles, 8},
+    {"_TreeLS_ransacPlotCylinders", (DL_FUNC) &_TreeLS_ransacPlotCylinders, 8},
+    {"_TreeLS_irlsPlotCylinders", (DL_FUNC) &_TreeLS_irlsPlotCylinders, 6},
+    {"_TreeLS_irlsPlotCircles", (DL_FUNC) &_TreeLS_irlsPlotCircles, 6},
+    {"_TreeLS_pointMetricsCpp", (DL_FUNC) &_TreeLS_pointMetricsCpp, 3},
+    {"_TreeLS_voxelIndex", (DL_FUNC) &_TreeLS_voxelIndex, 2},
+    {"_TreeLS_voxelMetrics", (DL_FUNC) &_TreeLS_voxelMetrics, 3},
+    {"_TreeLS_treeEigenHough", (DL_FUNC) &_TreeLS_treeEigenHough, 7},
+    {"_TreeLS_plotEigenHough", (DL_FUNC) &_TreeLS_plotEigenHough, 8},
+    {"_TreeLS_cppFastApply", (DL_FUNC) &_TreeLS_cppFastApply, 2},
+    {"_TreeLS_cppCircleFit", (DL_FUNC) &_TreeLS_cppCircleFit, 6},
+    {"_TreeLS_cppCylinderFit", (DL_FUNC) &_TreeLS_cppCylinderFit, 5},
     {NULL, NULL, 0}
 };
 

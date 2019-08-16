@@ -25,19 +25,75 @@ houghStemPoints <- function(las, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pix
     .Call(`_TreeLS_houghStemPoints`, las, h1, h2, hstep, radius, pixel, density, votes)
 }
 
-houghStemPlot <- function(las, treePositions, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pixel = 0.025, density = 0.1, votes = 3L) {
-    .Call(`_TreeLS_houghStemPlot`, las, treePositions, h1, h2, hstep, radius, pixel, density, votes)
+houghStemPlot <- function(las, pointIds, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pixel = 0.025, density = 0.1, votes = 3L) {
+    .Call(`_TreeLS_houghStemPlot`, las, pointIds, h1, h2, hstep, radius, pixel, density, votes)
 }
 
 getCircleRansac <- function(las, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8) {
     .Call(`_TreeLS_getCircleRansac`, las, nSamples, pConfidence, pInliers)
 }
 
-ransacStem <- function(las, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
-    .Call(`_TreeLS_ransacStem`, las, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+ransacStemCircle <- function(las, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacStemCircle`, las, segments, radii, nSamples, pConfidence, pInliers, tolerance)
 }
 
-ransacPlot <- function(las, treeId, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
-    .Call(`_TreeLS_ransacPlot`, las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+irlsStemCylinder <- function(las, segments, radii, nPoints = 500L, tolerance = 0.05) {
+    .Call(`_TreeLS_irlsStemCylinder`, las, segments, radii, nPoints, tolerance)
+}
+
+irlsStemCircle <- function(las, segments, radii, nSamples = 500L, tolerance = 0.05) {
+    .Call(`_TreeLS_irlsStemCircle`, las, segments, radii, nSamples, tolerance)
+}
+
+ransacStemCylinder <- function(las, segments, radii, nSamples = 10L, pConfidence = 0.95, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacStemCylinder`, las, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+}
+
+ransacPlotCircles <- function(las, treeId, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacPlotCircles`, las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+}
+
+ransacPlotCylinders <- function(las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance) {
+    .Call(`_TreeLS_ransacPlotCylinders`, las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+}
+
+irlsPlotCylinders <- function(las, treeId, segments, radii, nPoints, tolerance) {
+    .Call(`_TreeLS_irlsPlotCylinders`, las, treeId, segments, radii, nPoints, tolerance)
+}
+
+irlsPlotCircles <- function(las, treeId, segments, radii, nPoints, tolerance) {
+    .Call(`_TreeLS_irlsPlotCircles`, las, treeId, segments, radii, nPoints, tolerance)
+}
+
+pointMetricsCpp <- function(las, kIds, whichMetrics) {
+    .Call(`_TreeLS_pointMetricsCpp`, las, kIds, whichMetrics)
+}
+
+voxelIndex <- function(las, d) {
+    .Call(`_TreeLS_voxelIndex`, las, d)
+}
+
+voxelMetrics <- function(las, voxelIds, whichMetrics) {
+    .Call(`_TreeLS_voxelMetrics`, las, voxelIds, whichMetrics)
+}
+
+treeEigenHough <- function(las, ids, split_by, voxel = 0.05, rad = 0.25, is2d = FALSE, getSpace = FALSE) {
+    .Call(`_TreeLS_treeEigenHough`, las, ids, split_by, voxel, rad, is2d, getSpace)
+}
+
+plotEigenHough <- function(las, ids, split_by, resplit_by, voxel = 0.05, rad = 0.25, is2d = FALSE, getSpace = FALSE) {
+    .Call(`_TreeLS_plotEigenHough`, las, ids, split_by, resplit_by, voxel, rad, is2d, getSpace)
+}
+
+cppFastApply <- function(matrix, funcList) {
+    .Call(`_TreeLS_cppFastApply`, matrix, funcList)
+}
+
+cppCircleFit <- function(las, method = "qr", n = 5L, p = 0.99, inliers = 0.8, nbest = 0L) {
+    .Call(`_TreeLS_cppCircleFit`, las, method, n, p, inliers, nbest)
+}
+
+cppCylinderFit <- function(las, method = "nm", n = 10L, p = 0.95, inliers = 0.9) {
+    .Call(`_TreeLS_cppCylinderFit`, las, method, n, p, inliers)
 }
 

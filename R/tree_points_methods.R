@@ -29,7 +29,7 @@ trp.voronoi = function(){
   return(func)
 }
 
-trp.clip = function(r = 1, circle=T){
+trp.crop = function(r = 1, circle=T){
   func = function(las, xymap){
 
     las@data$TreeID = 0

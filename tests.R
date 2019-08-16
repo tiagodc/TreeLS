@@ -1,4 +1,4 @@
-Rcpp::sourceCpp('src/r_interface.cpp')
+Rcpp::sourceCpp('src/r_interface.cpp', rebuild = T)
 source('R/methods.R')
 source('R/sample_methods.R')
 source('R/map_methods.R')
@@ -20,170 +20,67 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-las = readTLS('test_data/ento_u_clip.laz') %>% tlsTransform(c('-x','z','y'), T, T) %>% tlsNormalize(keep_ground = F)
+files = dir('../../plantar/', full.names = T)
 
-map1 = readRDS('../case_tls/eigen_map_ento.rds')
-las = treePoints(las, map1, trp.clip(2, F))
+projs = sub('.*/plantar/(\\d+P\\d+).+las$', '\\1', files) %>% unique
+projs = projs[ !grepl('^\\.', projs) ]
+
+j = 3
+i = projs[j]
+
+pfiles = files[grep(i, files)]
+
+k = 6
+las = readTLS(pfiles[k] %T>% print)
+las = tlsTransform(las, bring_to_origin = T, rotate = T)
+las = tlsNormalize(las, keep_ground = F)
+
 las = pointMetrics(las, ptm.knn())
 
-las = stemPoints(las, stm.eigen.knn(.3, max_d = .6))
+thin = tlsSample(las, voxelize(.03))
+map = treeMap(thin, map.hough(hmin=2, hmax=4, max_d=.35))
+tp = treePositions(map)
 
-s1 = readRDS('../case_tls/simulations.rds')
-s2 = readRDS('../case_tls/simulations_2.rds')
+# map = treeMap(las, map.eigen.knn(max_d=.35, pln = .15, vrt = 15, min_n = 100, min_h = 1, mds = .1))
+# tp = treePositions(map)
 
-simList = s1
-simList[(length(s1)+1):(length(s1) + length(s2))] = s2
-simNames = sapply(simList, function(x) x[[1]][,1:10] %>% lapply(as.character) %>% paste(collapse='_') %>% gsub(pattern = '\\s', replacement = ""))
-simList = simList[!duplicated(simNames)]
-simNames = simNames[!duplicated(simNames)]
+plot(Y ~ X, data=tp, asp=1, cex=1, pch=20)
+text(tp$X, tp$Y, tp$TreeID)
 
-names(simList) = simNames
+rmTrees = c(122,263,32,120, 185,26, 13)
+map@data = map@data[!(TreeID %in% rmTrees)]
+tp = treePositions(map)
 
-simulations = c(lapply(s1, function(x) x[[1]]), lapply(s2, function(x) x[[1]])) %>% do.call(what=rbind) %>% as.data.table %>% unique
+las = treePoints(las, map, trp.crop(r = 2, circle = F))
 
-# simulations$n_trees_ratio = simulations$n_trees_lidar / 36
+col = las$TreeID %>% unique %>% length %>% pastel.colors
+plot(las, color='TreeID', colorPalette=col)
 
-temp = simulations[outlier_cut > 2 & gpstime_filter < 2]
-temp = temp[order(rmse / n_trees_ratio)] %>% head(20) %>% print
-temp$n_trees_ratio %>% mean
-temp$rmse %>% mean
-temp$mae %>% mean
+las = stemPoints(las, stm.hough(.3, max_radius = .15, hbase = c(2.5,5)))
+# las = stemPoints(las, stm.eigen.knn(.3, max_d=.35))
+plot(las, color='Stem')
 
-# gpstime_filter
-stem_classification = 'eigen knn'
-dbh_pick = 'section extraction'
-# shape
-algorithm = 'ransac'
-height_interval < .6
-ransac_n >= 10
-ransac_iter >= 10
-# outlier_cut
-# ransac_summary
+dbhSegs = lasfilter(las, Stem & Z > 1.2 & Z < 1.4)
+dbhSegs = split(dbhSegs@data, dbhSegs@data$TreeID) %>% lapply(LAS)
 
-# i = 1
-# hash = temp[i,1:10] %>% sapply(as.character) %>% paste(collapse = '_') %>% gsub(pattern = '\\s', replacement =  '')
-# hashData = simList[[hash]]
-
-inv = read.csv('../case_tls/inv_entomologia.csv', sep=';', dec=',')
-names(inv)[1] = 'FID'
-inv = inv[inv$CAP > 0,]
-
-ids = unique(las@data$TreeID)
-ids = ids[ids %in% inv$Rmap]
-
-dbhClouds = lapply(ids, function(x) lasfilter(las, Stem & TreeID == x & Z > 1.2 & Z < 1.4 & VotesWeight > .33))
-names(dbhClouds) = ids
-
-dbhEsts = lapply(dbhClouds, function(x) lapply(1:30, function(y) circleFit(x, method='ransac', n=15, inliers = .9)) %>% do.call(what=rbind) %>% apply(2,mean)) %>% do.call(what=rbind) %>% as.data.table
-# dbhEsts = lapply(dbhClouds, cylinderFit, method='ransac', n=15) %>% do.call(what=rbind)
-dbhEsts$TreeID = names(dbhClouds) %>% as.double
-
-dbhTest = dbhClouds %>% sapply(function(x) (x@data[,.(X,Y)] %>% dist %>% quantile(.95)) * 100)
-
-tlsInv = merge(inv, dbhEsts, by.x='Rmap', by.y='TreeID') %>% as.data.table
-tlsInv$diff = tlsInv$d - tlsInv$DAP
-
-tlsInv[order(-abs(diff))]
-
-plot(d ~ DAP, data=tlsInv, cex=.3, pch=20)
-abline(0,1,col='red',lwd=2)
-text(tlsInv$DAP, tlsInv$d, tlsInv$Rmap)
-
-for(i in nrow(dbhEsts):1){
-  row = dbhEsts[i,]
-  cld = dbhClouds[[i]]
-  tlsPlot.dh(cld,row)
+estimates = data.frame()
+for(tid in names(dbhSegs)){
+  temp = dbhSegs[[tid]]
+  est = lapply(1:30, function(x) circleFit(temp, 'ransac', n = 15, inliers = .7, n_best = 20)) %>% do.call(what=rbind) %>% apply(2, mean)
+  tlsPlot.dh(temp, est)
+  estimates %<>% rbind(c(as.double(tid), est))
 }
+names(estimates) = c('TreeID', names(est))
 
-#24, 3, 62, 34, 35, 7, 50, 61, 52, 40, 23, 55, 58, 64
-i = 26
-cld = dbhClouds[[i %>% as.character]]
-cld = lasfilter(las, Z > 1.1 & Z < 1.5 & Stem & TreeID == i & VotesWeight > .33) #%>% gpsTimeFilter(from=.5)
-tlsPlot.dh(cld, dbhEsts[dbhEsts$TreeID == i,1:3])
-tlsInv[Rmap == i]
+estimates$d %>% hist
+estimates$d %>% mean
+estimates$d %>% median
 
-redo = cld %>% cylinderFit('ransac', n=15, inliers = .9)
-tlsPlot.dh(cld, redo)
+v = 2
+vlas = readTLS(pfiles[v] %T>% print)
+plot(vlas)
 
-cld@data[,.(X,Y)] %>% apply(2,function(x) x %>% quantile(c(.025, .975)) %>% diff)
-
-(cld@data[,.(X,Y)] %>% dist %>% quantile(.95))
-
-mean(tlsInv$DAP)
-(mean(tlsInv$d) + median(tlsInv$d))/2
-mean(tlsInv$diff)
-sqrt(sum(tlsInv$diff^2)/nrow(tlsInv))
-
-100 * length(tlsInv[abs(diff) < 4]$diff) / 36
-
-outliers = c(7,23,26,27,35,50)
-tlsInv[Rmap %in% outliers]
-
-lastemp = lasfilter(las, Z > 1.1 & Z < 1.5 & TreeID == 23 & Stem & VotesWeight > .33)
-# plot(lastemp, color='gpstime')
-# axes3d(col='white')
-# lastemp@data %<>% merge(tlsInv, by.x='TreeID', by.y='Rmap', sort=F)
-# lastemp@data$absdiff = lastemp@data$diff %>% abs
-# names(lastemp@data)[3:4] = c('X','Y')
-# plot(lastemp, color='Votes', size=2, clear_artifacts=F)
-# pan3d(2)
-# plot(lastemp@data[,.(X,Y)], pch=20, cex=.5, asp=1)
-
-tlsInv[Rmap == 23]
-pars = lapply(1:1, function(x){
-  xp = circleFit(lastemp, 'ransac', n=15, inliers = .9)
-  # xp[2] %<>% abs
-  # if(xp[3] < 0) xp[3] = xp[3] + 180
-  return(xp)
-}) %>% do.call(what = rbind) %>% apply(2,mean)  %T>% print
-pars[2:4] * 180/pi
-
-pars = pars %>% as.double
-rho = pars[1]
-theta = pars[2]
-phi = pars[3]
-alpha = pars[4]
-r = pars[5] / 200
-
-n = c(cos(phi) * sin(theta) , sin(phi) * sin(theta) , cos(theta))
-ntheta = c(cos(phi) * cos(theta) , sin(phi) * cos(theta) , -sin(theta))
-nphi = c(-sin(phi) * sin(theta) , cos(phi) * sin(theta) , 0);
-nphibar = nphi/sin(theta)
-
-a = ntheta * cos(alpha) + nphibar * sin(alpha)
-q = n*(r+rho)
-
-meds = apply(lastemp@data[,.(X,Y,Z)], 2, median) %>% as.double
-
-qa = n * (r+rho)
-
-pt3d = lastemp@data[,.(X-median(X),Y-median(Y),Z-median(Z))]
-clear3d() ; bg3d('black') ; axes3d(col='white')
-lines3d(data.frame(qa, qa+a*.2) %>% t, color='red', lwd=3)
-lines3d(data.frame(0, qa) %>% t, color='green', lwd=3)
-rgl.points(pt3d, col='white')
-
-ptsx = cos(seq(0,2*pi,length.out = 54)) * r
-ptsy = sin(seq(0,2*pi,length.out = 54)) * r
-ptsz = -20:20/100
-
-ptring = lapply(ptsz, function(x) cbind(ptsx,ptsy,x)) %>% do.call(what=rbind)
-
-
-v = xprod(a,c(0,0,1))
-vx = matrix(c(0,-v[3],v[2],v[3],0,-v[1],-v[2],v[1],0),ncol=3,byrow = T)
-
-rmat = diag(c(1,1,1)) + vx + (vx %*% vx)/(1+ as.double(a %*% c(0,0,1)))
-
-ptring = ptring %*% rmat
-ptring[,1] = ptring[,1] + qa[1]
-ptring[,2] = ptring[,2] + qa[2]
-ptring[,3] = ptring[,3] + qa[3]
-
-# rgl.points(ptring[,1], ptring[,2], ptring[,3],size=4,col='orange')
-
-spheres3d(ptring[,1], ptring[,2], ptring[,3],.01,col='orange')
-
-pars %>% print
-plot(ptring[,1:2],asp=1)
-
+pfiles[k] %>% print
+saveRDS(las, '../../plantar/results/217P03_h_stem.rds')
+saveRDS(map, '../../plantar/results/217P03_h_map.rds')
+write.csv(estimates, '../../plantar/results/217P03_dbh.csv', quote = F, row.names = F)

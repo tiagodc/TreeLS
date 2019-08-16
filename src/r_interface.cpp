@@ -254,7 +254,7 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
 
     double dist = sqrt( pow(x - alias->x_center, 2) + pow(y - alias->y_center, 2) );
 
-    if(dist < alias->radius + pixel*2 && dist > alias->radius - pixel*2){
+    if(dist < alias->radius + pixel*2 /* && dist > alias->radius - pixel*2 */){
       isStem.filter[i] = true;
       isStem.values[i] = alias->radius;
       isStem.counts[i] = alias->n_votes;
@@ -318,7 +318,7 @@ List houghStemPlot(NumericMatrix& las, vector<unsigned int> pointIds, double h1 
 
       double dist = sqrt( pow(x - tempCircle->x_center, 2) + pow(y - tempCircle->y_center, 2) );
 
-      if(dist < tempCircle->radius + pixel*2 && dist > tempCircle->radius - pixel*2){
+      if(dist < tempCircle->radius + pixel*2 /* && dist > tempCircle->radius - pixel*2 */){
         plotInfo.filter[i] = true;
         plotInfo.values[i] = tempCircle->radius;
         plotInfo.counts[i] = tempCircle->n_votes;

@@ -58,7 +58,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F){
   ptring[,3] = ptring[,3] + q[3] + meds[3]
 
   tid = if(hasField(las, 'TreeID')) paste('tree', las$TreeID[1], '-') else ''
-  pt3d[,1:2] %>% plot(pch=20, cex=.5, asp=1, main=paste(tid ,'d =',round(r*200,2),'cm'), col=cols)
+  pt3d[,1:2] %>% plot(pch=20, cex=1, asp=1, main=paste(tid ,'d =',round(r*200,2),'cm'), col=cols)
   abline(v=seq(min(las$X),max(las$X),.02),col='grey',lty=2)
   abline(h=seq(min(las$Y),max(las$Y),.02),col='grey',lty=2)
   ptring[,1:2] %>% lines(col='red', lwd=2)
@@ -89,7 +89,7 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F){
                       y + sin(seq(0,2*pi,length.out = 36)) * r)
 
   tid = if(hasField(las, 'TreeID')) paste('tree', las$TreeID[1], '-') else ''
-  pt3d[,1:2] %>% plot(pch=20, cex=.5, asp=1, main=paste(tid, 'd =',round(r*200,2),'cm'), col=cols)
+  pt3d[,1:2] %>% plot(pch=20, cex=1, asp=1, main=paste(tid, 'd =',round(r*200,2),'cm'), col=cols)
   abline(v=seq(min(las$X),max(las$X),.02),col='grey',lty=2)
   abline(h=seq(min(las$Y),max(las$Y),.02),col='grey',lty=2)
   ptring %>% lines(col='red', lwd=2)

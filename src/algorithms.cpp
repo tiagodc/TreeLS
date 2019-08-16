@@ -68,7 +68,8 @@ vector<double> eigenCircle(vector<vector<double> >& cloud){
 
 vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples, double pConfidence, double pInliers, unsigned int nBest){
   
-  unsigned int kIterations = ceil(5 * log(1 - pConfidence) / log(1 - pow( pInliers, nSamples)));
+  unsigned int kTimes = nBest + 5;
+  unsigned int kIterations = kTimes * ceil(log(1 - pConfidence) / log(1 - pow( pInliers, nSamples)));
   vector< vector<double> > allCircles( 4, vector<double>(kIterations) );
   unsigned int best = 0;
   if(kIterations < nBest) nBest = 0;
@@ -141,8 +142,8 @@ vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSample
       y += allCircles[1][k];
       rad += allCircles[2][k];
       err += allCircles[3][k];
-      if(counter++ >= nBest){
-        bestFit = { x / nBest, y / nBest, rad / nBest, err / nBest };
+      if(counter++ > nBest){
+        bestFit = { x / counter, y / counter, rad / counter, err / counter };
         break;
       }
     }
