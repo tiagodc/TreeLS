@@ -167,3 +167,27 @@ map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .1, max_d = .5, min_h = 2,
   func %<>% setAttribute('tls_map_mtd')
   return(func)
 }
+
+
+map.pick = function(hmin=NULL, hmax=NULL){
+  func = function(las){
+
+    if(!is.null(hmin)){
+      las = lasfilter(las, Z > hmin)
+    }
+
+    if(!is.null(hmax)){
+      las = lasfilter(las, Z < hmax)
+    }
+
+    plot(las, size = .5, clear_artifacts=T)
+    axes3d(col='white')
+    pts = las@data %$% identify3d(X, Y, Z)
+    tmap = data.table(las@data$X[pts], las@data$Y[pts], 0, 1:length(pts)) %>% toLAS(c('X','Y','Z','TreeID'))
+    tmap %<>% setAttribute('map_pick')
+    return(tmap)
+  }
+
+  func %<>% setAttribute('tls_map_mtd')
+  return(func)
+}
