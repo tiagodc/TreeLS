@@ -169,19 +169,25 @@ LogicalVector RCropCloud(NumericMatrix& las, double xCenter, double yCenter, dou
 }
 
 // [[Rcpp::export]]
-List getCircle(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
+SEXP getHoughCircle(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, double min_den=0.1, unsigned int min_votes = 3){
 
   vector<vector<double> > cloud = rmatrix2cpp(las);
   Raster ras = getCounts(cloud, pixel);
   HoughCenters circle = getSingleCenter(&ras, rad_max, min_den, min_votes);
 
-  List out;
-  out["x"] = circle.main_circle.x_center;
-  out["y"] = circle.main_circle.y_center;
-  out["rad"] = circle.main_circle.radius;
-  out["votes"] = circle.main_circle.n_votes;
+  vector<vector<double> > ledger;
+  for(auto& i : circle.circles){
+    vector<double> temp = {i.x_center, i.y_center, i.radius, double(i.n_votes)};
+    ledger.push_back(temp);
+  }  
 
-  return out;
+  // List out;
+  // out["x"] = circle.main_circle.x_center;
+  // out["y"] = circle.main_circle.y_center;
+  // out["rad"] = circle.main_circle.radius;
+  // out["votes"] = circle.main_circle.n_votes;
+
+  return wrap( ledger );
 }
 
 // [[Rcpp::export]]
