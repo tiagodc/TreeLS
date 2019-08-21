@@ -21,8 +21,10 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 
 las = readRDS('../plantar/results/399P02_h_stem.rds')
+las = pointMetrics(las, ptm.knn(10))
+las = stemPoints(las, stm.eigen.knn(.3, max_d=.3))
 
-dbhSeg = lasfilter(las, Z > 1.2 & Z < 1.4 & TreeID > 0)
+dbhSeg = lasfilter(las, Z > 1.2 & Z < 1.4 & TreeID > 0 & Stem)
 plot(dbhSeg)
 dbhSeg = lapply(dbhSeg$TreeID %>% unique, function(x) lasfilter(dbhSeg, TreeID == x))
 
@@ -34,16 +36,17 @@ for(i in dbhSeg){
 }
 
 for(id in unique(las@data[TreeID > 0]$TreeID)){
-# 50, 29!!, 10, 2
+# 6,10,12,14,26
+# id = 26
 tree = lasfilter(las, TreeID == id)
 # plot(tree, size=.5) ; pan3d(2)
 
 dbh = lasfilter(tree, Z > 1.2 & Z < 1.4)
 # plot(dbh, color='gpstime')
 
-px = .02; dmax = .2; p = .67
+px = .02; dmax = .2; p = .67; d = .25
 
-  hg = getHoughCircle(dbh %>% las2xyz, px, rad_max = dmax/2) %>% do.call(what=rbind) %>% as.data.table
+  hg = getHoughCircle(dbh %>% las2xyz, px, rad_max = dmax/2, min_den = d) %>% do.call(what=rbind) %>% as.data.table
   names(hg) = c('x','y','r','v')
   hg = hg[v > quantile(v, p)]
   hg$clt = 1
@@ -65,8 +68,11 @@ px = .02; dmax = .2; p = .67
     if(!isForked) break
 
     houghClusters$clt = km$cluster
-    centers = mxs[,.(x=mean(x),y=mean(y),r=mean(r),v=mean(v)),by=clt]
-    centers = centers[order(-v)]
+    centers = mxs[,.(x=mean(x),y=mean(y),r=mean(r),v=mean(v)),by=clt][order(clt)]
+    centers$ssRatio = (km$withinss / km$size) / min(km$withinss / km$size)
+    centers$nRatio = km$size / max(km$size)
+    centers$absRatio = centers$ssRatio / centers$nRatio
+    centers = centers[absRatio < 5][order(-v)]
     k=k+1
   }
 
@@ -74,6 +80,7 @@ px = .02; dmax = .2; p = .67
   vcols = lidR:::set.colors(houghClusters$v, height.colors(houghClusters$v %>% unique %>% length))
   vcols = lidR:::set.colors(houghClusters$clt, height.colors(houghClusters$clt %>% unique %>% length))
   points(houghClusters$x, houghClusters$y, col=vcols, pch=20, cex=1)
+  #print(centers)
 
   dbh@data$StemID = 0
   # tree@data$StemID = 0
