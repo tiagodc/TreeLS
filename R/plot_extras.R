@@ -34,7 +34,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F){
 
   if(clear) clear3d() else rgl.open()
   bg3d('black') ; axes3d(col='white')
-  lines3d(data.frame(meds+q-a*height, meds+q+a*height) %>% t, color='red', lwd=3)
+  lines3d(data.frame(meds+q-a*height, meds+q+a*height) %>% t, color='darkred', lwd=3)
   lines3d(data.frame(meds, meds+q) %>% t, color='blue', lwd=3)
   rgl.points(pt3d, color=cols)
 
@@ -61,8 +61,8 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F){
   pt3d[,1:2] %>% plot(pch=20, cex=1, asp=1, main=paste(tid ,'d =',round(r*200,2),'cm'), col=cols)
   abline(v=seq(min(las$X),max(las$X),.02),col='grey',lty=2)
   abline(h=seq(min(las$Y),max(las$Y),.02),col='grey',lty=2)
-  ptring[,1:2] %>% lines(col='red', lwd=2)
-  points((meds+q)[1], (meds+q)[2], col='red', cex=2, pch=3)
+  ptring[,1:2] %>% lines(col='darkred', lwd=2)
+  points((meds+q)[1], (meds+q)[2], col='darkred', cex=2, pch=3)
 }
 
 tlsPlot.dh.circle = function(las, x, y, r, clear=F){
@@ -77,7 +77,7 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F){
 
   if(clear) clear3d() else rgl.open()
   bg3d('black') ; axes3d(col='white')
-  lines3d(data.frame(cbase, ctop) %>% t, color='red', lwd=3)
+  lines3d(data.frame(cbase, ctop) %>% t, color='darkred', lwd=3)
   lines3d(data.frame(ccen, crad) %>% t, color='blue', lwd=3)
   rgl.points(pt3d, color=cols)
 
@@ -92,6 +92,6 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F){
   pt3d[,1:2] %>% plot(pch=20, cex=1, asp=1, main=paste(tid, 'd =',round(r*200,2),'cm'), col=cols)
   abline(v=seq(min(las$X),max(las$X),.02),col='grey',lty=2)
   abline(h=seq(min(las$Y),max(las$Y),.02),col='grey',lty=2)
-  ptring %>% lines(col='red', lwd=2)
-  points(x,y, col='red', cex=2, pch=3)
+  ptring %>% lines(col='darkred', lwd=2)
+  points(x,y, col='darkred', cex=2, pch=3)
 }

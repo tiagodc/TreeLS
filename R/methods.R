@@ -1016,3 +1016,113 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95){
   pars = pars %>% t %>% as.data.frame
   return(pars)
 }
+
+
+
+#########################################
+
+
+robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile = .7, min_den = .25, plot=F, ...){
+
+  hg = getHoughCircle(dlas %>% las2xyz, pixel_size, rad_max = max_d/2, min_den = min_den, min_votes = 2) %>% do.call(what=rbind) %>% as.data.table
+  names(hg) = c('x','y','r','v')
+  hg = hg[v > quantile(v, votes_percentile)]
+  hg$clt = 1
+
+  houghClusters = hg
+  centers = hg[v == max(v)] %>% apply(2,mean) %>% t %>% as.data.table
+
+  k = 2
+  repeat{
+    km = kmeans(hg[,1:3], k)
+    hg$clt = km$cluster
+    mxs = hg[,.(x=mean(x), y=mean(y), r=mean(r), v=mean(v)), by=clt]
+    dst = mxs[,c('x','y')] %>% dist
+    combs = combn(nrow(mxs), 2)
+    rst = apply(combs, 2, function(x){mxs$r[x[1]] + mxs$r[x[2]]}) - pixel_size
+    isForked = all(min(dst) > rst)
+
+    if(!isForked) break
+
+    houghClusters$clt = km$cluster
+    centers = mxs[,.(x=mean(x),y=mean(y),r=mean(r),v=mean(v)),by=clt][order(clt)]
+    centers$ssRatio = (km$withinss / km$size) / min(km$withinss / km$size)
+    centers$nRatio = km$size / max(km$size)
+    centers$absRatio = centers$ssRatio / centers$nRatio
+    vRatio = centers %$% ifelse(min(absRatio) > 5, absRatio, 5)
+    centers = centers[absRatio <= vRatio][order(-v)]
+    k=k+1
+  }
+
+  if(plot){
+    plot(dbh$Y ~ dbh$X, cex=.5, asp=1, pch=20, ylab='Y (m)', xlab='X (m)')#, ...)
+    vcols = lidR:::set.colors(houghClusters$v, height.colors(houghClusters$v %>% unique %>% length))
+    vcols = lidR:::set.colors(houghClusters$clt, height.colors(houghClusters$clt %>% unique %>% length))
+    points(houghClusters$x, houghClusters$y, col=vcols, pch=20, cex=1)
+  }
+
+  estimates = data.frame()
+  dlas@data$StemID = 0
+  for(i in 1:nrow(centers)){
+    temp = centers[i]
+
+    dsts = dlas@data %$% sqrt( (X - temp$x)^2 + (Y - temp$y)^2 )
+    pts = dsts < temp$r + 2*pixel_size & dlas@data$StemID == 0
+    dlas@data$StemID[pts] = i
+
+    cld = lasfilter(dlas, StemID == i)
+    est = circleFit(cld, 'ransac', n=15, inliers = .7, n_best = 30)
+    if(is.null(est)) next
+
+    dst = cld@data %$% sqrt( (X - est$X)^2 + (Y - est$Y)^2 )
+    rad = est$d / 200
+    thickness = ifelse(rad/2 > pixel_size, pixel_size,  rad/2)
+
+    inner = dst <= thickness
+    areaInner = pi*thickness^2
+    denInner = (inner %>% which %>% length) / areaInner
+
+    strip = dst > (rad - thickness/2) & dst < (rad + thickness/2)
+    areaStrip = pi*((rad + thickness/2)^2 - (rad - thickness/2)^2)
+    denStrip = (strip %>% which %>% length) / areaStrip
+
+    outer = dst < (rad + thickness) & dst >= (rad + thickness/2)
+    areaOuter = pi*((rad + thickness)^2 - (rad + thickness/2)^2)
+    denOuter = (outer %>% which %>% length) / areaOuter
+
+    est$ratioInner = denInner / denStrip
+    est$ratioOuter = denOuter / denStrip
+    est$StemID = i
+    est$TreeID = id
+    est$score = 1
+
+    if(est$ratioInner > 1){
+      est$score = 3
+    }else if(est$ratioInner > .8 | est$ratioOuter > .8){
+      est$score = 2
+    }
+
+    estimates %<>% rbind(est)
+
+    if(plot){
+      cld@data %$% points(X,Y, col=ifelse(strip, 'darkblue', ifelse(inner | outer, 'darkred', 'black')), cex=.75, pch=20)
+
+      angs = seq(0,pi*2,length.out = 36)
+      xh = temp$x + cos(angs) * temp$r
+      yh = temp$y + sin(angs) * temp$r
+      lines(xh,yh,col='orange',lwd=2)
+
+      xr = est$X + cos(angs) * est$d/200
+      yr = est$Y + sin(angs) * est$d/200
+      lines(xr,yr,col='green',lwd=2)
+    }
+  }
+
+  check = estimates$score == 3
+  if(!all(check)){
+    estimates = estimates[ estimates$score < 3 ,]
+  }
+
+  return(estimates)
+}
+
