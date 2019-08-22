@@ -32,7 +32,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F){
 
   cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
 
-  if(clear) clear3d() else rgl.open()
+  if(clear) clear3d() # else rgl.open()
   bg3d('black') ; axes3d(col='white')
   lines3d(data.frame(meds+q-a*height, meds+q+a*height) %>% t, color='darkred', lwd=3)
   lines3d(data.frame(meds, meds+q) %>% t, color='blue', lwd=3)
@@ -75,7 +75,7 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F){
 
   cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
 
-  if(clear) clear3d() else rgl.open()
+  if(clear) clear3d() # else rgl.open()
   bg3d('black') ; axes3d(col='white')
   lines3d(data.frame(cbase, ctop) %>% t, color='darkred', lwd=3)
   lines3d(data.frame(ccen, crad) %>% t, color='blue', lwd=3)
