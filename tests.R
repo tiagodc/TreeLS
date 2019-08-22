@@ -20,11 +20,11 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-files = dir('../plantar/results/', full.names = T)
+files = dir('../../plantar/results/', full.names = T)
 projs = sub('(.+?)_.+', '\\1', files) %>% unique
 
 # for(pr in projs[7]){
-  pr = projs[4]
+  pr = projs[6]
   paste('.. project', pr) %>% print
 
   las = pr %>% paste0('_h_stem.rds') %>% readRDS
@@ -41,6 +41,7 @@ projs = sub('(.+?)_.+', '\\1', files) %>% unique
   res$d %>% median
   res$d %>% sd
 
+  las %<>% tlsSample(randomize(.33)) %>% lasfilter(Z > .5 & Z < 3)
   plot(las, clear_artifacts=F, size=.5, colorPalette='white') ; pan3d(2)
   txt = las@data[TreeID > 0, .(X=mean(X), Y=mean(Y), Z=min(Z)-.5),by=TreeID]
   text3d(txt[,-1], col='yellow', cex=1.5, texts = txt$TreeID)
@@ -52,8 +53,8 @@ projs = sub('(.+?)_.+', '\\1', files) %>% unique
     tlsPlot.dh(dbh, pars[,2:5], F)
   }
 
-  check = c(52,29,10,32,50,19,8)
   redone = data.frame()
+  # check = c(5,34,37,38,171,93,479,107,102,109,69,241,87)
   # res[score > 1]
   # res[TreeID %in% check]
 
@@ -62,31 +63,37 @@ projs = sub('(.+?)_.+', '\\1', files) %>% unique
 
   # estimates = data.frame()
   # for(id in unique(las@data[TreeID > 0]$TreeID)){
-  #   paste('.. .. dbh', id) %>% print
-  #
-    id = 8
+  # paste('.. .. dbh', id) %>% print
+
+    id = 113
     tree = lasfilter(las, TreeID == id)
   #   # clear3d() ; rgl.points(tree@data[,.(X,Y,Z)], size=.5)
   #
     dbh = lasfilter(tree, Z > 1.2 & Z < 1.4)
-    dbh %<>% gpsTimeFilter(from=.5)
+    # dbh %<>% gpsTimeFilter(to=.4)
     # plot(dbh)
   #
     est = res[TreeID == id,2:5]
-    est = robustDiameter(dlas=dbh, plot=T, max_d = .15, pixel_size = .015)
-    par(mfrow=c(1,nrow(est)))
-    # plot(tree, clear_artifacts=F, size=.5, colorPalette='grey')
+    par(mfrow=c(1,nrow(est))) ; clear3d()
+    est[,1:4] %>% apply(1, function(x) tlsPlot.dh(dbh, x, clear = F))
+
+    est = robustDiameter(dlas=dbh, plot=T, max_d = .12, pixel_size = .01, min_den = .33) ; est %>% nrow
+    # est = est[1,]
+    par(mfrow=c(1,nrow(est))) ; clear3d()
+    plot(tree, clear_artifacts=F, size=.5, colorPalette='white')
     est[,1:4] %>% apply(1, function(x) tlsPlot.dh(dbh, x, clear = F))
     # estimates %<>% rbind(est)
   # }
 
     redone %<>% rbind(est)
+
     redone %<>% merge(res[,.(TreeID,h)], by='TreeID')
 
     res = res[!(TreeID %in% redone$TreeID)]
     res %<>% rbind(redone)
     pr %>% paste0('_res_ok.csv') %>% write.csv(x = res)
 
+    res$d %>% hist
 
   # heights = vlas@data[TreeID > 0, .(h=max(Z)), by=TreeID]
   # estimates %<>% merge(heights, by='TreeID')
