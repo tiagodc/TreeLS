@@ -1055,7 +1055,7 @@ robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile =
   }
 
   if(plot){
-    plot(dbh$Y ~ dbh$X, cex=.5, asp=1, pch=20, ylab='Y (m)', xlab='X (m)')#, ...)
+    plot(dlas$Y ~ dlas$X, cex=.5, asp=1, pch=20, ylab='Y (m)', xlab='X (m)')#, ...)
     vcols = lidR:::set.colors(houghClusters$v, height.colors(houghClusters$v %>% unique %>% length))
     vcols = lidR:::set.colors(houghClusters$clt, height.colors(houghClusters$clt %>% unique %>% length))
     points(houghClusters$x, houghClusters$y, col=vcols, pch=20, cex=1)
@@ -1093,7 +1093,7 @@ robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile =
     est$ratioInner = denInner / denStrip
     est$ratioOuter = denOuter / denStrip
     est$StemID = i
-    est$TreeID = id
+    est$TreeID = dlas$TreeID[1]
     est$score = 1
 
     if(est$ratioInner > 1){
