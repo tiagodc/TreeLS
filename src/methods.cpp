@@ -831,3 +831,35 @@ vector<vector<vector<double> > > plotEigenHough(vector<vector<double> >& cppEige
 
   return plotResults;
 }
+
+vector<unsigned int> treeIdsFromMap(vector<vector<double> >& xy, vector<vector<double> >& xymap, vector<unsigned int> ids, double length, bool circle){
+
+  vector<unsigned int> treeIds( xy[0].size() );
+
+  for(unsigned int i = 0; i < xy[0].size(); ++i){
+    double x = xy[0][i];
+    double y = xy[1][i];
+
+    for(unsigned int j = 0; j < ids.size(); ++j){
+      double xref = xymap[0][j];
+      double yref = xymap[1][j];
+
+      bool isInside = false;
+      if(circle){
+        double dist = sqrt( pow(x - xref, 2) + pow(y - yref, 2) );
+        isInside = dist < length;
+      }else{
+        double xdist = abs(x - xref);
+        double ydist = abs(y - yref);
+        isInside = xdist < (length/2) && ydist < (length/2);
+      }
+
+      if(isInside){
+        treeIds[i] = ids[j];
+        break;
+      }
+    }
+  }
+
+  return treeIds;
+}

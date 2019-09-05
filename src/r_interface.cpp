@@ -498,3 +498,11 @@ SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 1
 
   return wrap( pars );
 }
+
+// [[Rcpp::export]]
+SEXP treeIdsFromMap(NumericMatrix& las, NumericMatrix& xycenters, NumericVector& uniqueIds, double length, bool circle){
+  vector<vector<double> > xy = rmatrix2cpp(las);
+  vector<vector<double> > xymap = rmatrix2cpp(xycenters);
+  vector<unsigned int> ids = Rcpp::as< vector<unsigned int> >( uniqueIds );
+  return wrap( treeIdsFromMap(xy, xymap, ids, length, circle) );
+}

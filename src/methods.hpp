@@ -60,4 +60,6 @@ vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEige
 
 vector<vector<vector<double> > > plotEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& treeId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d = true, bool getSpace = false);
 
+vector<unsigned int> treeIdsFromMap(vector<vector<double> >& xy, vector<vector<double> >& xymap, vector<unsigned int> ids, double length = 2.5, bool circle = true);
+
 #endif // METHODS_HPP

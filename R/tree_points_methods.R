@@ -29,21 +29,12 @@ trp.voronoi = function(){
   return(func)
 }
 
-trp.crop = function(r = 1, circle=T){
+trp.crop = function(l = 1, circle=T){
   func = function(las, xymap){
-
-    las@data$TreeID = 0
-    for(i in 1:nrow(xymap)){
-      x = xymap$X[i]
-      y = xymap$Y[i]
-      id = xymap$TreeID[i]
-      bool = RCropCloud(las %>% las2xyz, x, y, r, circle, F)
-      las@data$TreeID[bool] = id
-    }
+    las@data$TreeID = treeIdsFromMap(las@data[,.(X,Y)] %>% as.matrix, xymap[,.(X,Y)] %>% as.matrix, xymap$TreeID %>% as.integer, l, circle)
     las %<>% setAttribute('tree_points')
     return(las)
   }
-
   func %<>% setAttribute('tpt_mtd')
   return(func)
 }

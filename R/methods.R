@@ -193,13 +193,13 @@ planeAngle = function(xyz, axis='z'){
   return(ang)
 }
 
-rotationMatrix = function (ax, az, ax2){
+rotationMatrix = function (ax, ay, az){
 
-  Rx = matrix(c(1, 0, 0, 0, cos(ax), sin(ax), 0, -sin(ax), cos(ax)), ncol = 3, byrow = T)
-  Rz = matrix(c(cos(az), 0, -sin(az), 0, 1, 0, sin(az), 0, cos(az)), ncol = 3, byrow = T)
-  Rx2 = matrix(c(cos(ax2), sin(ax2), 0, -sin(ax2), cos(ax2), 0, 0, 0, 1), ncol = 3, byrow = T)
+  Rx = matrix(c(1, 0, 0, 0, cos(ax), -sin(ax), 0, sin(ax), cos(ax)), ncol = 3, byrow = T)
+  Ry = matrix(c(cos(ay), 0, sin(ay), 0, 1, 0, -sin(ay), 0, cos(ay)), ncol = 3, byrow = T)
+  Rz = matrix(c(cos(az), -sin(az), 0, sin(az), cos(az), 0, 0, 0, 1), ncol = 3, byrow = T)
 
-  mat = Rx2 %*% Rz %*% Rx
+  mat = Rz %*% Ry %*% Rx
 
   return(mat)
 }
@@ -654,8 +654,8 @@ tlsRotate = function(las){
   rz = ifelse(az > pi/2, pi-az, -az)
   rx = ifelse(ay < pi/2, -ax, ax)
 
-  rot = rotationMatrix(0, rz, rx) %>% as.matrix
-  xyBack = rotationMatrix(0,0,-rx) %>% as.matrix
+  rot = rotationMatrix(rx, 0, rz) %>% as.matrix
+  xyBack = rotationMatrix(-rx,0,0) %>% as.matrix
 
   minXYZ = apply(las@data[,1:3], 2, min) %>% as.double
 
