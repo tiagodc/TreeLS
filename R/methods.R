@@ -183,7 +183,7 @@ tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
 planeAngle = function(xyz, axis='z'){
 
   e = eigen(cov(xyz))
-  if(axis != 'z') e$vectors[3,3] = 0
+  # if(axis != 'z') e$vectors[3,3] = 0
 
   global_axis = if(axis == 'z') c(0,0,1) else if(axis=='x') c(1,0,0) else c(0,1,0)
 
@@ -195,9 +195,9 @@ planeAngle = function(xyz, axis='z'){
 
 rotationMatrix = function (ax, ay, az){
 
-  Rx = matrix(c(1, 0, 0, 0, cos(ax), -sin(ax), 0, sin(ax), cos(ax)), ncol = 3, byrow = T)
-  Ry = matrix(c(cos(ay), 0, sin(ay), 0, 1, 0, -sin(ay), 0, cos(ay)), ncol = 3, byrow = T)
-  Rz = matrix(c(cos(az), -sin(az), 0, sin(az), cos(az), 0, 0, 0, 1), ncol = 3, byrow = T)
+  Rx = matrix(c(1, 0, 0, 0, cos(ax), sin(ax), 0, -sin(ax), cos(ax)), ncol = 3, byrow = T)
+  Ry = matrix(c(cos(ay), 0, -sin(ay), 0, 1, 0, sin(ay), 0, cos(ay)), ncol = 3, byrow = T)
+  Rz = matrix(c(cos(az), -sin(az), 0, -sin(az), cos(az), 0, 0, 0, 1), ncol = 3, byrow = T)
 
   mat = Rz %*% Ry %*% Rx
 
@@ -651,10 +651,29 @@ tlsRotate = function(las){
   ax = planeAngle(ground, 'x')
   ay = planeAngle(ground, 'y')
 
-  rz = ifelse(az > pi/2, pi-az, -az)
-  rx = ifelse(ay < pi/2, -ax, ax)
+  mid = apply(ground, 2, mean) %>% as.double
+  clear3d() ; rgl.points(ground, color='black') ; pan3d(2) ; axes3d(col='black')
+  eig = eigen(cov(ground))$vectors
 
-  rot = rotationMatrix(rx, 0, rz) %>% as.matrix
+  lines3d(c(mid[1], eig[1,1]+mid[1]), c(mid[2], mid[2]+eig[2,1]), c(mid[3], mid[3]+eig[3,1]), col='red', lwd=3)
+  lines3d(c(mid[1], eig[1,2]+mid[1]), c(mid[2], mid[2]+eig[2,2]), c(mid[3], mid[3]+eig[3,2]), col='green', lwd=3)
+  lines3d(c(mid[1], eig[1,3]+mid[1]), c(mid[2], mid[2]+eig[2,3]), c(mid[3], mid[3]+eig[3,3]), col='blue', lwd=3)
+
+  lines3d(c(mid[1], mid[1]+1), c(mid[2], mid[2]), c(mid[3], mid[3]), col='darkred', lwd=3)
+  lines3d(c(mid[1], mid[1]), c(mid[2], mid[2]+1), c(mid[3], mid[3]), col='darkgreen', lwd=3)
+  lines3d(c(mid[1], mid[1]), c(mid[2], mid[2]), c(mid[3], mid[3]+1), col='darkblue', lwd=3)
+
+  rot = rotationMatrix(0,0,ax) %>% as.matrix
+  eig = eig %*% rot
+
+  lines3d(c(mid[1], eig[1,1]+mid[1]), c(mid[2], mid[2]+eig[2,1]), c(mid[3], mid[3]+eig[3,1]), col='orange', lwd=3)
+  lines3d(c(mid[1], eig[1,2]+mid[1]), c(mid[2], mid[2]+eig[2,2]), c(mid[3], mid[3]+eig[3,2]), col='yellow', lwd=3)
+  lines3d(c(mid[1], eig[1,3]+mid[1]), c(mid[2], mid[2]+eig[2,3]), c(mid[3], mid[3]+eig[3,3]), col='pink', lwd=5)
+
+  rz = -az#ifelse(az > pi/2, pi-az, -az)
+  rx = -ax#ifelse(ay < pi/2, -ax, ax)
+
+  rot = rotationMatrix(rx, ry, rz) %>% as.matrix
   xyBack = rotationMatrix(-rx,0,0) %>% as.matrix
 
   minXYZ = apply(las@data[,1:3], 2, min) %>% as.double
