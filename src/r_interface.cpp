@@ -179,7 +179,7 @@ SEXP getHoughCircle(NumericMatrix& las, double pixel=0.05, double rad_max=0.25, 
   for(auto& i : circle.circles){
     vector<double> temp = {i.x_center, i.y_center, i.radius, double(i.n_votes)};
     ledger.push_back(temp);
-  }  
+  }
 
   // List out;
   // out["x"] = circle.main_circle.x_center;
@@ -459,8 +459,9 @@ SEXP cppFastApply(NumericMatrix& matrix, StringVector& funcList){
 
 // [[Rcpp::export]]
 SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, double p = 0.99, double inliers = 0.8, unsigned int nbest = 0){
+
   vector<vector<double> > cloud = rmatrix2cpp(las);
-  vector<double> pars;
+  vector<double> pars = {0};
 
   if(method == "irls"){
     pars = irlsCircleFit(las);
@@ -473,16 +474,15 @@ SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, 
   }
 
   return wrap( pars );
-  
 }
 
 // [[Rcpp::export]]
-SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9){
+SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9, double max_angle = 30){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
 
   double nmax = 100;
-  if(method != "ransac" && cloud[0].size() > nmax){
+  if(method != "ransac" && method != "bf" && cloud[0].size() > nmax){
     double prop = nmax / (double)cloud[0].size();
     cloud = randomPoints(cloud, prop);
   }
@@ -494,6 +494,8 @@ SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 1
     pars = nmCylinderFit(cloud);
   }else if(method == "ransac"){
     pars = ransacCylinder(cloud, n, p, inliers);
+  }else if(method == "bf"){
+    pars = bruteForceRansacCylinder(cloud, n, p, inliers, 10, max_angle, true)[0];
   }
 
   return wrap( pars );
@@ -505,4 +507,10 @@ SEXP treeIdsFromMap(NumericMatrix& las, NumericMatrix& xycenters, NumericVector&
   vector<vector<double> > xymap = rmatrix2cpp(xycenters);
   vector<unsigned int> ids = Rcpp::as< vector<unsigned int> >( uniqueIds );
   return wrap( treeIdsFromMap(xy, xymap, ids, length, circle) );
+}
+
+// [[Rcpp::export]]
+SEXP bruteForceRansacCylinder(NumericMatrix& las, unsigned int nSamples, double pConfidence, double pInliers, unsigned int nBest, double maxAngle){
+  vector<vector<double> > xyz = rmatrix2cpp(las);
+  return wrap( bruteForceRansacCylinder(xyz, nSamples, pConfidence, pInliers, nBest, maxAngle) );
 }

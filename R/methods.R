@@ -183,7 +183,7 @@ tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
 planeAngle = function(xyz, axis='z'){
 
   e = eigen(cov(xyz))
-  # if(axis != 'z') e$vectors[3,3] = 0
+  if(axis != 'z') e$vectors[3,3] = 0
 
   global_axis = if(axis == 'z') c(0,0,1) else if(axis=='x') c(1,0,0) else c(0,1,0)
 
@@ -197,7 +197,7 @@ rotationMatrix = function (ax, ay, az){
 
   Rx = matrix(c(1, 0, 0, 0, cos(ax), sin(ax), 0, -sin(ax), cos(ax)), ncol = 3, byrow = T)
   Ry = matrix(c(cos(ay), 0, -sin(ay), 0, 1, 0, sin(ay), 0, cos(ay)), ncol = 3, byrow = T)
-  Rz = matrix(c(cos(az), -sin(az), 0, -sin(az), cos(az), 0, 0, 0, 1), ncol = 3, byrow = T)
+  Rz = matrix(c(cos(az), sin(az), 0, -sin(az), cos(az), 0, 0, 0, 1), ncol = 3, byrow = T)
 
   mat = Rz %*% Ry %*% Rx
 
@@ -651,30 +651,11 @@ tlsRotate = function(las){
   ax = planeAngle(ground, 'x')
   ay = planeAngle(ground, 'y')
 
-  mid = apply(ground, 2, mean) %>% as.double
-  clear3d() ; rgl.points(ground, color='black') ; pan3d(2) ; axes3d(col='black')
-  eig = eigen(cov(ground))$vectors
+  rz = ifelse(az > pi/2, pi-az, -az)
+  rx = ifelse(ay < pi/2, -ax, ax)
 
-  lines3d(c(mid[1], eig[1,1]+mid[1]), c(mid[2], mid[2]+eig[2,1]), c(mid[3], mid[3]+eig[3,1]), col='red', lwd=3)
-  lines3d(c(mid[1], eig[1,2]+mid[1]), c(mid[2], mid[2]+eig[2,2]), c(mid[3], mid[3]+eig[3,2]), col='green', lwd=3)
-  lines3d(c(mid[1], eig[1,3]+mid[1]), c(mid[2], mid[2]+eig[2,3]), c(mid[3], mid[3]+eig[3,3]), col='blue', lwd=3)
-
-  lines3d(c(mid[1], mid[1]+1), c(mid[2], mid[2]), c(mid[3], mid[3]), col='darkred', lwd=3)
-  lines3d(c(mid[1], mid[1]), c(mid[2], mid[2]+1), c(mid[3], mid[3]), col='darkgreen', lwd=3)
-  lines3d(c(mid[1], mid[1]), c(mid[2], mid[2]), c(mid[3], mid[3]+1), col='darkblue', lwd=3)
-
-  rot = rotationMatrix(0,0,ax) %>% as.matrix
-  eig = eig %*% rot
-
-  lines3d(c(mid[1], eig[1,1]+mid[1]), c(mid[2], mid[2]+eig[2,1]), c(mid[3], mid[3]+eig[3,1]), col='orange', lwd=3)
-  lines3d(c(mid[1], eig[1,2]+mid[1]), c(mid[2], mid[2]+eig[2,2]), c(mid[3], mid[3]+eig[3,2]), col='yellow', lwd=3)
-  lines3d(c(mid[1], eig[1,3]+mid[1]), c(mid[2], mid[2]+eig[2,3]), c(mid[3], mid[3]+eig[3,3]), col='pink', lwd=5)
-
-  rz = -az#ifelse(az > pi/2, pi-az, -az)
-  rx = -ax#ifelse(ay < pi/2, -ax, ax)
-
-  rot = rotationMatrix(rx, ry, rz) %>% as.matrix
-  xyBack = rotationMatrix(-rx,0,0) %>% as.matrix
+  rot = rotationMatrix(0, rz, rx) %>% as.matrix
+  xyBack = rotationMatrix(0,0,-rx) %>% as.matrix
 
   minXYZ = apply(las@data[,1:3], 2, min) %>% as.double
 
@@ -682,7 +663,7 @@ tlsRotate = function(las){
   las@data$Y = las@data$Y - minXYZ[2]
   las@data$Z = las@data$Z - minXYZ[3]
 
-  las@data[,1:3] = (las2xyz(las) %*% rot) %*% xyBack %>% as.data.table
+  las@data[,.(X,Y,Z)] = (las2xyz(las) %*% rot) %*% xyBack %>% as.data.table
 
   las@data$X = las@data$X + minXYZ[1]
   las@data$Y = las@data$Y + minXYZ[2]
@@ -1026,20 +1007,22 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   return(pars)
 }
 
-cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95){
+cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, mag=30){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
-  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers)
-  pars[5] = pars[5] * 200
-  names(pars) = c('rho','theta','phi', 'alpha', 'd', 'err')
+  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, mag)
+  if(method == 'bf'){
+    pars[3] = pars[3] * 200
+    names(pars) = c('x','y','d', 'err', 'ax', 'ay')
+  }else{
+    pars[5] = pars[5] * 200
+    names(pars) = c('rho','theta','phi', 'alpha', 'd', 'err')
+  }
   pars = pars %>% t %>% as.data.frame
   return(pars)
 }
 
-
-
 #########################################
-
 
 robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile = .7, min_den = .25, plot=F, ...){
 

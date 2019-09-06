@@ -27,9 +27,89 @@
 
 #include "algorithms.hpp"
 
+// eigen conversions
+Eigen::Matrix<double, Eigen::Dynamic, 3> stl2eigenmat(vector<vector<double> >& xyz){
+  Eigen::Matrix<double, Eigen::Dynamic, 3> eigenMat;
+  eigenMat.resize(xyz[0].size(), 3);
+
+  for(unsigned int i = 0; i < 3; ++i){
+    eigenMat.col(i) = Eigen::VectorXd::Map(&xyz[i][0],xyz[i].size());
+  }
+
+  return eigenMat;
+}
+
+vector<vector<double> > eigenmat2stl(Eigen::Matrix<double, Eigen::Dynamic, 3>& mat){
+  
+  vector<vector<double> > xyz( 3, vector<double>(mat.rows()) );
+  
+  for(unsigned int i = 0; i < mat.cols(); ++i){
+    Eigen::VectorXd::Map(&xyz[i][0], mat.rows()) = mat.col(i);
+  }
+
+  return xyz;  
+}
+
+Eigen::Matrix<double, 3, 3> rotationMatrix(double ax, double ay, double az){
+  
+  Eigen::Matrix<double, 3, 3> Rx;
+  Rx << 1, 0, 0, 
+        0, cos(ax), sin(ax), 
+        0, -sin(ax), cos(ax);
+  
+  Eigen::Matrix<double, 3, 3> Ry;
+  Ry << cos(ay), 0, -sin(ay), 
+        0, 1, 0,
+        sin(ay), 0, cos(ay);
+  
+  Eigen::Matrix<double, 3, 3> Rz;
+  Rz << cos(az), sin(az), 0, 
+        -sin(az), cos(az), 0, 
+        0, 0, 1;
+
+  Eigen::Matrix<double, 3, 3> rotMat = Rz * Ry * Rx;
+  return rotMat; 
+}
+
+vector<vector<double> > rotateCloud(vector<vector<double> >& xyz, double ax, double ay, double az){
+
+  Eigen::Matrix<double, Eigen::Dynamic, 3> xyzMat = stl2eigenmat(xyz) * rotationMatrix(ax, ay, az);
+
+  vector<vector<double> > rot = eigenmat2stl(xyzMat);
+
+  return rot;
+}
+
+vector<vector<double> > bruteForceRansacCylinder(vector<vector<double> >& cloud, unsigned int nSamples, double pConfidence, double pInliers, unsigned int nBest, double maxAngle, bool bestOnly){
+
+  vector<vector<double> > pars;  
+  if(bestOnly) pars.resize(1);
+  double err = -1;
+  
+  for(double i = -maxAngle; i <= maxAngle; i += 1){
+    for(double j = -maxAngle; j <= maxAngle; j += 1){
+      vector<vector<double> > tempCloud = rotateCloud(cloud, i * PI/180, j * PI/180, 0.0);
+      vector<double> ijPars = ransacCircle(tempCloud, nSamples, pConfidence, pInliers, nBest);
+
+      ijPars.push_back(i);
+      ijPars.push_back(j);
+
+      if(bestOnly){
+        if(err < 0 || ijPars[3] < err){
+          err = ijPars[3];
+          pars[0] = ijPars;
+        }
+      }else{
+        pars.push_back(ijPars);
+      }
+    }
+  }
+
+  return pars;
+}
+
 // circle methods
 vector<double> eigenCircle(vector<vector<double> >& cloud){
-  
   unsigned int n = cloud[0].size();
 
   Eigen::Matrix<double, Eigen::Dynamic, 3> tempMatrix;
@@ -63,7 +143,6 @@ vector<double> eigenCircle(vector<vector<double> >& cloud){
 
   vector<double> bestFit = { xyr(0,1), xyr(1,0), xyr(2,0), circleError };
   return bestFit;
-
 }
 
 vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples, double pConfidence, double pInliers, unsigned int nBest){

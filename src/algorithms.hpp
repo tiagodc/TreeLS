@@ -19,6 +19,8 @@
 //
 //  ===============================================================================
 
+#include <Eigen/Dense>
+
 #ifndef ALGORITHMS_HPP
 #define ALGORITHMS_HPP
 
@@ -49,5 +51,15 @@ vector<double> nmCylinderInit(vector<vector<double> >& las);
 vector<double> ransacCircle(vector<vector<double> >& cloud, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, unsigned int nBest = 0);
 
 vector<double> ransacCylinder(vector<vector<double> >& las, unsigned int nSamples=10, double pConfidence=0.99, double pInliers=0.8);
+
+Eigen::Matrix<double, Eigen::Dynamic, 3> stl2eigenmat(vector<vector<double> >& xyz);
+
+Eigen::Matrix<double, 3, 3> rotationMatrix(double ax, double ay, double az);
+
+vector<vector<double> > eigenmat2stl(Eigen::Matrix<double, Eigen::Dynamic, 3>& mat);
+
+vector<vector<double> > rotateCloud(vector<vector<double> >& xyz, double ax, double ay, double az);
+
+vector<vector<double> > bruteForceRansacCylinder(vector<vector<double> >& cloud, unsigned int nSamples, double pConfidence, double pInliers, unsigned int nBest, double maxAngle = 45.0, bool bestOnly = false);
 
 #endif // ALGORITHMS_HPP
