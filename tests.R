@@ -20,12 +20,19 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-cyl = tlsCylinder(1000, .5, .22, .01)@data
-cyl = (as.matrix(cyl) %*% rotationMatrix(30 * pi/180, -8 * pi/180, 0)) %>% as.data.table
+las = readTLS('../entomologia_zeb_cubagem.laz') %>% tlsNormalize(.1, F)
+plot(las)
 
-circleFit(cyl %>% toLAS, method = "ransac", 15, .8, .99, 5)
-
-cylinderFit(cyl %>% toLAS, 'bf', 10, .8, .95, 45)
+dev.off()
+par(mfrow=c(2,2))
+for(i in seq(min(las$Z), max(las$Z), .5)){
+  cyl = lasfilter(las, Z > i & Z < i+.5)
+  # a = circleFit(cyl, method = "ransac", 15, .8, .99, 5)
+  # a = cylinderFit(cyl %>% toLAS, 'bf', 10, .8, .95, 30)
+  a = robustDiameter(cyl, max_d=.5)
+  if(is.null(a)) next
+  tlsPlot.dh(cyl, a, clear = F)
+}
 
 vals = bruteForceRansacCylinder(cyl %>% as.matrix, 10, .99, .7, 5, 25)
 vals = do.call(rbind, vals) %>% as.data.table
