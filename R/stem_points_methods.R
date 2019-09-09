@@ -20,7 +20,7 @@
 
 #' Stem denoising algorithm: Hough Transform
 #' @description This function is meant to be used inside \code{\link{stemPoints}}. It applies an adapted version of the Hough Transform for circle search. Mode details are given in the sections below.
-#' @template param-hstep
+#' @template param-h_step
 #' @template param-max-radius
 #' @template param-hbase
 #' @template param-pixel-size
@@ -51,10 +51,10 @@
 stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
   if(length(h_base) != 2)
-    stop('hbase must be a numeric vector of length 2')
+    stop('h_base must be a numeric vector of length 2')
 
-  if(diff(hbase) <= 0)
-    stop('hbase[2] must be larger than hbase[1]')
+  if(diff(h_base) <= 0)
+    stop('h_base[2] must be larger than h_base[1]')
 
   params = list(
     h_step = h_step,
@@ -96,11 +96,11 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
     if(!hasField(las, 'TreeID')){
       message('no TreeID field found with tree_points signature: performing single stem point classification')
-      results = houghStemPoints(las2xyz(las)[surveyPts,], hbase[1], hbase[2], h_step, max_radius, pixel_size, min_density, min_votes)
+      results = houghStemPoints(las2xyz(las)[surveyPts,], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
     }else{
       message('performing point classification on multiple stems')
       surveyPts = surveyPts & las$TreeID > 0
-      results = houghStemPlot(las2xyz(las)[surveyPts,], las@data$TreeID[surveyPts], hbase[1], hbase[2], h_step, max_radius, pixel_size, min_density, min_votes)
+      results = houghStemPlot(las2xyz(las)[surveyPts,], las@data$TreeID[surveyPts], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
     }
 
     las@data$Stem = F

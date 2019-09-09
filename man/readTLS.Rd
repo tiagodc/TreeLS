@@ -4,12 +4,12 @@
 \alias{readTLS}
 \title{Import a point cloud file into a LAS object}
 \usage{
-readTLS(file, colNames = NULL, ...)
+readTLS(file, col_names = NULL, ...)
 }
 \arguments{
 \item{file}{file path.}
 
-\item{colNames}{optional - \code{character} vector. Only used for table-like files. It states the column names - if not set, only the 3 first columns will be converted to XYZ.}
+\item{col_names}{optional - \code{character} vector. Only used for table-like files. It states the column names - if not set, only the 3 first columns will be converted to XYZ.}
 
 \item{...}{further arguments passed to either \code{readLAS} or \code{read.table}.}
 }

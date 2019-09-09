@@ -4,17 +4,17 @@
 \alias{map.hough}
 \title{Tree mapping algorithm: Hough Transform}
 \usage{
-map.hough(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025,
-  max_radius = 0.25, min_density = 0.1, min_votes = 3)
+map.hough(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025,
+  max_d = 0.5, min_density = 0.1, min_votes = 3)
 }
 \arguments{
-\item{hmin, hmax}{\code{numeric} - height thresholds within the point cloud in which circle search will be performed.}
+\item{min_h, max_h}{\code{numeric} - height thresholds within the point cloud in which circle search will be performed.}
 
-\item{hstep}{\code{numeric} - height interval to perform circle search.}
+\item{h_step}{\code{numeric} - height interval to perform point filtering/assignment/classification.}
 
 \item{pixel_size}{\code{numeric} - pixel side length to discretize the point cloud layers while performing the Hough Transform circle search.}
 
-\item{max_radius}{\code{numeric} - approximately the largest stem cross section radius expected in the point cloud.}
+\item{max_d}{\code{numeric} - maximum diameter tolerated for a tree segment.}
 
 \item{min_density}{\code{numeric} - between 0 and 1 - minimum point density within a pixel evaluated on the Hough Transform - i.e. only \emph{dense} point clousters will undergo circle search.}
 

@@ -4,7 +4,7 @@
 \alias{tlsNormalize}
 \title{Normalize a TLS point cloud}
 \usage{
-tlsNormalize(las, res = 0.5, keepGround = TRUE)
+tlsNormalize(las, res = 0.5, keep_ground = TRUE)
 }
 \arguments{
 \item{las}{\code{LAS} object.}

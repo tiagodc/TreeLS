@@ -20,7 +20,7 @@
 
 #' Tree mapping algorithm: Hough Transform
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies an adapted version of the Hough Transform for circle search. Mode details are given in the sections below.
-#' @template param-min_h-hmax_h
+#' @template param-min_h-max_h
 #' @template param-h_step
 #' @template param-pixel-size
 #' @template param-max-d
@@ -119,9 +119,9 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' @template param-max-planarity
 #' @template param-max-verticality
 #' @param max_mean_dist \code{numeric} - maximum average distance between points tolerated in a neighborhood.
-#' @template max-d
-#' @template min-h
-#' @template min-n
+#' @template param-max-d
+#' @template param-min-h
+#' @template param-min-n
 #' @export
 map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dist = .1, max_d = .5, min_h = 2, min_n = 100){
 
@@ -196,9 +196,9 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
 #' @template param-max-planarity
 #' @template param-max-verticality
 #' @param voxel_spacing \code{numeric} - voxel side length to points into.
-#' @template max-d
-#' @template min-h
-#' @template min-n
+#' @template param-max-d
+#' @template param-min-h
+#' @template param-min-n
 #' @export
 map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 2, min_n = 100){
 

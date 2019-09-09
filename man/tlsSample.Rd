@@ -4,7 +4,7 @@
 \alias{tlsSample}
 \title{Resample a point cloud}
 \usage{
-tlsSample(las, method = voxelize())
+tlsSample(las, method = smp.voxelize())
 }
 \arguments{
 \item{las}{\code{LAS} object.}
@@ -23,11 +23,11 @@ tls = readTLS(file)
 summary(tls)
 
 ## sample points systematically in 3D
-vx = tlsSample(tls, voxelize(0.05))
+vx = tlsSample(tls, smp.voxelize(0.05))
 summary(vx)
 
 ## sample points randomly
-rd = tlsSample(tls, randomize(0.5))
+rd = tlsSample(tls, smp.randomize(0.5))
 summary(rd)
 
 }

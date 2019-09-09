@@ -4,12 +4,10 @@
 \alias{stemPoints}
 \title{Stem points classification}
 \usage{
-stemPoints(las, map = NULL, method = stem.hough())
+stemPoints(las, method = stm.hough())
 }
 \arguments{
 \item{las}{\code{LAS} object.}
-
-\item{map}{optional - map of tree positions (output from \code{\link{treeMap}} or \code{\link{treePositions}}). If omitted, the algorithm assumes \code{las} is a single tree.}
 
 \item{method}{stem denoising algorithm - currently available: \code{\link{stem.hough}}.}
 }

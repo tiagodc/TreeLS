@@ -4,7 +4,7 @@
 \alias{stemSegmentation}
 \title{Stem segmentation}
 \usage{
-stemSegmentation(las, method = sgmt.ransac.circle())
+stemSegmentation(las, method = sgt.ransac.circle())
 }
 \arguments{
 \item{las}{\code{LAS} object.}

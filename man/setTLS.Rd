@@ -9,7 +9,7 @@ setTLS(cloud, colNames = NULL)
 \arguments{
 \item{cloud}{\code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted or reset.}
 
-\item{colNames}{optional - \code{character} vector. Only used for table-like files. It states the column names - if not set, only the 3 first columns will be converted to XYZ.}
+\item{col_names}{optional - \code{character} vector. Only used for table-like files. It states the column names - if not set, only the 3 first columns will be converted to XYZ.}
 }
 \value{
 \code{LAS} object.
