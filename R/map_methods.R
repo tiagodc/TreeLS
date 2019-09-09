@@ -1,9 +1,29 @@
+# ===============================================================================
+#
+# Developers:
+#
+# Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
+#
+# COPYRIGHT: Tiago de Conto, 2019
+#
+# This piece of software is open and free to use, redistribution and modifications
+# should be done in accordance to the GNU General Public License >= 3
+# Use this software as you wish, but no warranty is provided whatsoever. For any
+# comments or questions on TreeLS, please contact the developer (prefereably through my github account)
+#
+# If publishing any work/study/research that used the tools in TreeLS,
+# please don't forget to cite the proper sources!
+#
+# Enjoy!
+#
+# ===============================================================================
+
 #' Tree mapping algorithm: Hough Transform
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies an adapted version of the Hough Transform for circle search. Mode details are given in the sections below.
-#' @template param-hmin-hmax
-#' @template param-hstep
+#' @template param-min_h-hmax_h
+#' @template param-h_step
 #' @template param-pixel-size
-#' @template param-max-radius
+#' @template param-max-d
 #' @template param-min-density
 #' @template param-min-votes
 #' @section \code{LAS@data} Special Fields:
@@ -37,13 +57,13 @@
 #' @template reference-thesis
 #' @template example-tree-map
 #' @export
-map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_d = 0.5, min_density = 0.1, min_votes = 3){
+map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max_d = 0.5, min_density = 0.1, min_votes = 3){
 
-  if(hmax <= hmin)
-    stop('hmax must be larger than hmin')
+  if(max_h <= min_h)
+    stop('max_h must be larger than min_h')
 
   params = list(
-    hstep = hstep,
+    h_step = h_step,
     pixel_size = pixel_size,
     max_d = max_d,
     min_density = min_density,
@@ -64,19 +84,19 @@ map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_d 
   }
 
   if(min_density > 1)
-    stop('min_den must be between 0 and 1')
+    stop('min_density must be between 0 and 1')
 
   func = function(las){
 
     rgz = las$Z %>% range
 
-    if(hmax < rgz[1])
+    if(max_h < rgz[1])
       stop('hmax is too low - below the point cloud')
 
-    if(hmin > rgz[2])
+    if(min_h > rgz[2])
       stop('hmin is too high - above the point cloud')
 
-    map = stackMap(las %>% las2xyz, hmin, hmax, hstep, pixel_size, max_d/2, min_density, min_votes) %>%
+    map = stackMap(las %>% las2xyz, min_h, max_h, h_step, pixel_size, max_d/2, min_density, min_votes) %>%
       do.call(what=cbind) %>% as.data.table
 
     map$Intensity %<>% as.integer
@@ -94,7 +114,46 @@ map.hough = function(hmin = 1, hmax = 3, hstep = 0.5, pixel_size = 0.025, max_d 
 }
 
 
-map.eigen.knn = function(pln = .15, vrt = 15, mds = .1, max_d = .5, min_h = 2, min_n = 100){
+#' Tree mapping algorithm: KNN point geometry
+#' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{pointMetrics}}.
+#' @template param-max-planarity
+#' @template param-max-verticality
+#' @param max_mean_dist \code{numeric} - maximum average distance between points tolerated in a neighborhood.
+#' @template max-d
+#' @template min-h
+#' @template min-n
+#' @export
+map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dist = .1, max_d = .5, min_h = 2, min_n = 100){
+
+  params = list(
+    max_planarity = max_planarity,
+    max_verticality = max_verticality,
+    max_mean_dist = max_mean_dist,
+    max_d = max_d,
+    min_h = min_h,
+    min_n = min_n
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(length(val) != 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(max_planarity > 1){
+    stop('max_planarity must be a number between 0 and 1')
+  }
+
+  if(max_verticality > 180){
+    stop('max_verticality must be a number between 0 and 180')
+  }
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
@@ -107,7 +166,7 @@ map.eigen.knn = function(pln = .15, vrt = 15, mds = .1, max_d = .5, min_h = 2, m
       las = pointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt & MeanDistance < mds) %>%
+    las = lasfilter(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality & MeanDistance < max_mean_dist) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
 
     las@data$TreeID = 0
@@ -132,7 +191,46 @@ map.eigen.knn = function(pln = .15, vrt = 15, mds = .1, max_d = .5, min_h = 2, m
 }
 
 
-map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .1, max_d = .5, min_h = 2, min_n = 100){
+#' Tree mapping algorithm: Voxel geometry
+#' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{pointMetrics}}.
+#' @template param-max-planarity
+#' @template param-max-verticality
+#' @param voxel_spacing \code{numeric} - voxel side length to points into.
+#' @template max-d
+#' @template min-h
+#' @template min-n
+#' @export
+map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 2, min_n = 100){
+
+  params = list(
+    max_planarity = max_planarity,
+    max_verticality = max_verticality,
+    voxel_spacing = voxel_spacing,
+    max_d = max_d,
+    min_h = min_h,
+    min_n = min_n
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(length(val) != 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(max_planarity > 1){
+    stop('max_planarity must be a number between 0 and 1')
+  }
+
+  if(max_verticality > 180){
+    stop('max_verticality must be a number between 0 and 180')
+  }
 
   func = function(las){
     las = lasfilter(las, Classification != 2)
@@ -144,7 +242,7 @@ map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .1, max_d = .5, min_h = 2,
       las = pointMetrics(las, ptm.voxel(vxl), mtrlst)
     }
 
-    las = lasfilter(las, N > 3 & Planarity < pln & abs(Verticality - 90) < vrt) %>%
+    las = lasfilter(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
 
     las@data$TreeID = 0
@@ -169,20 +267,41 @@ map.eigen.voxel = function(pln = .15, vrt = 15, vxl = .1, max_d = .5, min_h = 2,
 }
 
 
-map.pick = function(hmin=NULL, hmax=NULL){
+#' Tree mapping algorithm: pick trees manually
+#' @description This function is meant to be used inside \code{\link{treeMap}}. It opens a new \code{rgl} plot on which the user can point the tree locations by clicking.
+#' @param min_h,max_h minimum/maximum height thresholds to filter the point cloud before plotting it in \code{rgl}.
+#' @export
+map.pick = function(min_h=NULL, max_h=NULL){
+
+  if(min_h >= max_h){
+    stop('max_h must be larger than min_h')
+  }
+
   func = function(las){
 
-    if(!is.null(hmin)){
-      las = lasfilter(las, Z > hmin)
+    rgz = las$Z %>% range
+
+    if(max_h < rgz[1])
+      stop('hmax is too low - below the point cloud')
+
+    if(min_h > rgz[2])
+      stop('hmin is too high - above the point cloud')
+
+    if(!is.null(min_h)){
+      las = lasfilter(las, Z > min_h)
     }
 
-    if(!is.null(hmax)){
-      las = lasfilter(las, Z < hmax)
+    if(!is.null(max_h)){
+      las = lasfilter(las, Z < max_h)
+    }
+
+    if(lidR::is.empty(las)){
+      stop('no points found in the specified min_h/max_h range')
     }
 
     plot(las, size = .5, clear_artifacts=T)
     axes3d(col='white')
-    pts = las@data %$% identify3d(X, Y, Z)
+    pts = las@data %$% identify3d(X, Y, Z, tolerance = 50)
     tmap = data.table(las@data$X[pts], las@data$Y[pts], 0, 1:length(pts)) %>% toLAS(c('X','Y','Z','TreeID'))
     tmap %<>% setAttribute('map_pick')
     return(tmap)

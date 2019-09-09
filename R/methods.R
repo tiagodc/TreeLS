@@ -2,12 +2,12 @@
 #
 # Developers:
 #
-# Tiago de Conto - ti@forlidar.com.br -  https://github.com/tiagodc/
+# Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
 #
 # COPYRIGHT: Tiago de Conto, 2019
 #
 # This piece of software is open and free to use, redistribution and modifications
-# should be done in accordance to the GNU General Public License >= 3#
+# should be done in accordance to the GNU General Public License >= 3
 # Use this software as you wish, but no warranty is provided whatsoever. For any
 # comments or questions on TreeLS, please contact the developer (prefereably through my github account)
 #
@@ -315,11 +315,11 @@ readTLS = function(file, colNames=NULL, ...){
 #' summary(tls)
 #'
 #' ## sample points systematically in 3D
-#' vx = tlsSample(tls, voxelize(0.05))
+#' vx = tlsSample(tls, smp.voxelize(0.05))
 #' summary(vx)
 #'
 #' ## sample points randomly
-#' rd = tlsSample(tls, randomize(0.5))
+#' rd = tlsSample(tls, smp.randomize(0.5))
 #' summary(rd)
 #'
 #' @export
@@ -896,7 +896,7 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-treePoints = function(las, map, method=trees.voronoi()){
+treePoints = function(las, map, method=trp.voronoi()){
 
   isLAS(las)
 
@@ -964,12 +964,13 @@ nnFilter = function(las, d = 0.05, n = 2){
 #' @description print available point metrics - for usage in \code{\link{pointMetrics}}.
 #' @return vector with available metrics names.
 #' @examples
-#' availablePointMetrics()
+#' m = availablePointMetrics()
+#' print(m)
 #' @export
 availablePointMetrics = function(){
   temp = data.frame(METRIC = point.metrics.check, OBS = '')
   temp$OBS %<>% as.character
-  temp$OBS[12:15] = '   calculated only on ptm.knn and ptm.radius methods'
+  temp$OBS[12:17] = '   available for ptm.knn only'
   print(temp)
   cat('\n')
   return(invisible(point.metrics.check))

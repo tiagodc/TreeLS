@@ -1,3 +1,23 @@
+# ===============================================================================
+#
+# Developers:
+#
+# Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
+#
+# COPYRIGHT: Tiago de Conto, 2019
+#
+# This piece of software is open and free to use, redistribution and modifications
+# should be done in accordance to the GNU General Public License >= 3
+# Use this software as you wish, but no warranty is provided whatsoever. For any
+# comments or questions on TreeLS, please contact the developer (prefereably through my github account)
+#
+# If publishing any work/study/research that used the tools in TreeLS,
+# please don't forget to cite the proper sources!
+#
+# Enjoy!
+#
+# ===============================================================================
+
 #' Stem segmentation algorithm: RANSAC circle fit
 #' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares circle fit algorithm in a RANSAC fashion over stem segments. More details are given in the sections below.
 #' @template param-tol
@@ -21,7 +41,7 @@
 #' @template reference-thesis
 #' @template example-segmentation
 #' @export
-sgmt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
+sgt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
 
   params = list(
     tol = tol,
@@ -127,7 +147,7 @@ sgmt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
 #' @template reference-thesis
 #' @template example-segmentation
 #' @export
-sgmt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
+sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
   params = list(
     tol = tol,
@@ -209,7 +229,7 @@ sgmt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
 }
 
-sgmt.irls.circle = function(tol=0.05, n = 500){
+sgt.irls.circle = function(tol=0.05, n = 500){
 
   params = list(
     tol = tol,
@@ -286,7 +306,7 @@ sgmt.irls.circle = function(tol=0.05, n = 500){
 
 }
 
-sgmt.irls.cylinder = function(tol=0.05, n = 100){
+sgt.irls.cylinder = function(tol=0.05, n = 100){
 
   params = list(
     tol = tol,

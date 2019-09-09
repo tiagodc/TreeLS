@@ -1,3 +1,23 @@
+# ===============================================================================
+#
+# Developers:
+#
+# Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
+#
+# COPYRIGHT: Tiago de Conto, 2019
+#
+# This piece of software is open and free to use, redistribution and modifications
+# should be done in accordance to the GNU General Public License >= 3
+# Use this software as you wish, but no warranty is provided whatsoever. For any
+# comments or questions on TreeLS, please contact the developer (prefereably through my github account)
+#
+# If publishing any work/study/research that used the tools in TreeLS,
+# please don't forget to cite the proper sources!
+#
+# Enjoy!
+#
+# ===============================================================================
+
 ptmMetricsLog = function(metrics_list){
   metrics_log = point.metrics.check %in% metrics_list
 
@@ -40,7 +60,17 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
   return(ptm)
 }
 
+
+#' Point metrics algorithm: Voxel metrics
+#' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics voxel-wise.
+#' @param d \code{numeric} - voxel spacing.
+#' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search, much faster on dense point clouds (millions of points).
+#' @export
 ptm.voxel = function(d = .1, exact=F){
+
+  if(!is.numeric(d)) stop('d must be a number')
+  if(d <= 0) stop('d must be a positive number')
+  if(!is.logical(exact)) stop('exact must be logical')
 
   func = function(las, metrics_list){
 
@@ -88,7 +118,17 @@ ptm.voxel = function(d = .1, exact=F){
   return(func)
 }
 
+
+#' Point metrics algorithm: Nearest Neighborhood metrics
+#' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics from a point's nearest neighborhood.
+#' @param k \code{numeric} - number of closest points to search.
+#' @param r \code{numeric} - limit radius for nearest neighbor search. If r == 0, no distance limit is applied.
+#' @export
 ptm.knn = function(k = 30, r = 0){
+
+  if(!is.numeric(k) || !is.numeric(r)) stop('k and r must be numbers')
+  if(k < 3) stop('k must be a number larger than 3')
+  if(r < 0) stop('r must be 0 or higher')
 
   func = function(las, metrics_list){
 
