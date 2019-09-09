@@ -5,7 +5,6 @@
 ^Rcpp-quickref\.pdf$
 ^\.vscode$
 ^test_data$
-^tests\.R$
 ^src/classes\.hpp$
 ^src/methods\.hpp$
 ^old\.R$

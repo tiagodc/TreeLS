@@ -22,6 +22,9 @@
 #' @import lidR
 #' @import magrittr
 #' @import rgl
+#' @import dismo
+#' @import deldir
+#' @import nabor
 #' @useDynLib TreeLS, .registration = TRUE
 
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
@@ -286,7 +289,7 @@ setTLS = function(cloud, colNames=NULL){
 #' summary(tls)
 #' @importFrom utils read.table
 #' @export
-readTLS = function(file, colNames=NULL, ...){
+readTLS = function(file, col_names=NULL, ...){
 
   format = sub('.+\\.(.+$)', '\\1', file) %>% tolower
 
@@ -296,7 +299,7 @@ readTLS = function(file, colNames=NULL, ...){
 
   }else{
 
-    las = read.table(file, ...) %>% toLAS(colNames)
+    las = read.table(file, ...) %>% toLAS(col_names)
 
   }
 
@@ -323,7 +326,7 @@ readTLS = function(file, colNames=NULL, ...){
 #' summary(rd)
 #'
 #' @export
-tlsSample = function(las, method = voxelize()){
+tlsSample = function(las, method = smp.voxelize()){
 
   isLAS(las)
 
@@ -553,7 +556,7 @@ stemPoints = function(las, method = stm.hough()){
 #' @return \code{data.table} of stem segments with \emph{stem_dt} signature.
 #' @template example-segmentation
 #' @export
-stemSegmentation = function(las, method=sgmt.ransac.circle()){
+stemSegmentation = function(las, method=sgt.ransac.circle()){
 
   isLAS(las)
 
@@ -977,11 +980,11 @@ availablePointMetrics = function(){
 }
 
 
-#' Calculate metrics per point neighborhood
+#' Calculate metrics on point neighborhoods
 #' @description Get a list of statistics per point neighborhood. Check out \code{\link{availablePointMetrics}} for information on the available metrics.
 #' @template param-las
-#' @param metrics_list list of metrics to be calculated - must match exactly names \code{availablePointMetrics()}.
-#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}}, \code{\link{ptm.knn}} and \code{\link{ptm.radius}}.
+#' @param metrics_list list of metrics to be calculated - must match exactly the names in \code{availablePointMetrics()}.
+#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.
 #' @return \code{LAS} object with extra fields - one for each calculated metric.
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
@@ -997,6 +1000,16 @@ pointMetrics = function(las, method = ptm.voxels(), metrics_list = point.metrics
   return(method(las, metrics_list))
 }
 
+
+#' Point cloud circle fit
+#' @description Fits a circle on XY coordinates from a set of 3D points.
+#' @template param-las
+#' @param method method for estimating the circle parameters. Currently available: \code{"qr"}, \code{"nm"}, \code{"irls"} and \code{"ransac"}.
+#' @template param-n-ransac
+#' @template param-inliers
+#' @template param-conf
+#' @param n_best \code{numeric} - Applicable when \code{method == "ransac"}. For \code{n_best == 0}, takes the best RANSAC iteration as estimates, otherwise, it estimates the parameters as the average of \code{n_best} RANSAC iterations.
+#' @export
 circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'qr'
@@ -1008,10 +1021,20 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   return(pars)
 }
 
-cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, mag=30){
+
+#' Point cloud cylinder fit
+#' @description Fits a cylinder on a set of 3D points.
+#' @template param-las
+#' @param method method for estimating the cylinder parameters. Currently available: \code{"nm"}, \code{"irls"}, \code{"ransac"} and \code{"bf"}.
+#' @template param-n-ransac
+#' @template param-inliers
+#' @template param-conf
+#' @param max_angle \code{numeric} - applicable when \code{method == "bf"}. It's the maximum angle a point cloud's axis can deviate from an absolute vertical axis (Z = c(0,0,1) ), in degrees.
+#' @export
+cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
-  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, mag)
+  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, max_angle)
   if(method == 'bf'){
     pars[3] = pars[3] * 200
     names(pars) = c('x','y','d', 'err', 'ax', 'ay')

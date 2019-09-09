@@ -282,12 +282,13 @@ List houghStemPoints(NumericMatrix& las, double h1 = 1, double h2 = 3, double hs
 }
 
 // [[Rcpp::export]]
-List houghStemPlot(NumericMatrix& las, vector<unsigned int> pointIds, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
+List houghStemPlot(NumericMatrix& las, NumericVector& ptIds, double h1 = 1, double h2 = 3, double hstep=0.5, double radius=0.25, double pixel=0.025, double density=0.1, unsigned int votes=3){
 
   // unordered_set<unsigned int> treeIds(pointIds.begin(), pointIds.end());
   // vector<unsigned int> treeIdsVec(treeIds.begin(), treeIds.end());
 
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> pointIds = Rcpp::as< vector<unsigned int> >( ptIds );
   vector<vector<vector<double> > > treeList = getChunks(cloud, pointIds);
   // unordered_map<unsigned int, vector<HoughCenters> > denoisedTrees;
   vector<vector<HoughCenters>> denoisedTrees;
@@ -357,55 +358,72 @@ NumericVector getCircleRansac(NumericMatrix& las, unsigned int nSamples = 5, dou
 }
 
 // [[Rcpp::export]]
-List ransacStemCircle(NumericMatrix& las, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
+List ransacStemCircle(NumericMatrix& las, NumericVector& segs, NumericVector& rads, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );
   return wrap(ransacStemCircle(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
-List irlsStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints=500,  double tolerance=0.05){
+List irlsStemCylinder(NumericMatrix& las, NumericVector& segs, NumericVector& rads, unsigned int nPoints=500,  double tolerance=0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );
   return wrap(irlsStemCylinder(cloud, segments, radii, nPoints, tolerance));
 }
 
 // [[Rcpp::export]]
-List irlsStemCircle(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=500, double tolerance=0.05){
+List irlsStemCircle(NumericMatrix& las, NumericVector& segs, NumericVector& rads, unsigned int nSamples=500, double tolerance=0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
   return wrap(irlsStemCircle(cloud, segments, radii, nSamples, tolerance));
 }
 
 // [[Rcpp::export]]
-List ransacStemCylinder(NumericMatrix& las, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence=0.95, double pInliers=0.8, double tolerance=0.05){
+List ransacStemCylinder(NumericMatrix& las, NumericVector& segs, NumericVector& rads, unsigned int nSamples=10, double pConfidence=0.95, double pInliers=0.8, double tolerance=0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
   return wrap(ransacStemCylinder(cloud, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
-List ransacPlotCircles(NumericMatrix& las, std::vector<unsigned int>& treeId, std::vector<unsigned int>& segments, std::vector<double>& radii, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
+List ransacPlotCircles(NumericMatrix& las, NumericVector& tId, NumericVector& segs, NumericVector& rads, unsigned int nSamples = 5, double pConfidence = 0.99, double pInliers = 0.8, double tolerance = 0.05){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<unsigned int> treeId = Rcpp::as< vector<unsigned int> >( tId );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
   return wrap(ransacPlotCircles(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
-List ransacPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
+List ransacPlotCylinders(NumericMatrix& las, NumericVector& tId, NumericVector& segs, NumericVector& rads, unsigned int nSamples, double pConfidence, double pInliers, double tolerance){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<unsigned int> treeId = Rcpp::as< vector<unsigned int> >( tId );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
   return wrap(ransacPlotCylinders(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance));
 }
 
 // [[Rcpp::export]]
-List irlsPlotCylinders(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
+List irlsPlotCylinders(NumericMatrix& las, NumericVector& tId, NumericVector& segs, NumericVector& rads, unsigned int nPoints, double tolerance){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<unsigned int> treeId = Rcpp::as< vector<unsigned int> >( tId );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
   return wrap(irlsPlotCylinders(cloud, treeId, segments, radii, nPoints, tolerance));
 }
 
 // [[Rcpp::export]]
-List irlsPlotCircles(NumericMatrix& las, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nPoints, double tolerance){
+List irlsPlotCircles(NumericMatrix& las, NumericVector& tId, NumericVector& segs, NumericVector& rads, unsigned int nPoints, double tolerance){
   vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<unsigned int> treeId = Rcpp::as< vector<unsigned int> >( tId );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
   return wrap(irlsPlotCircles(cloud, treeId, segments, radii, nPoints, tolerance));
 }
-
-
-/////// TESTS
 
 // [[Rcpp::export]]
 SEXP pointMetricsCpp(NumericMatrix& las, NumericMatrix& kIds, LogicalVector& whichMetrics){
@@ -458,7 +476,7 @@ SEXP cppFastApply(NumericMatrix& matrix, StringVector& funcList){
 }
 
 // [[Rcpp::export]]
-SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, double p = 0.99, double inliers = 0.8, unsigned int nbest = 0){
+SEXP cppCircleFit(NumericMatrix& las, std::string method = "qr", unsigned int n = 5, double p = 0.99, double inliers = 0.8, unsigned int nbest = 0){
 
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars = {0};
@@ -477,7 +495,7 @@ SEXP cppCircleFit(NumericMatrix& las, string method = "qr", unsigned int n = 5, 
 }
 
 // [[Rcpp::export]]
-SEXP cppCylinderFit(NumericMatrix& las, string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9, double max_angle = 30){
+SEXP cppCylinderFit(NumericMatrix& las, std::string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9, double max_angle = 30){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
 

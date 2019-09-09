@@ -9,8 +9,8 @@ RCropCloud <- function(las, xCenter, yCenter, len, circle, negative) {
     .Call(`_TreeLS_RCropCloud`, las, xCenter, yCenter, len, circle, negative)
 }
 
-getCircle <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
-    .Call(`_TreeLS_getCircle`, las, pixel, rad_max, min_den, min_votes)
+getHoughCircle <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
+    .Call(`_TreeLS_getHoughCircle`, las, pixel, rad_max, min_den, min_votes)
 }
 
 singleStack <- function(las, pixel = 0.05, rad_max = 0.25, min_den = 0.1, min_votes = 3L) {
@@ -25,44 +25,44 @@ houghStemPoints <- function(las, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pix
     .Call(`_TreeLS_houghStemPoints`, las, h1, h2, hstep, radius, pixel, density, votes)
 }
 
-houghStemPlot <- function(las, pointIds, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pixel = 0.025, density = 0.1, votes = 3L) {
-    .Call(`_TreeLS_houghStemPlot`, las, pointIds, h1, h2, hstep, radius, pixel, density, votes)
+houghStemPlot <- function(las, ptIds, h1 = 1, h2 = 3, hstep = 0.5, radius = 0.25, pixel = 0.025, density = 0.1, votes = 3L) {
+    .Call(`_TreeLS_houghStemPlot`, las, ptIds, h1, h2, hstep, radius, pixel, density, votes)
 }
 
 getCircleRansac <- function(las, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8) {
     .Call(`_TreeLS_getCircleRansac`, las, nSamples, pConfidence, pInliers)
 }
 
-ransacStemCircle <- function(las, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
-    .Call(`_TreeLS_ransacStemCircle`, las, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+ransacStemCircle <- function(las, segs, rads, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacStemCircle`, las, segs, rads, nSamples, pConfidence, pInliers, tolerance)
 }
 
-irlsStemCylinder <- function(las, segments, radii, nPoints = 500L, tolerance = 0.05) {
-    .Call(`_TreeLS_irlsStemCylinder`, las, segments, radii, nPoints, tolerance)
+irlsStemCylinder <- function(las, segs, rads, nPoints = 500L, tolerance = 0.05) {
+    .Call(`_TreeLS_irlsStemCylinder`, las, segs, rads, nPoints, tolerance)
 }
 
-irlsStemCircle <- function(las, segments, radii, nSamples = 500L, tolerance = 0.05) {
-    .Call(`_TreeLS_irlsStemCircle`, las, segments, radii, nSamples, tolerance)
+irlsStemCircle <- function(las, segs, rads, nSamples = 500L, tolerance = 0.05) {
+    .Call(`_TreeLS_irlsStemCircle`, las, segs, rads, nSamples, tolerance)
 }
 
-ransacStemCylinder <- function(las, segments, radii, nSamples = 10L, pConfidence = 0.95, pInliers = 0.8, tolerance = 0.05) {
-    .Call(`_TreeLS_ransacStemCylinder`, las, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+ransacStemCylinder <- function(las, segs, rads, nSamples = 10L, pConfidence = 0.95, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacStemCylinder`, las, segs, rads, nSamples, pConfidence, pInliers, tolerance)
 }
 
-ransacPlotCircles <- function(las, treeId, segments, radii, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
-    .Call(`_TreeLS_ransacPlotCircles`, las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+ransacPlotCircles <- function(las, tId, segs, rads, nSamples = 5L, pConfidence = 0.99, pInliers = 0.8, tolerance = 0.05) {
+    .Call(`_TreeLS_ransacPlotCircles`, las, tId, segs, rads, nSamples, pConfidence, pInliers, tolerance)
 }
 
-ransacPlotCylinders <- function(las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance) {
-    .Call(`_TreeLS_ransacPlotCylinders`, las, treeId, segments, radii, nSamples, pConfidence, pInliers, tolerance)
+ransacPlotCylinders <- function(las, tId, segs, rads, nSamples, pConfidence, pInliers, tolerance) {
+    .Call(`_TreeLS_ransacPlotCylinders`, las, tId, segs, rads, nSamples, pConfidence, pInliers, tolerance)
 }
 
-irlsPlotCylinders <- function(las, treeId, segments, radii, nPoints, tolerance) {
-    .Call(`_TreeLS_irlsPlotCylinders`, las, treeId, segments, radii, nPoints, tolerance)
+irlsPlotCylinders <- function(las, tId, segs, rads, nPoints, tolerance) {
+    .Call(`_TreeLS_irlsPlotCylinders`, las, tId, segs, rads, nPoints, tolerance)
 }
 
-irlsPlotCircles <- function(las, treeId, segments, radii, nPoints, tolerance) {
-    .Call(`_TreeLS_irlsPlotCircles`, las, treeId, segments, radii, nPoints, tolerance)
+irlsPlotCircles <- function(las, tId, segs, rads, nPoints, tolerance) {
+    .Call(`_TreeLS_irlsPlotCircles`, las, tId, segs, rads, nPoints, tolerance)
 }
 
 pointMetricsCpp <- function(las, kIds, whichMetrics) {
@@ -93,7 +93,15 @@ cppCircleFit <- function(las, method = "qr", n = 5L, p = 0.99, inliers = 0.8, nb
     .Call(`_TreeLS_cppCircleFit`, las, method, n, p, inliers, nbest)
 }
 
-cppCylinderFit <- function(las, method = "nm", n = 10L, p = 0.95, inliers = 0.9) {
-    .Call(`_TreeLS_cppCylinderFit`, las, method, n, p, inliers)
+cppCylinderFit <- function(las, method = "nm", n = 10L, p = 0.95, inliers = 0.9, max_angle = 30) {
+    .Call(`_TreeLS_cppCylinderFit`, las, method, n, p, inliers, max_angle)
+}
+
+treeIdsFromMap <- function(las, xycenters, uniqueIds, length, circle) {
+    .Call(`_TreeLS_treeIdsFromMap`, las, xycenters, uniqueIds, length, circle)
+}
+
+bruteForceRansacCylinder <- function(las, nSamples, pConfidence, pInliers, nBest, maxAngle) {
+    .Call(`_TreeLS_bruteForceRansacCylinder`, las, nSamples, pConfidence, pInliers, nBest, maxAngle)
 }
 

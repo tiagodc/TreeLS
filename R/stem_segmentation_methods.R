@@ -209,7 +209,7 @@ sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
       las %<>% lasfilter(Stem)
 
-      estimates = ransacPlotCylinders(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
+      estimates = ransacPlotCylinders(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% lapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment', 'TreeID')
 
       z = las@data[, .(AvgHeight = mean(Z), N = .N), .(TreeID, Segment)]
@@ -229,6 +229,12 @@ sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
 }
 
+
+#' Stem segmentation algorithm: Iterated Reweighted Least Squares circle fit
+#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a reweighted least squares circle fit algorithm using M-estimators in order to remove outlier effects.
+#' @template param-tol
+#' @param n \code{numeric} - maximum number of points to sample when fitting a stem segment.
+#' @export
 sgt.irls.circle = function(tol=0.05, n = 500){
 
   params = list(
@@ -306,6 +312,12 @@ sgt.irls.circle = function(tol=0.05, n = 500){
 
 }
 
+
+#' Stem segmentation algorithm: Iterated Reweighted Least Squares cylinder fit
+#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a reweighted least squares cylinder fit algorithm using M-estimators and Nelder-Mead optimization in order to remove outlier effects.
+#' @template param-tol
+#' @param n \code{numeric} - maximum number of points to sample when fitting a stem segment.
+#' @export
 sgt.irls.cylinder = function(tol=0.05, n = 100){
 
   params = list(
