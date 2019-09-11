@@ -57,7 +57,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   height = las$Z %>% range %>% diff %>% abs
   height = height/2
 
-  tlsPlot.dh.3d(las, cbind(meds+q-a*height, meds+q+a*height), cbind(meds, meds+q), r, clear, wired, col)
+  tlsPlot.dh.3d(las, cbind(meds-a*height, meds+a*height), cbind(meds, meds+n*r), r, clear, wired, col)
 
   # cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
   # if(clear) clear3d() # else rgl.open()
@@ -86,9 +86,9 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   rmat = diag(3) + vx + (vx %*% vx)/(1+ as.double(a %*% c(0,0,1)))
 
   ptring = ptring %*% rmat
-  ptring[,1] = ptring[,1] + q[1] + meds[1]
-  ptring[,2] = ptring[,2] + q[2] + meds[2]
-  ptring[,3] = ptring[,3] + q[3] + meds[3]
+  ptring[,1] = ptring[,1] + meds[1]
+  ptring[,2] = ptring[,2] + meds[2]
+  ptring[,3] = ptring[,3] + meds[3]
 
   tlsPlot.dh.2d(las, ptring, r)
 
