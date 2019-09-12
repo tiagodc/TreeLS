@@ -24,7 +24,7 @@ tlsPlot.dh.bf.cylinder = function(las, x, y, r, ax, ay, clear=F, wired=T, col='w
   temp = as.matrix(pt3d) %*% rmat %>% as.data.table
   names(temp) = names(pt3d)
 
-  rmat = rotationMatrix(-ax*pi/180, -ay*pi/180, 0)
+  rmat = rotationMatrix(-ax*pi/180, 0, 0) %*% rotationMatrix(0, -ay*pi/180, 0)
   cbase = c(x,y,min(temp$Z)) %*% rmat %>% as.double
   ctop  = c(x,y,max(temp$Z)) %*% rmat %>% as.double
 
@@ -78,7 +78,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   ptring = cbind(
     cos(seq(0,2*pi,length.out = 36)) * r,
     sin(seq(0,2*pi,length.out = 36)) * r,
-    height
+    0
   )
 
   v = xprod(a,c(0,0,1))
