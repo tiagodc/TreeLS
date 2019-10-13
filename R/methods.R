@@ -666,7 +666,7 @@ tlsRotate = function(las){
   las@data$Y = las@data$Y - minXYZ[2]
   las@data$Z = las@data$Z - minXYZ[3]
 
-  las@data[,.(X,Y,Z)] = (las2xyz(las) %*% rot) %*% xyBack %>% as.data.table
+  las@data[,c('X','Y','Z')] = (las2xyz(las) %*% rot) %*% xyBack %>% as.data.table
 
   las@data$X = las@data$X + minXYZ[1]
   las@data$Y = las@data$Y + minXYZ[2]
