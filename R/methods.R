@@ -647,7 +647,7 @@ tlsRotate = function(las){
     lasground(csf(class_threshold = .2), F) %>%
     lasfilter(Classification == 2)
 
-  center = ground@data[,.(mean(X), mean(Y))] %>% as.double
+  center = ground@data[,.(median(X), median(Y))] %>% as.double
   ground = tlsCrop(ground, center[1], center[2], 5) %>% las2xyz
 
   az = planeAngle(ground, 'z')

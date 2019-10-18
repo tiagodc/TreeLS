@@ -20,13 +20,17 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-cyl = tlsCylinder(1000, .5, .12, .04)
-cyl@data$X = cyl@data$X + 37
-cyl@data$Y = cyl@data$Y - 57
-cyl@data$Z = cyl@data$Z + 12
+files = dir('~/Desktop/bracell/', pattern = '\\.laz$', full.names = T)
 
-cyl@data[,1:3] = as.data.table(as.matrix(cyl@data[,1:3]) %*% rotationMatrix(20*pi/180, 12*pi/180, 0))
+for(f in files){
+  print(f)
 
-est = cylinderFit(cyl, 'bf', n=15) %T>% print
-tlsPlot.dh(cyl, est, clear = T)
+  las = readLAS(f)
+  las = tlsTransform(las, c('z','x','y'), rotate = T)
+
+  if(grepl('_v\\.laz$',f)) las = tlsRotate(las)
+
+  nm = sub('\\.laz$', '_fix.laz', f)
+  writeLAS(las, nm)
+}
 
