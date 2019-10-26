@@ -493,7 +493,7 @@ treePositions = function(las, plot=T){
     las %<>% lasfilter(TreePosition)
   }
 
-  pos = las@data[,.(X=mean(X), Y=mean(Y)),by=TreeID]
+  pos = las@data[,.(X=median(X), Y=median(Y)),by=TreeID]
   pos = pos[order(TreeID)]
 
   pos %<>% setAttribute('tree_map_dt')
@@ -503,6 +503,44 @@ treePositions = function(las, plot=T){
   }
 
   return(pos)
+}
+
+
+#' Merge nearby trees in a tree_map object
+#' @description Check and merge TreeIDs which are too close in a tree_map object
+#' @export
+treeMapAggregate = function(las, d=.2){
+
+  isLAS(map)
+
+  if(!hasAttribute(las, 'tree_map'))
+    stop('las is not a tree_map object: check ?treeMap')
+
+  if(d < 0)
+    stop('d must be a positive number')
+
+  nxy = treePositions(las, plot = F)
+  nn = nabor::knn(nxy[,-1], k=2)
+  dst = nn$nn.dists[,2] %>% sort %>% unique
+  step = dst[-1] - dst[-length(dst)]
+  lg_step = which(step > d)
+  lg_step = lg_step[ lg_step/length(step) < .5 ]
+
+  if(length(lg_step) == 0) return(las)
+
+  lg_step = 1:max(lg_step)
+
+  id_step = which(nn$nn.dists[,2] %in% dst[lg_step])
+  id_mat = nn$nn.idx[id_step,]
+
+  if(nrow(id_mat) == 0) return(las)
+
+  for(rid in 1:nrow(id_mat)){
+    idx = id_mat[rid,]
+    las@data[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
+  }
+
+  return(las)
 }
 
 
