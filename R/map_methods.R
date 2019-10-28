@@ -299,7 +299,7 @@ map.pick = function(min_h=NULL, max_h=NULL){
       stop('no points found in the specified min_h/max_h range')
     }
 
-    plot(las, size = .5, clear_artifacts=T)
+    plot(las, size = .5, clear_artifacts=F)
     axes3d(col='white')
     pts = las@data %$% identify3d(X, Y, Z, tolerance = 50)
     tmap = data.table(las@data$X[pts], las@data$Y[pts], 0, 1:length(pts)) %>% toLAS(c('X','Y','Z','TreeID'))

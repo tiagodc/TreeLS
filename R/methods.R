@@ -431,7 +431,7 @@ tlsNormalize = function(las, res=.5, keep_ground=TRUE){
 
   if(!any(las$Classification == 2)){
     message('no ground points found, performing ground segmentation')
-    las %<>% lasground(csf(class_threshold = 0.2, cloth_resolution = 0.1), last_returns = F)
+    las %<>% lasground(csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
   }
 
   grid = las %>% extent %>% raster
