@@ -20,7 +20,7 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-files = dir('/media/tiago/DATA/Bracell', full.names = T)
+files = dir('../bracell_zeb/', full.names = T)
 
 f = 16
 # for(f in 5:length(files)){
@@ -32,16 +32,21 @@ f = 16
   las = tlsNormalize(las, .2, F)
   thin = tlsSample(las, smp.voxelize(.02))
 
-  map = treeMap(thin, map.hough(max_d=.3, min_h = 2.5, max_h = 4.5, min_density = .15))
+  map = treeMap(thin, map.hough(max_d=.3, min_h = 1.5, max_h = 3.5, min_density = .175))
 
-  treePositions(map)
+  tp = treePositions(map)
   map = treeMapAggregate(map)
   tp = treePositions(map)
 
-  plot(map, clear_artifacts=F)
-  rgl.points(lasfilter(thin, Z < 6)@data[,.(X,Y,Z)], size=.5)
+  plot(lasfilter(thin, Z < 6), clear_artifacts=F, colorPalette='#FFFFFF', size=.5)
+  spheres3d(tp$X, tp$Y, 1.3, .25, col='red')
 
-  las = treePoints(las, map, trp.crop(1,F))
+  tp = treeMap(thin, map.pick(tp, .5, 4))
+  tp %<>% setAttribute('tree_map_dt')
+  plot(tp$Y ~ tp$X, cex=.3, pch=20)
+  text(tp$X, tp$Y, tp$TreeID)
+
+  las = treePoints(las, tp, trp.crop(1,F))
   las = stemPoints(las, stm.hough(.5, h_base = c(1,3), max_radius = .15, pixel_size = .025, min_density = .2))
 
   h = las@data[TreeID > 0, .(H = max(Z)), by='TreeID']
@@ -51,7 +56,8 @@ f = 16
   dbh = data.table()
   for(d in unique(las_dbh$TreeID)){
     temp = lasfilter(las_dbh, TreeID == d)
-    est = circleFit(temp, 'ransac', 15, n_best = 30)
+    est = circleFit(temp, 'ransac', 5, n_best = 30)
+    # est = cylinderFit(temp, 'ransac', n=10, max_angle = 10)
     tlsPlot.dh(temp, est, F)
     est$TreeID = d
     # est = robustDiameter(temp)
@@ -62,12 +68,13 @@ f = 16
   text3d(tp$X, tp$Y, 0, tp$TreeID, size=1.5, col='yellow')
 
   inv = merge(dbh, h, by='TreeID')
-  inv = inv[!(TreeID %in% c(202))]
+  # inv[(TreeID %in% c(180,188))]$d = 0
+  # inv = inv[!(TreeID %in% c(72,32,2))]
 
   nm = sub('_clip\\.la[sz]', '_inv.csv', files[f])
   nm = sub('.+/(.+\\.csv)', '../bracell_results/\\1', nm)
 
-  hist(inv$d, main=nm, xlab=mean(inv$d) %>% round(2))
+  hist(inv[d>0]$d, main=nm, xlab=mean(inv[d>0]$d) %>% round(2))
   write.table(inv, nm, quote = F, row.names = F, sep=',')
 # }
 

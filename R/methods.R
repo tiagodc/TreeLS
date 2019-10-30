@@ -946,7 +946,7 @@ treePoints = function(las, map, method=trp.voronoi()){
   }else if(hasAttribute(map, 'tree_map')){
     map %<>% treePositions(F)
   }else{
-    stop('las is not a tree_map object: check ?treeMap')
+    stop('map is not a tree_map object: check ?treeMap')
   }
 
   if( map$TreeID %>% duplicated %>% any )

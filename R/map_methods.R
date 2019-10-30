@@ -271,10 +271,20 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It opens a new \code{rgl} plot on which the user can point the tree locations by clicking.
 #' @param min_h,max_h minimum/maximum height thresholds to filter the point cloud before plotting it in \code{rgl}.
 #' @export
-map.pick = function(min_h=NULL, max_h=NULL){
+map.pick = function(map = NULL, min_h=NULL, max_h=NULL){
 
   if(min_h >= max_h){
     stop('max_h must be larger than min_h')
+  }
+
+  if(!is.null(map)){
+    if(hasAttribute(map, 'tree_map_dt')){
+      # map = map
+    }else if(hasAttribute(map, 'tree_map')){
+      map %<>% treePositions(F)
+    }else{
+      stop('map is not a tree_map object: check ?treeMap')
+    }
   }
 
   func = function(las){
@@ -300,10 +310,28 @@ map.pick = function(min_h=NULL, max_h=NULL){
     }
 
     plot(las, size = .5, clear_artifacts=F)
+
+    if(!is.null(map)){
+      spheres3d(map$X, map$Y, median(las$Z), .33, color='white')
+      text3d(map$X, map$Y, min(las$Z)-.5, map$TreeID, cex=1.5, col='yellow')
+    }
+
     axes3d(col='white')
     pts = las@data %$% identify3d(X, Y, Z, tolerance = 50)
-    tmap = data.table(las@data$X[pts], las@data$Y[pts], 0, 1:length(pts)) %>% toLAS(c('X','Y','Z','TreeID'))
-    tmap %<>% setAttribute('map_pick')
+
+    ids = 1:length(pts)
+    if(!is.null(map)){
+      ids = ids + max(map$TreeID)
+    }
+
+    tmap = data.table(ids, las@data$X[pts], las@data$Y[pts]) # %>% toLAS(c('X','Y','TreeID'))
+    names(tmap) = c('TreeID', 'X','Y')
+
+    if(!is.null(map)){
+      tmap = rbind(map, tmap)
+    }
+
+    tmap %<>% setAttribute('tree_map_dt')
     return(tmap)
   }
 
