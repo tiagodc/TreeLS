@@ -421,7 +421,7 @@ vector<vector<double> > ransacStemCircle(vector<vector<double> >& cloud, vector<
     if(slice[0].size() <= nSamples) continue;
 
     double& hrad = segRadii[i];
-    vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers);
+    vector<double> temp = ransacCircle(slice, nSamples, pConfidence, pInliers, 20);
 
     double rdiff = abs(temp[2] - hrad);
     if(rdiff > tolerance){
