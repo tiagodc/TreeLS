@@ -83,7 +83,7 @@ sgt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
 
       message('performing single stem segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = ransacStemCircle(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, tol) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment')
@@ -101,7 +101,7 @@ sgt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
 
       message('performing multiple stems segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = ransacPlotCircles(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('X', 'Y', 'Radius', 'Error', 'Segment', 'TreeID')
@@ -189,7 +189,7 @@ sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
       message('performing single stem segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = ransacStemCylinder(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, tol) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment')
@@ -207,7 +207,7 @@ sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 
       message('performing multiple stems segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = ransacPlotCylinders(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, tol) %>% lapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment', 'TreeID')
@@ -272,7 +272,7 @@ sgt.irls.circle = function(tol=0.05, n = 500){
 
       message('performing single stem segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = irlsStemCircle(las %>% las2xyz, las@data$Segment, las@data$Radius, n, tol) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('X', 'Y', 'Radius', 'SSQ', 'Error', 'Segment')
@@ -290,7 +290,7 @@ sgt.irls.circle = function(tol=0.05, n = 500){
 
       message('performing multiple stems segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = irlsPlotCircles(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('X', 'Y', 'Radius', 'SSQ', 'Error', 'Segment', 'TreeID')
@@ -355,7 +355,7 @@ sgt.irls.cylinder = function(tol=0.05, n = 100){
 
       message('performing single stem segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = irlsStemCylinder(las %>% las2xyz, las@data$Segment, las@data$Radius, n, tol) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment')
@@ -373,7 +373,7 @@ sgt.irls.cylinder = function(tol=0.05, n = 100){
 
       message('performing multiple stems segmentation')
 
-      las %<>% lasfilter(Stem)
+      las %<>% filter_poi(Stem)
 
       estimates = irlsPlotCylinders(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, tol) %>% sapply(do.call, what=rbind) %>% do.call(what = rbind) %>% as.data.table
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment', 'TreeID')

@@ -140,7 +140,7 @@ ptm.knn = function(k = 30, r = 0){
 
     # df = data.table()
     # for(i in zuq){
-    #   temp = lasfilter(las, zclass == i)
+    #   temp = filter_poi(las, zclass == i)
     #   knn = nabor::knn(temp %>% las2xyz, k = k+1, radius = r)
     #   ptm = ptmStatistics(temp, knn, metrics_list)
     #   temp@data[,colnames(ptm)] = ptm

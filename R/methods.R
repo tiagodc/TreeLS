@@ -89,22 +89,6 @@ preCheck = function(las){
 
 }
 
-resetLAS = function(las){
-
-  if(class(las)[1] != "LAS")
-    stop("las must be a LAS object")
-
-  prj4 = las@proj4string
-  vlr = las@header@VLR
-
-  las = las@data %>% LAS %>% setHeaderTLS
-
-  las@proj4string = prj4
-  las@header@VLR = vlr
-
-  return(las)
-}
-
 toLAS = function(dataMatrix, namesVector=NULL){
 
   if(ncol(dataMatrix) < 3)
@@ -156,16 +140,16 @@ setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
   if(class(las)[1] != "LAS")
     stop("las must be a LAS object")
 
-  if(las@header@PHB$`X scale factor` > xfac)
-    las@header@PHB$`X scale factor` = xfac
+  if(las@header@PHB$`X scale factor` < xfac)
+    xfac = las@header@PHB$`X scale factor`
 
-  if(las@header@PHB$`Y scale factor` > yfac)
-    las@header@PHB$`Y scale factor` = yfac
+  if(las@header@PHB$`Y scale factor` < yfac)
+    yfac = las@header@PHB$`Y scale factor`
 
-  if(las@header@PHB$`Z scale factor` > xfac)
-    las@header@PHB$`Z scale factor` = zfac
+  if(las@header@PHB$`Z scale factor` < zfac)
+    zfac = las@header@PHB$`Z scale factor`
 
-  return(las)
+  return(las_rescale(las, xfac, yfac, zfac))
 }
 
 #' @importFrom stats runif
@@ -268,9 +252,9 @@ pan3d = function(button){
 setTLS = function(cloud, colNames=NULL){
 
   if(class(cloud)[1] == 'LAS'){
-    cloud %<>% resetLAS
+    cloud = setHeaderTLS(cloud)
   }else{
-    cloud %<>% toLAS(colNames)
+    cloud = toLAS(cloud, colNames)
   }
 
   return(cloud)
@@ -333,7 +317,7 @@ tlsSample = function(las, method = smp.voxelize()){
   if(!hasAttribute(method, 'tls_sample_mtd'))
     stop('invalid method: check ?tlsSample')
 
-  las %<>% lasfilter(method(las))
+  las %<>% filter_poi(method(las))
 
   return(las)
 }
@@ -396,7 +380,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
     stop('negative must of length 1')
 
   bool = RCropCloud(las %>% las2xyz, x, y, len, circle, negative)
-  las %<>% lasfilter(bool)
+  las %<>% filter_poi(bool)
 
   return(las)
 
@@ -422,7 +406,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #'
 #' @importFrom raster raster extent res<-
 #' @export
-tlsNormalize = function(las, res=.5, keep_ground=TRUE){
+tlsNormalize = function(las, res=.25, keep_ground=TRUE){
 
   isLAS(las)
 
@@ -431,17 +415,16 @@ tlsNormalize = function(las, res=.5, keep_ground=TRUE){
 
   if(!any(las$Classification == 2)){
     message('no ground points found, performing ground segmentation')
-    las %<>% lasground(csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
+    las = classify_ground(las, csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
   }
 
   grid = las %>% extent %>% raster
   res(grid) = res
 
-  dtm = suppressWarnings( grid_terrain(las, res = grid, algorithm = knnidw()) )
+  dtm = grid_terrain(las, res = grid, algorithm = knnidw(), full_raster=TRUE)
+  las = normalize_height(las, dtm, na.rm=TRUE, Wdegenerated = TRUE)
 
-  las %<>% lasnormalize(dtm, na.rm=TRUE)
-
-  if(!keep_ground) las %<>% lasfilter(Classification != 2)
+  if(!keep_ground) las = filter_poi(las, Classification != 2)
 
   return(las)
 
@@ -467,7 +450,7 @@ treeMap = function(las, method = map.hough()){
   preCheck(las)
 
   if(hasField(las, 'Classification'))
-    las %<>% lasfilter(Classification != 2)
+    las %<>% filter_poi(Classification != 2)
 
   map = method(las) %>% setAttribute('tree_map')
 
@@ -490,7 +473,7 @@ treePositions = function(las, plot=T){
     stop('las is not a tree_map object: check ?treeMap')
 
   if(hasAttribute(las, 'map_hough')){
-    las %<>% lasfilter(TreePosition)
+    las %<>% filter_poi(TreePosition)
   }
 
   pos = las@data[,.(X=median(X), Y=median(Y)),by=TreeID]
@@ -607,7 +590,7 @@ stemSegmentation = function(las, method=sgt.ransac.circle()){
 
 
 #' Filter points based on gpstime
-#' @description This is a simple wrapper to \code{\link[lidR:lasfilter]{lasfilter}} that takes as inputs proportional values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
+#' @description This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs proportional values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
 #' @template param-las
 #' @param from,to \code{numeric} - between 0 and 1 - gpstime quantile limits to filter by
 #' @template return-las
@@ -646,7 +629,7 @@ gpsTimeFilter = function(las, from=0, to=1){
   }
 
   qts = las@data$gpstime %>% quantile(c(from, to), na.rm=T)
-  las %<>% lasfilter(gpstime >= qts[1] & gpstime <= qts[2])
+  las %<>% filter_poi(gpstime >= qts[1] & gpstime <= qts[2])
 
   return(las)
 
@@ -680,10 +663,10 @@ tlsRotate = function(las){
 
   . = NULL
 
-  ground = las@data[,1:3] %>%
+  ground = las@data[,c('X','Y','Z')] %>%
     toLAS %>%
-    lasground(csf(class_threshold = .2), F) %>%
-    lasfilter(Classification == 2)
+    classify_ground(csf(class_threshold = .2), F) %>%
+    filter_poi(Classification == 2)
 
   center = ground@data[,.(median(X), median(Y))] %>% as.double
   ground = tlsCrop(ground, center[1], center[2], 5) %>% las2xyz
@@ -709,8 +692,6 @@ tlsRotate = function(las){
   las@data$X = las@data$X + minXYZ[1]
   las@data$Y = las@data$Y + minXYZ[2]
   las@data$Z = las@data$Z + minXYZ[3]
-
-  las %<>% resetLAS
 
   return(las)
 }
@@ -801,7 +782,6 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
   . = NULL
 
   las@data[,1:3] = XYZ
-  las %<>% resetLAS
 
   if(rotate){
     las %<>% tlsRotate()
@@ -815,8 +795,6 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
     las@data$X = las@data$X - mincoords[1]
     las@data$Y = las@data$Y - mincoords[2]
     las@data$Z = las@data$Z - mincoords[3]
-
-    las %<>% resetLAS
   }
 
   return(las)
@@ -859,10 +837,10 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 
     if(is.null(treeID)){
 
-      temp = lasfilter(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
+      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
 
-      corner = plot(las %>% lasfilter(Stem), color='TreeID', colorPalette=cp, size=1.5)
-      las %<>% lasfilter(!Stem & Classification != 2)
+      corner = plot(las %>% filter_poi(Stem), color='TreeID', colorPalette=cp, size=1.5)
+      las %<>% filter_poi(!Stem & Classification != 2)
       rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
 
       temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=sgmtColor)
@@ -878,10 +856,10 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 
       las %<>% tlsCrop(xy[1], xy[2], 1.5)
 
-      temp = lasfilter(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
+      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
 
-      corner = plot(las %>% lasfilter(Stem), size=1.5)
-      las %<>% lasfilter(!Stem & Classification != 2)
+      corner = plot(las %>% filter_poi(Stem), size=1.5)
+      las %<>% filter_poi(!Stem & Classification != 2)
       rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
 
       temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=sgmtColor)
@@ -890,8 +868,8 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 
   }else if(hasAttribute(las, 'single_stem_points')){
 
-    corner = plot(las %>% lasfilter(Stem), size=1.5)
-    las %<>% lasfilter(!Stem & Classification != 2)
+    corner = plot(las %>% filter_poi(Stem), size=1.5)
+    las %<>% filter_poi(!Stem & Classification != 2)
     rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
 
   }else{
@@ -914,7 +892,7 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
   if(!is.null(map)){
     if(hasAttribute(map, 'tree_map')){
       if(!is.null(treeID)){
-        map %<>% lasfilter(TreeID == treeID)
+        map %<>% filter_poi(TreeID == treeID)
       }
       map@data %$% rgl.points(X - corner[1], Y - corner[2], Z, color='green', size=.5)
     }else{
@@ -996,7 +974,7 @@ nnFilter = function(las, d = 0.05, n = 2){
 
   #   keep[bool] = knn >= n
   # }
-  las %<>% lasfilter(keep)
+  las %<>% filter_poi(keep)
   return(las)
 }
 
@@ -1134,7 +1112,7 @@ robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile =
     pts = dsts < temp$r + 2*pixel_size & dlas@data$StemID == 0
     dlas@data$StemID[pts] = i
 
-    cld = lasfilter(dlas, StemID == i)
+    cld = filter_poi(dlas, StemID == i)
     est = circleFit(cld, 'ransac', n=15, inliers = .7, n_best = 30)
     if(is.null(est)) next
 

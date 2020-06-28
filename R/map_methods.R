@@ -156,7 +156,7 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
   }
 
   func = function(las){
-    las = lasfilter(las, Classification != 2)
+    las = filter_poi(las, Classification != 2)
 
     mtrlst = c('N', 'Planarity', 'Verticality', 'MeanDistance')
 
@@ -166,7 +166,7 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
       las = pointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    las = lasfilter(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality & MeanDistance < max_mean_dist) %>%
+    las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality & MeanDistance < max_mean_dist) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
 
     las@data$TreeID = 0
@@ -180,7 +180,7 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = lasfilter(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
+    las = filter_poi(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
 
     las %<>% setAttribute('map_eigen')
     return(las)
@@ -233,7 +233,7 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
   }
 
   func = function(las){
-    las = lasfilter(las, Classification != 2)
+    las = filter_poi(las, Classification != 2)
     mtrlst = c('N', 'Planarity', 'Verticality')
 
     checkPtMetrics = c(mtrlst, 'VoxelID') %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
@@ -242,7 +242,7 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
       las = pointMetrics(las, ptm.voxel(vxl), mtrlst)
     }
 
-    las = lasfilter(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality) %>%
+    las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
 
     las@data$TreeID = 0
@@ -256,7 +256,7 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = lasfilter(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
+    las = filter_poi(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
 
     las %<>% setAttribute('map_eigen')
     return(las)
@@ -298,11 +298,11 @@ map.pick = function(map = NULL, min_h=NULL, max_h=NULL){
       stop('hmin is too high - above the point cloud')
 
     if(!is.null(min_h)){
-      las = lasfilter(las, Z > min_h)
+      las = filter_poi(las, Z > min_h)
     }
 
     if(!is.null(max_h)){
-      las = lasfilter(las, Z < max_h)
+      las = filter_poi(las, Z < max_h)
     }
 
     if(lidR::is.empty(las)){
