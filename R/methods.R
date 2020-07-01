@@ -94,7 +94,7 @@ toLAS = function(dataMatrix, namesVector=NULL){
   if(ncol(dataMatrix) < 3)
     stop('dataMatrix must have at least 3 columns')
 
-  dataMatrix %<>% as.data.frame
+  dataMatrix %<>% as.data.table
 
   if(!is.null(namesVector)){
 
@@ -280,6 +280,10 @@ readTLS = function(file, col_names=NULL, ...){
   if(format %in% c('laz', 'las')){
 
     las = readLAS(file, ...) %>% setHeaderTLS
+
+  }else if(format == 'ply'){
+
+    las = LAS(rlas::read.las(file, ...)) %>% setHeaderTLS
 
   }else{
 
