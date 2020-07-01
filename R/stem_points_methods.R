@@ -88,7 +88,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
     if(min(las$Z) > 5)
       message("point cloud doesn't look normalized (Z values too high) - check ?tlsNormalize")
 
-    surveyPts = if(las %>% hasField('Classification')){
+    survey_points = if(las %>% hasField('Classification')){
       las$Classification != 2
     }else{
       rep(T, las@data %>% nrow)
@@ -96,24 +96,24 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
     if(!hasField(las, 'TreeID')){
       message('no TreeID field found with tree_points signature: performing single stem point classification')
-      results = houghStemPoints(las2xyz(las)[surveyPts,], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
+      results = houghStemPoints(las2xyz(las)[survey_points,], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
     }else{
       message('performing point classification on multiple stems')
-      surveyPts = surveyPts & las$TreeID > 0
-      results = houghStemPlot(las2xyz(las)[surveyPts,], las@data$TreeID[surveyPts], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
+      survey_points = survey_points & las$TreeID > 0
+      results = houghStemPlot(las2xyz(las)[survey_points,], las@data$TreeID[survey_points], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
     }
 
     las@data$Stem = F
-    las@data$Stem[surveyPts] = results$Stem
+    las@data$Stem[survey_points] = results$Stem
 
     las@data$Segment = 0
-    las@data$Segment[surveyPts] = results$Segment
+    las@data$Segment[survey_points] = results$Segment
 
     las@data$Radius = 0
-    las@data$Radius[surveyPts] = results$Radius
+    las@data$Radius[survey_points] = results$Radius
 
     las@data$Votes = 0
-    las@data$Votes[surveyPts] = results$Votes
+    las@data$Votes[survey_points] = results$Votes
 
     las %<>% resetLAS
 
@@ -144,7 +144,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = F){
+stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,
@@ -184,8 +184,8 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, 
     #     lapply(function(x) x@data) %>% do.call(what=rbind) %>% as.data.table
     # }
 
-    checkPtMetrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
-    if(!checkPtMetrics){
+    check_point_metrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!check_point_metrics){
       message('Calculating knn pointMetrics')
       las = pointMetrics(las, ptm.knn(), mtrlst)
     }
@@ -195,8 +195,8 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, 
       las@data$Stem = las@data$Stem & las@data$Classification != 2
     }
 
-    stemSeg = seq(0, max(las$Z)+h_step, h_step)
-    las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
+    stem_seg = seq(0, max(las$Z)+h_step, h_step)
+    las@data$Segment = cut(las$Z, stem_seg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
     las@data$Segment[las@data$Z < 0] = 0
 
     if(hasField(las, 'TreeID')){
@@ -231,8 +231,8 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, 
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 
     if(hasField(las, 'TreeID')){
-      maxVotes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
-      las@data = merge(las@data, maxVotes, by='TreeID', sort=F, all.x=T)
+      max_votes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
+      las@data = merge(las@data, max_votes, by='TreeID', sort=FALSE, all.x=TRUE)
       las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
       las@data$MaxVotes = NULL
     }else{
@@ -259,7 +259,7 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, 
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.voxel = function(h_step = .5, max_planarity = .2, max_verticality = 20, voxel_spacing = .1, max_d = .5, votes_weight = .2, v3d = F){
+stm.eigen.voxel = function(h_step = .5, max_planarity = .2, max_verticality = 20, voxel_spacing = .1, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,
@@ -292,16 +292,16 @@ stm.eigen.voxel = function(h_step = .5, max_planarity = .2, max_verticality = 20
     mtrlst = c('N', 'Planarity', 'Verticality', 'EigenVectors')
     mtrnames = c(mtrlst[-4], 'EigenVector13', 'EigenVector23', 'EigenVector33', 'VoxelID')
 
-    checkPtMetrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
-    if(!checkPtMetrics){
+    check_point_metrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!check_point_metrics){
       message('Calculating voxel pointMetrics')
       las = pointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
     las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality)
 
-    stemSeg = seq(0, max(las$Z)+h_step, h_step)
-    las@data$Segment = cut(las$Z, stemSeg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
+    stem_seg = seq(0, max(las$Z)+h_step, h_step)
+    las@data$Segment = cut(las$Z, stem_seg, include_lowest=T, right=F, ordered_result=T) %>% as.integer
     las@data$Segment[las@data$Z < 0] = 0
 
     if(hasField(las, 'TreeID')){
@@ -335,8 +335,8 @@ stm.eigen.voxel = function(h_step = .5, max_planarity = .2, max_verticality = 20
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 
     if(hasField(las, 'TreeID')){
-      maxVotes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
-      las@data = merge(las@data, maxVotes, by='TreeID', sort=F, all.x=T)
+      max_votes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
+      las@data = merge(las@data, max_votes, by='TreeID', sort=F, all.x=T)
       las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
       las@data$MaxVotes = NULL
     }else{

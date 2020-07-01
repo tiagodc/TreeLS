@@ -18,22 +18,22 @@
 #
 # ===============================================================================
 
-ptmMetricsLog = function(metrics_list){
-  metrics_log = point.metrics.check %in% metrics_list
+ptmMetricsLog = function(which_metrics){
+  metrics_log = POINT_METRICS_CHECK %in% which_metrics
 
   if(all(!metrics_log)) stop('Please provide at least one known metric. See ?availablePointMetrics')
 
-  metrics_names = point.metrics.names[1:9][metrics_log[1:9]]
-  if(metrics_log[10]) metrics_names %<>% c(point.metrics.names[10:12])
-  if(metrics_log[11]) metrics_names %<>% c(point.metrics.names[13:21])
+  metrics_names = POINT_METRICS_NAMES[1:9][metrics_log[1:9]]
+  if(metrics_log[10]) metrics_names %<>% c(POINT_METRICS_NAMES[10:12])
+  if(metrics_log[11]) metrics_names %<>% c(POINT_METRICS_NAMES[13:21])
 
   return(list(log = metrics_log, names = metrics_names))
 
 }
 
-ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
+ptmStatistics = function(las, knn, which_metrics = POINT_METRICS_CHECK){
 
-  pickMetrics = ptmMetricsLog(metrics_list)
+  pick_metrics = ptmMetricsLog(which_metrics)
 
   kid = knn$nn.idx
   kds = knn$nn.dists
@@ -41,15 +41,15 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
 
   ptm = data.table()
 
-  if(any(pickMetrics$log[1:11])){
-    ptm =  pointMetricsCpp(las %>% las2xyz, kid, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
-    colnames(ptm) = pickMetrics$names
+  if(any(pick_metrics$log[1:11])){
+    ptm =  pointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
+    colnames(ptm) = pick_metrics$names
   }
 
-  distMetrics = point.metrics.check[ 12:17 ][ pickMetrics$log[12:17] ]
-  if(length(distMetrics) > 0){
-    dtm = cppFastApply(kds[,-1], distMetrics) %>% do.call(what=rbind) %>% as.data.table
-    colnames(dtm) = distMetrics
+  dist_metrics = POINT_METRICS_CHECK[ 12:17 ][ pick_metrics$log[12:17] ]
+  if(length(dist_metrics) > 0){
+    dtm = cppFastApply(kds[,-1], dist_metrics) %>% do.call(what=rbind) %>% as.data.table
+    colnames(dtm) = dist_metrics
     ptm = cbind(ptm, dtm)
   }
 
@@ -66,15 +66,15 @@ ptmStatistics = function(las, knn, metrics_list = point.metrics.check){
 #' @param d \code{numeric} - voxel spacing.
 #' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search, much faster on dense point clouds (millions of points).
 #' @export
-ptm.voxel = function(d = .1, exact=F){
+ptm.voxel = function(d = .1, exact=FALSE){
 
   if(!is.numeric(d)) stop('d must be a number')
   if(d <= 0) stop('d must be a positive number')
   if(!is.logical(exact)) stop('exact must be logical')
 
-  func = function(las, metrics_list){
+  func = function(las, which_metrics){
 
-    pickMetrics = ptmMetricsLog(metrics_list)
+    pick_metrics = ptmMetricsLog(which_metrics)
 
     if(exact){
 
@@ -100,11 +100,11 @@ ptm.voxel = function(d = .1, exact=F){
     }
 
     idx = split(0:(length(vx)-1), vx)
-    vtm = voxelMetrics(las2xyz(las), idx, pickMetrics$log) %>% do.call(what = rbind) %>% as.data.table
-    colnames(vtm) = pickMetrics$names
+    vtm = voxelMetrics(las2xyz(las), idx, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
+    colnames(vtm) = pick_metrics$names
 
-    keepNames = colnames(las@data)[ !( colnames(las@data) %in% colnames(vtm) ) ]
-    las@data = las@data[, ..keepNames]
+    keep_names = colnames(las@data)[ !( colnames(las@data) %in% colnames(vtm) ) ]
+    las@data = las@data[, ..keep_names]
     vtm$VoxelID = names(idx) %>% as.double
     las@data$VoxelID = vx
     las@data = merge(las@data, vtm, by='VoxelID', sort=F)
@@ -130,25 +130,11 @@ ptm.knn = function(k = 30, r = 0){
   if(k < 3) stop('k must be a number larger than 3')
   if(r < 0) stop('r must be 0 or higher')
 
-  func = function(las, metrics_list){
+  func = function(las, which_metrics){
 
     k = nabor::knn(las %>% las2xyz, k = k+1, radius = r)
-    ptm = ptmStatistics(las, k, metrics_list)
+    ptm = ptmStatistics(las, k, which_metrics)
     las@data[,colnames(ptm)] = ptm
-    # zclass = splitByIndex(las)
-    # zuq = unique(zclass)
-
-    # df = data.table()
-    # for(i in zuq){
-    #   temp = filter_poi(las, zclass == i)
-    #   knn = nabor::knn(temp %>% las2xyz, k = k+1, radius = r)
-    #   ptm = ptmStatistics(temp, knn, metrics_list)
-    #   temp@data[,colnames(ptm)] = ptm
-    #   df = rbind(df, temp@data)
-    # }
-
-    # las@data = df
-    # las = resetLAS(las)
     return(las)
   }
 

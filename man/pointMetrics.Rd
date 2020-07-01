@@ -5,7 +5,7 @@
 \title{Calculate metrics on point neighborhoods}
 \usage{
 pointMetrics(las, method = ptm.voxels(),
-  metrics_list = point.metrics.check)
+  metrics_list = POINT_METRICS_CHECK)
 }
 \arguments{
 \item{las}{\code{LAS} object.}

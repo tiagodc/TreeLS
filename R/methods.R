@@ -29,39 +29,37 @@
 
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
 
-point.metrics.names = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValue1', 'EigenValue2', 'EigenValue3', 'EigenVector11', 'EigenVector21', 'EigenVector31', 'EigenVector12', 'EigenVector22', 'EigenVector32', 'EigenVector13', 'EigenVector23', 'EigenVector33')
-
-point.metrics.check = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance', 'VarDistance', 'SdDistance')
-
-tls.marker = 'tlsAttribute'
+POINT_METRICS_NAMES = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValue1', 'EigenValue2', 'EigenValue3', 'EigenVector11', 'EigenVector21', 'EigenVector31', 'EigenVector12', 'EigenVector22', 'EigenVector32', 'EigenVector13', 'EigenVector23', 'EigenVector33')
+POINT_METRICS_CHECK = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance', 'VarDistance', 'SdDistance')
+TLS_MARKER = 'TLS_MARKER'
 
 isLAS = function(las){
   if(class(las)[1] != 'LAS')
     stop('input data must be a LAS object - checkout ?setTLS')
 }
 
-setAttribute = function(obj, atnm){
-  attr(obj, tls.marker) = atnm
+setAttribute = function(obj, attribute_name){
+  attr(obj, TLS_MARKER) = attribute_name
   return(obj)
 }
 
-hasAttribute = function(obj, atnm){
-  tlsatt = attr(obj, tls.marker)
-  bool = is.null(tlsatt) || tlsatt != atnm
+hasAttribute = function(obj, attribute_name){
+  tlsatt = attr(obj, TLS_MARKER)
+  bool = is.null(tlsatt) || tlsatt != attribute_name
   return(!bool)
 }
 
-plot.cylinder = function(xCenter = 0, yCenter = 0, hBase = 0, hTop = 1, radius = 0.5, col = 'yellow'){
+plot.cylinder = function(x_center = 0, y_center = 0, h_bottom = 0, h_top = 1, radius = 0.5, color = 'yellow'){
 
   axis = matrix(c(
-    rep(xCenter, 2),
-    rep(yCenter, 2),
-    seq(hBase, hTop, length.out = 2)
+    rep(x_center, 2),
+    rep(y_center, 2),
+    seq(h_bottom, h_top, length.out = 2)
   ), ncol = 3, byrow = F)
 
   cyl = cylinder3d(axis, radius = radius)
 
-  mesh = shade3d(addNormals(subdivision3d(cyl, depth = 0)), col = col)
+  mesh = shade3d(addNormals(subdivision3d(cyl, depth = 0)), col = color)
   # mesh = shade3d(cyl, col=col)
 }
 
@@ -69,57 +67,57 @@ preCheck = function(las){
 
   isLAS(las)
 
-  hasClass = "Classification" %in% names(las@data)
+  has_class = "Classification" %in% names(las@data)
 
-  if( !hasClass ){
+  if(!has_class){
     message('no Classification field found in the dataset')
 
   }else{
 
-    hasGround = any(las$Classification == 2)
+    has_ground = any(las$Classification == 2)
 
-    if(hasGround){
+    if(has_ground){
 
-      meanGround = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
+      mean_ground = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
 
-      if(meanGround > 0.2)
+      if(mean_ground > 0.2)
         message("point cloud apparently not normalized")
     }
   }
 
 }
 
-toLAS = function(dataMatrix, namesVector=NULL){
+toLAS = function(data_matrix, column_names=NULL){
 
-  if(ncol(dataMatrix) < 3)
-    stop('dataMatrix must have at least 3 columns')
+  if(ncol(data_matrix) < 3)
+    stop('data_matrix must have at least 3 columns')
 
-  dataMatrix %<>% as.data.table
+  data_matrix %<>% as.data.table
 
-  if(!is.null(namesVector)){
+  if(!is.null(column_names)){
 
-    if(length(namesVector) != ncol(dataMatrix))
-      stop('dataMatrix must have the same number of columns as there are names in namesVector')
+    if(length(column_names) != ncol(data_matrix))
+      stop('data_matrix must have the same number of columns as in column_names')
 
-    checkXYZ = c('X', 'Y', 'Z') %in% namesVector
+    checkXYZ = c('X', 'Y', 'Z') %in% column_names
 
     if(!all(checkXYZ))
-      stop('X, Y and Z must be declared explicitly in namesVector (in uppercase)')
+      stop('X, Y and Z must be declared explicitly in column_names (in uppercase)')
 
-    colnames(dataMatrix) = namesVector
+    colnames(data_matrix) = column_names
 
   } else {
 
-    if(ncol(dataMatrix) > 3)
+    if(ncol(data_matrix) > 3)
       message('converting first three columns only (assumed XYZ coordinates)')
 
-    dataMatrix = dataMatrix[,1:3]
-    colnames(dataMatrix) = c('X', 'Y', 'Z')
+    data_matrix = data_matrix[,1:3]
+    colnames(data_matrix) = c('X', 'Y', 'Z')
 
   }
 
-  dataMatrix %<>% LAS %>% setHeaderTLS
-  return(dataMatrix)
+  data_matrix %<>% LAS %>% setHeaderTLS
+  return(data_matrix)
 }
 
 las2xyz = function(las){
@@ -131,37 +129,37 @@ las2xyz = function(las){
   return(las)
 }
 
-hasField = function(las, field){
-  any(names(las@data) == field) %>% return()
+hasField = function(las, field_name){
+  any(names(las@data) == field_name) %>% return()
 }
 
-setHeaderTLS = function(las, xfac = 0.0001, yfac = 0.0001, zfac = 0.0001){
+setHeaderTLS = function(las, x_scale = 0.0001, y_scale = 0.0001, z_scale = 0.0001){
 
   if(class(las)[1] != "LAS")
     stop("las must be a LAS object")
 
-  if(las@header@PHB$`X scale factor` < xfac)
-    xfac = las@header@PHB$`X scale factor`
+  if(las@header@PHB$`X scale factor` < x_scale)
+    x_scale = las@header@PHB$`X scale factor`
 
-  if(las@header@PHB$`Y scale factor` < yfac)
-    yfac = las@header@PHB$`Y scale factor`
+  if(las@header@PHB$`Y scale factor` < y_scale)
+    y_scale = las@header@PHB$`Y scale factor`
 
-  if(las@header@PHB$`Z scale factor` < zfac)
-    zfac = las@header@PHB$`Z scale factor`
+  if(las@header@PHB$`Z scale factor` < z_scale)
+    z_scale = las@header@PHB$`Z scale factor`
 
-  return(las_rescale(las, xfac, yfac, zfac))
+  return(las_rescale(las, x_scale, y_scale, z_scale))
 }
 
 #' @importFrom stats runif
-tlsCylinder = function(n=10000, h=100, rad=30, dev=0){
+tlsCylinder = function(n=10000, h=100, radius=30, deviation=0){
 
-  rad = runif(n, rad-dev, rad+dev)
+  radius = runif(n, radius-deviation, radius+deviation)
 
   z=runif(n = n, min = 0, max = h)
 
   angs = runif(n, 0, 2*pi)
-  x = sin(angs)*rad
-  y = cos(angs)*rad
+  x = sin(angs)*radius
+  y = cos(angs)*radius
 
   return(cbind(x,y,z) %>% toLAS)
 }
@@ -174,10 +172,10 @@ planeAngle = function(xyz, axis='z'){
 
   global_axis = if(axis == 'z') c(0,0,1) else if(axis=='x') c(1,0,0) else c(0,1,0)
 
-  ang = (( e$vectors[,3] %*% global_axis ) / ( sqrt(sum(e$vectors[,3]^2)) * sqrt(sum(global_axis^2)) )) %>%
+  angle = (( e$vectors[,3] %*% global_axis ) / ( sqrt(sum(e$vectors[,3]^2)) * sqrt(sum(global_axis^2)) )) %>%
     as.double %>% acos
 
-  return(ang)
+  return(angle)
 }
 
 rotationMatrix = function (ax, ay, az){
@@ -191,9 +189,9 @@ rotationMatrix = function (ax, ay, az){
   return(mat)
 }
 
-tfMatrix = function (ax, az, ax2, x, y, z){
+tfMatrix = function(ax, ay, az, x, y, z){
 
-  mat = rotationMatrix(ax, az, ax2) %>%
+  mat = rotationMatrix(ax, ay, az) %>%
     rbind(0) %>% cbind(c(x,y,z,1))
 
   return(mat)
@@ -249,12 +247,12 @@ pan3d = function(button){
 #' cld = setTLS(cld)
 #' summary(cld)
 #' @export
-setTLS = function(cloud, colNames=NULL){
+setTLS = function(cloud, col_names=NULL){
 
   if(class(cloud)[1] == 'LAS'){
     cloud = setHeaderTLS(cloud)
   }else{
-    cloud = toLAS(cloud, colNames)
+    cloud = toLAS(cloud, col_names)
   }
 
   return(cloud)
@@ -272,6 +270,7 @@ setTLS = function(cloud, colNames=NULL){
 #' tls = readTLS(file)
 #' summary(tls)
 #' @importFrom utils read.table
+#' @importFrom rlas read.las
 #' @export
 readTLS = function(file, col_names=NULL, ...){
 
@@ -283,7 +282,7 @@ readTLS = function(file, col_names=NULL, ...){
 
   }else if(format == 'ply'){
 
-    las = LAS(rlas::read.las(file, ...)) %>% setHeaderTLS
+    las = LAS(read.las(file, ...)) %>% setHeaderTLS
 
   }else{
 
@@ -395,7 +394,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' @description Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
 #' @template param-las
 #' @param res \code{numeric} - resolution of the DTM used for normalization.
-#' @param keepGround \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points.
+#' @param keep_ground \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points.
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
@@ -469,7 +468,7 @@ treeMap = function(las, method = map.hough()){
 #' @return \code{data.table} of tree IDs and XY coordinates with \emph{tree_map_dt} signature.
 #' @template example-tree-map
 #' @export
-treePositions = function(las, plot=T){
+treePositions = function(las, plot=TRUE){
 
   isLAS(las)
 
@@ -495,8 +494,9 @@ treePositions = function(las, plot=T){
 
 #' Merge nearby trees in a tree_map object
 #' @description Check and merge TreeIDs which are too close in a tree_map object
+#' @importFrom nabor knn
 #' @export
-treeMapAggregate = function(las, d=.2){
+treeMap.merge = function(las, d=.2){
 
   isLAS(map)
 
@@ -507,7 +507,7 @@ treeMapAggregate = function(las, d=.2){
     stop('d must be a positive number')
 
   nxy = treePositions(las, plot = F)
-  nn = nabor::knn(nxy[,-1], k=2)
+  nn = knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
   lg_step = which(step > d)
@@ -683,7 +683,7 @@ tlsRotate = function(las){
   rx = ifelse(ay < pi/2, -ax, ax)
 
   rot = rotationMatrix(0, rz, rx) %>% as.matrix
-  xyBack = rotationMatrix(0,0,-rx) %>% as.matrix
+  xy_back = rotationMatrix(0,0,-rx) %>% as.matrix
 
   minXYZ = apply(las@data[,1:3], 2, min) %>% as.double
 
@@ -691,7 +691,7 @@ tlsRotate = function(las){
   las@data$Y = las@data$Y - minXYZ[2]
   las@data$Z = las@data$Z - minXYZ[3]
 
-  las@data[,c('X','Y','Z')] = (las2xyz(las) %*% rot) %*% xyBack %>% as.data.table
+  las@data[,c('X','Y','Z')] = (las2xyz(las) %*% rot) %*% xy_back %>% as.data.table
 
   las@data$X = las@data$X + minXYZ[1]
   las@data$Y = las@data$Y + minXYZ[2]
@@ -813,7 +813,7 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 #' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
 #' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
 #' @param treeID optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
-#' @param sgmtColor optional - color of the plotted stem segment representations.
+#' @param color optional - color of the plotted stem segment representations.
 #' @examples
 #' ### single tree
 #' file = system.file("extdata", "spruce.laz", package="TreeLS")
@@ -826,12 +826,12 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 #' ### For further examples check:
 #' ?stemSegmentation
 #' @export
-tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yellow'){
+tlsPlot = function(las, sgmt = NULL, map = NULL, tree_id = NULL, color = 'yellow'){
 
   isLAS(las)
 
-  if(!is.null(treeID) && (length(treeID) != 1 || !is.numeric(treeID)))
-      stop('treeID must be numeric of length 1')
+  if(!is.null(tree_id) && (length(tree_id) != 1 || !is.numeric(tree_id)))
+      stop('tree_id must be numeric of length 1')
 
   . = NULL
 
@@ -839,22 +839,22 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 
   if(hasAttribute(las, 'multiple_stem_points')){
 
-    if(is.null(treeID)){
+    if(is.null(tree_id)){
 
-      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
+      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=tree_id]
 
       corner = plot(las %>% filter_poi(Stem), color='TreeID', colorPalette=cp, size=1.5)
       las %<>% filter_poi(!Stem & Classification != 2)
       rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
 
-      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=sgmtColor)
+      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
 
     }else{
 
-      xy = las@data[TreeID == treeID, .(mean(X),mean(Y))]
+      xy = las@data[TreeID == tree_id, .(mean(X),mean(Y))]
 
       if(nrow(xy) == 0)
-        stop('no match for treeID ==' %>% paste(treeID))
+        stop('no match for tree_id ==' %>% paste(tree_id))
 
       xy %<>% as.double
 
@@ -866,7 +866,7 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
       las %<>% filter_poi(!Stem & Classification != 2)
       rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
 
-      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=sgmtColor)
+      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
 
     }
 
@@ -883,11 +883,11 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
   if(!is.null(sgmt)){
     if(hasAttribute(sgmt, 'multiple_stems_dt') || hasAttribute(sgmt, 'single_stem_dt')){
 
-      if(!is.null(treeID) && hasAttribute(sgmt, 'multiple_stems_dt')){
-        sgmt = sgmt[TreeID == treeID]
+      if(!is.null(tree_id) && hasAttribute(sgmt, 'multiple_stems_dt')){
+        sgmt = sgmt[TreeID == tree_id]
       }
 
-      sgmt %$% spheres3d(X-corner[1], Y-corner[2], AvgHeight, Radius, color=sgmtColor)
+      sgmt %$% spheres3d(X-corner[1], Y-corner[2], AvgHeight, Radius, color=color)
     }else{
       message('sgmt does not have a stem_dt signature')
     }
@@ -895,8 +895,8 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 
   if(!is.null(map)){
     if(hasAttribute(map, 'tree_map')){
-      if(!is.null(treeID)){
-        map %<>% filter_poi(TreeID == treeID)
+      if(!is.null(tree_id)){
+        map %<>% filter_poi(TreeID == tree_id)
       }
       map@data %$% rgl.points(X - corner[1], Y - corner[2], Z, color='green', size=.5)
     }else{
@@ -919,7 +919,7 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, treeID = NULL, sgmtColor = 'yel
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-treePoints = function(las, map, method=trp.voronoi()){
+treePoints = function(las, map, method = trp.voronoi()){
 
   isLAS(las)
 
@@ -953,32 +953,18 @@ treePoints = function(las, map, method=trp.voronoi()){
 #' @examples
 #' file = system.file("extdata", "spruce.laz", package="TreeLS")
 #' tls = readTLS(file)
+#' @importFrom nabor knn
 #' @export
 nnFilter = function(las, d = 0.05, n = 2){
 
-  rnn = nabor::knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
+  rnn = knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
 
   keep = rep(T, nrow(las@data))
   for(j in 1:ncol(rnn)){
     keep = keep & rnn[,j] < d
   }
-  # zclass = splitByIndex(las, max_size = max_points)
-  # keep = rep(T, nrow(las@data))
 
-  # for(i in unique(zclass)){
-  #   bool = zclass == i
-  #   xyz = las@data[bool,.(X,Y,Z)]
-  #   rnn = nabor::knn(data = xyz, k = n+1)$nn.dists[,-1] %>% as.data.frame
-
-  #   knn = rep(0, nrow(rnn))
-  #   for(j in 1:ncol(rnn)){
-  #     temp = ifelse(rnn[,j] > d, 0, 1) %>% as.double
-  #     knn = knn + temp
-  #   }
-
-  #   keep[bool] = knn >= n
-  # }
-  las %<>% filter_poi(keep)
+  las = filter_poi(las, keep)
   return(las)
 }
 
@@ -991,33 +977,33 @@ nnFilter = function(las, d = 0.05, n = 2){
 #' print(m)
 #' @export
 availablePointMetrics = function(){
-  temp = data.frame(METRIC = point.metrics.check, OBS = '')
+  temp = data.frame(METRIC = POINT_METRICS_CHECK, OBS = '')
   temp$OBS %<>% as.character
   temp$OBS[12:17] = '   available for ptm.knn only'
   print(temp)
   cat('\n')
-  return(invisible(point.metrics.check))
+  return(invisible(POINT_METRICS_CHECK))
 }
 
 
 #' Calculate metrics on point neighborhoods
 #' @description Get a list of statistics per point neighborhood. Check out \code{\link{availablePointMetrics}} for information on the available metrics.
 #' @template param-las
-#' @param metrics_list list of metrics to be calculated - must match exactly the names in \code{availablePointMetrics()}.
+#' @param which_metrics list of metrics to be calculated - must match exactly the names in \code{availablePointMetrics()}.
 #' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.
 #' @return \code{LAS} object with extra fields - one for each calculated metric.
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-pointMetrics = function(las, method = ptm.voxels(), metrics_list = point.metrics.check){
+pointMetrics = function(las, method = ptm.voxels(), which_metrics = POINT_METRICS_CHECK){
 
   isLAS(las)
 
   if(!hasAttribute(method, 'ptm_mtd'))
     stop('invalid method: check ?pointMetrics')
 
-  return(method(las, metrics_list))
+  return(method(las, which_metrics))
 }
 
 
@@ -1068,14 +1054,14 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
 
 #########################################
 
-robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile = .7, min_den = .25, plot=F, ...){
+robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile = .7, min_den = .25, plot=FALSE, ...){
 
   hg = getHoughCircle(dlas %>% las2xyz, pixel_size, rad_max = max_d/2, min_den = min_den, min_votes = 2) %>% do.call(what=rbind) %>% as.data.table
   names(hg) = c('x','y','r','v')
   hg = hg[v > quantile(v, votes_percentile)]
   hg$clt = 1
 
-  houghClusters = hg
+  hough_clusters = hg
   centers = hg[v == max(v)] %>% apply(2,mean) %>% t %>% as.data.table
 
   k = 2
@@ -1086,25 +1072,25 @@ robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile =
     dst = mxs[,c('x','y')] %>% dist
     combs = combn(nrow(mxs), 2)
     rst = apply(combs, 2, function(x){mxs$r[x[1]] + mxs$r[x[2]]}) - pixel_size
-    isForked = all(min(dst) > rst)
+    is_forked = all(min(dst) > rst)
 
-    if(!isForked) break
+    if(!is_forked) break
 
-    houghClusters$clt = km$cluster
+    hough_clusters$clt = km$cluster
     centers = mxs[,.(x=mean(x),y=mean(y),r=mean(r),v=mean(v)),by=clt][order(clt)]
     centers$ssRatio = (km$withinss / km$size) / min(km$withinss / km$size)
     centers$nRatio = km$size / max(km$size)
     centers$absRatio = centers$ssRatio / centers$nRatio
-    vRatio = centers %$% ifelse(min(absRatio) > 5, absRatio, 5)
-    centers = centers[absRatio <= vRatio][order(-v)]
+    v_ratio = centers %$% ifelse(min(absRatio) > 5, absRatio, 5)
+    centers = centers[absRatio <= v_ratio][order(-v)]
     k=k+1
   }
 
   if(plot){
     plot(dlas$Y ~ dlas$X, cex=.5, asp=1, pch=20, ylab='Y (m)', xlab='X (m)')#, ...)
-    vcols = lidR:::set.colors(houghClusters$v, height.colors(houghClusters$v %>% unique %>% length))
-    vcols = lidR:::set.colors(houghClusters$clt, height.colors(houghClusters$clt %>% unique %>% length))
-    points(houghClusters$x, houghClusters$y, col=vcols, pch=20, cex=1)
+    vcols = lidR:::set.colors(hough_clusters$v, height.colors(hough_clusters$v %>% unique %>% length))
+    vcols = lidR:::set.colors(hough_clusters$clt, height.colors(hough_clusters$clt %>% unique %>% length))
+    points(hough_clusters$x, hough_clusters$y, col=vcols, pch=20, cex=1)
   }
 
   estimates = data.frame()
@@ -1125,19 +1111,19 @@ robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile =
     thickness = ifelse(rad/2 > pixel_size, pixel_size,  rad/2)
 
     inner = dst <= thickness
-    areaInner = pi*thickness^2
-    denInner = (inner %>% which %>% length) / areaInner
+    area_inner = pi*thickness^2
+    den_inner = (inner %>% which %>% length) / area_inner
 
     strip = dst > (rad - thickness/2) & dst < (rad + thickness/2)
-    areaStrip = pi*((rad + thickness/2)^2 - (rad - thickness/2)^2)
-    denStrip = (strip %>% which %>% length) / areaStrip
+    area_strip = pi*((rad + thickness/2)^2 - (rad - thickness/2)^2)
+    den_strip = (strip %>% which %>% length) / area_strip
 
     outer = dst < (rad + thickness) & dst >= (rad + thickness/2)
-    areaOuter = pi*((rad + thickness)^2 - (rad + thickness/2)^2)
-    denOuter = (outer %>% which %>% length) / areaOuter
+    area_outer = pi*((rad + thickness)^2 - (rad + thickness/2)^2)
+    den_outer = (outer %>% which %>% length) / area_outer
 
-    est$ratioInner = denInner / denStrip
-    est$ratioOuter = denOuter / denStrip
+    est$ratioInner = den_inner / den_strip
+    est$ratioOuter = den_outer / den_strip
     est$StemID = i
     est$TreeID = dlas$TreeID[1]
     est$score = 1
