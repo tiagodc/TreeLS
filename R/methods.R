@@ -82,6 +82,8 @@ preCheck = function(las){
 
       if(mean_ground > 0.2)
         message("point cloud apparently not normalized")
+    } else {
+      message("ground points not classified")
     }
   }
 
