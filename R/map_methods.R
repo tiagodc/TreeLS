@@ -123,7 +123,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' @template param-min-h
 #' @template param-min-n
 #' @export
-map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dist = .1, max_d = .5, min_h = 2, min_n = 100){
+map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
 
   params = list(
     max_planarity = max_planarity,
@@ -131,6 +131,7 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
     max_mean_dist = max_mean_dist,
     max_d = max_d,
     min_h = min_h,
+    max_h = max_h,
     min_n = min_n
   )
 
@@ -156,12 +157,16 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
   }
 
   func = function(las){
-    las = filter_poi(las, Classification != 2)
+    las = filter_poi(las, Classification != 2 & Z > min_h & Z < max_h)
+
+    if(lidR::is.empty(las)){
+      stop('no points found in the specified min_h/max_h range')
+    }
 
     mtrlst = c('N', 'Planarity', 'Verticality', 'MeanDistance')
 
-    checkPtMetrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
-    if(!checkPtMetrics){
+    check_pt_metrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!check_pt_metrics){
       message('Calculating knn pointMetrics')
       las = pointMetrics(las, ptm.knn(), mtrlst)
     }
@@ -180,7 +185,7 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = filter_poi(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
+    las = filter_poi(las, hn$N[TreeID] > min_n)
 
     las %<>% setAttribute('map_eigen')
     return(las)
@@ -200,7 +205,7 @@ map.eigen.knn = function(max_planarity = .15, max_verticality = 15, max_mean_dis
 #' @template param-min-h
 #' @template param-min-n
 #' @export
-map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 2, min_n = 100){
+map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
 
   params = list(
     max_planarity = max_planarity,
@@ -208,6 +213,7 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
     voxel_spacing = voxel_spacing,
     max_d = max_d,
     min_h = min_h,
+    max_h = max_h,
     min_n = min_n
   )
 
@@ -233,13 +239,17 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
   }
 
   func = function(las){
-    las = filter_poi(las, Classification != 2)
-    mtrlst = c('N', 'Planarity', 'Verticality')
+    las = filter_poi(las, Classification != 2 & Z > min_h & Z < max_h)
 
-    checkPtMetrics = c(mtrlst, 'VoxelID') %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
-    if(!checkPtMetrics){
+    if(lidR::is.empty(las)){
+      stop('no points found in the specified min_h/max_h range')
+    }
+
+    mtrlst = c('N', 'Planarity', 'Verticality')
+    check_pt_metrics = c(mtrlst, 'VoxelID') %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    if(!check_pt_metrics){
       message('Calculating voxel pointMetrics')
-      las = pointMetrics(las, ptm.voxel(vxl), mtrlst)
+      las = pointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
     las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality) %>%
@@ -256,7 +266,7 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = filter_poi(las, !(TreeID %in% hn$TreeID[hn$H < min_h] | hn$N[TreeID] < min_n) )
+    las = filter_poi(las, hn$N[TreeID] > min_n)
 
     las %<>% setAttribute('map_eigen')
     return(las)
@@ -281,7 +291,7 @@ map.pick = function(map = NULL, min_h=NULL, max_h=NULL){
     if(hasAttribute(map, 'tree_map_dt')){
       # map = map
     }else if(hasAttribute(map, 'tree_map')){
-      map %<>% treePositions(F)
+      map %<>% treeMap.positions(F)
     }else{
       stop('map is not a tree_map object: check ?treeMap')
     }

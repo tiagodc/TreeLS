@@ -9,7 +9,7 @@ treePoints(las, map, method = trp.voronoi())
 \arguments{
 \item{las}{\code{LAS} object.}
 
-\item{map}{output from \code{\link{treeMap}} or \code{\link{treePositions}}.}
+\item{map}{output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.}
 
 \item{method}{segmentation algorithm - currently available: \code{\link{trees.voronoi}}.}
 }

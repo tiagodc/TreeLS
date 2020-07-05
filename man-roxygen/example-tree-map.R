@@ -8,5 +8,5 @@
 #' plot(map, color='Radii')
 #'
 #' ## get a 2D representation of the tree map
-#' xymap = treePositions(map)
+#' xymap = treeMap.positions(map)
 #' head(xymap)

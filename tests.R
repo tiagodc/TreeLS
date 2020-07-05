@@ -20,3 +20,4 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
+a = readTLS('./test_data/Parcela.las', filter='-keep_random_fraction 0.2')

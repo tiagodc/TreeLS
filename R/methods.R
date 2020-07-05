@@ -411,7 +411,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #'
 #' @importFrom raster raster extent res<-
 #' @export
-tlsNormalize = function(las, res=.25, keep_ground=TRUE){
+tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
   isLAS(las)
 
@@ -422,6 +422,9 @@ tlsNormalize = function(las, res=.25, keep_ground=TRUE){
     message('no ground points found, performing ground segmentation')
     las = classify_ground(las, csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
   }
+
+  res = area(las) / nrow(las@data[Classification == 2])
+  res = ifelse(res < min_res, min_res, res)
 
   grid = las %>% extent %>% raster
   res(grid) = res
@@ -445,7 +448,7 @@ tlsNormalize = function(las, res=.25, keep_ground=TRUE){
 #' @section Output:
 #' The output is a \code{LAS} object with extra fields in the \code{data} slot. For more details on the output fields checkout \code{\link{map.hough}}'s help page.
 #' @export
-treeMap = function(las, method = map.hough()){
+treeMap = function(las, method = map.hough(), merge=0.2, positions_only=FALSE){
 
   isLAS(las)
 
@@ -459,6 +462,14 @@ treeMap = function(las, method = map.hough()){
 
   map = method(las) %>% setAttribute('tree_map')
 
+  if(merge > 0){
+    map = treeMap.merge(map, merge)
+  }
+
+  if(positions_only){
+    map = treeMap.positions(map, FALSE)
+  }
+
   return(map)
 }
 
@@ -470,21 +481,23 @@ treeMap = function(las, method = map.hough()){
 #' @return \code{data.table} of tree IDs and XY coordinates with \emph{tree_map_dt} signature.
 #' @template example-tree-map
 #' @export
-treePositions = function(las, plot=TRUE){
+treeMap.positions = function(las, plot=TRUE){
 
-  isLAS(las)
-
-  if(!hasAttribute(las, 'tree_map'))
+  if(!hasAttribute(las, 'tree_map') && !hasAttribute(las, 'tree_map_dt'))
     stop('las is not a tree_map object: check ?treeMap')
 
-  if(hasAttribute(las, 'map_hough')){
-    las %<>% filter_poi(TreePosition)
+  if(hasAttribute(las, 'tree_map_dt')){
+    pos = las
+  }else{
+    if(hasAttribute(las, 'map_hough')){
+      las %<>% filter_poi(TreePosition)
+    }
+
+    pos = las@data[,.(X=median(X), Y=median(Y)),by=TreeID]
+    pos = pos[order(TreeID)]
+
+    pos %<>% setAttribute('tree_map_dt')
   }
-
-  pos = las@data[,.(X=median(X), Y=median(Y)),by=TreeID]
-  pos = pos[order(TreeID)]
-
-  pos %<>% setAttribute('tree_map_dt')
 
   if(plot){
     pos %$% plot(Y ~ X, cex=3, pch=20, main='tree map', xlab='X', ylab='Y')
@@ -500,15 +513,13 @@ treePositions = function(las, plot=TRUE){
 #' @export
 treeMap.merge = function(las, d=.2){
 
-  isLAS(map)
-
-  if(!hasAttribute(las, 'tree_map'))
+  if(!hasAttribute(las, 'tree_map') && !hasAttribute(las, 'tree_map_dt'))
     stop('las is not a tree_map object: check ?treeMap')
 
   if(d < 0)
     stop('d must be a positive number')
 
-  nxy = treePositions(las, plot = F)
+  nxy = if(hasAttribute('tree_map_dt')) las else treeMap.positions(las, plot = F)
   nn = knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
@@ -914,7 +925,7 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, tree_id = NULL, color = 'yellow
 #' Classify areas of influence for individual trees
 #' @description Classify \code{LAS} points according to the region of influence calculated from a tree map.
 #' @template param-las
-#' @param map output from \code{\link{treeMap}} or \code{\link{treePositions}}.
+#' @param map output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.
 #' @param method segmentation algorithm - currently available: \code{\link{trees.voronoi}}.
 #' @return \code{LAS} object with a new TreeID field.
 #' @examples
@@ -928,7 +939,7 @@ treePoints = function(las, map, method = trp.voronoi()){
   if(hasAttribute(map, 'tree_map_dt')){
     # map = map
   }else if(hasAttribute(map, 'tree_map')){
-    map %<>% treePositions(F)
+    map %<>% treeMap.positions(F)
   }else{
     stop('map is not a tree_map object: check ?treeMap')
   }

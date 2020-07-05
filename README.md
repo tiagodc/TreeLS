@@ -73,7 +73,7 @@ thin = tlsSample(tls, voxelize(0.05))
 map = treeMap(thin, map.hough(min_density = 0.03))
 
 # visualize tree map in 2D and 3D
-xymap = treePositions(map, plot = TRUE)
+xymap = treeMap.positions(map, plot = TRUE)
 plot(map, color='Radii')
 
 # classify stem points
