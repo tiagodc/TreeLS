@@ -20,4 +20,13 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-a = readTLS('./test_data/Parcela.las', filter='-keep_random_fraction 0.2')
+las = readTLS('./test_data/Parcela.las', filter='-keep_random_fraction 0.2')
+
+benchmarkme::get_ram()
+as.numeric(system("awk '/MemAvailable/ {print $2}' /proc/meminfo",intern=TRUE))
+
+sz = ls() %>% sapply(function(x) get(x) %>% object.size) %>% sum
+sz / 1000000
+a = gc(full = T)
+rm(las)
+gc()

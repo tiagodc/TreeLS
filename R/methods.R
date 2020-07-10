@@ -89,6 +89,21 @@ preCheck = function(las){
 
 }
 
+#' @importFrom benchmarkme get_ram
+sizeCheck = function(las, n_new_fields, bytes=8){
+  n = nrow(las@data)
+  mem = sum(gc(full=TRUE)[,2])
+  ram = as.double(get_ram()) / 1000000
+  malloc = n * n_new_fields * bytes / 1000000
+  can_malloc = ram - mem - malloc
+  if(can_malloc < 0){
+    paste('adding', n_new_fields, 'columns to the las object is not possible - not enough RAM available') %>% message
+  }else if((can_malloc / ram) < 0.1){
+    paste('adding', n_new_fields, 'columns to the las object will take more than 90% of the available RAM') %>% message
+  }
+  return(can_malloc < 0)
+}
+
 toLAS = function(data_matrix, column_names=NULL){
 
   if(ncol(data_matrix) < 3)
