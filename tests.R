@@ -20,13 +20,18 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 
 ###################
 
-las = readTLS('./test_data/Parcela.las', filter='-keep_random_fraction 0.2')
+las = readTLS('./test_data/Parcela.las', filter='-keep_random_fraction 0.5')
 
-benchmarkme::get_ram()
-as.numeric(system("awk '/MemAvailable/ {print $2}' /proc/meminfo",intern=TRUE))
+las = tlsNormalize(las, keep_ground = F)
 
-sz = ls() %>% sapply(function(x) get(x) %>% object.size) %>% sum
-sz / 1000000
-a = gc(full = T)
-rm(las)
-gc()
+map = treeMap(las, map.eigen.knn(.05, 5, .05), merge = .1)
+
+las = treePoints(las, map, trp.crop(1.5, circle = F))
+plot(las, color='TreeID', colorPalette=pastel.colors(100))
+
+las@data[,23:39] = NULL
+las@data %>% names
+las = stemPoints(las, stm.eigen.knn())
+las %>% tlsSample(smp.randomize(.2)) %>% plot(color='VotesWeight')
+
+segs = stemSegmentation(las, sgt.ransac.circle())

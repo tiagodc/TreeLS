@@ -144,7 +144,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
+stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,
@@ -259,7 +259,7 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .2, max_verticality = 20, 
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.voxel = function(h_step = .5, max_planarity = .2, max_verticality = 20, voxel_spacing = .1, max_d = .5, votes_weight = .2, v3d = FALSE){
+stm.eigen.voxel = function(h_step = .5, max_planarity = .15, max_verticality = 15, voxel_spacing = .15, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,

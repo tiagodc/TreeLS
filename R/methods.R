@@ -430,7 +430,7 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
   isLAS(las)
 
-  if(res <= 0)
+  if(min_res <= 0)
     stop('res must be a positive number')
 
   if(!any(las$Classification == 2)){
@@ -595,7 +595,8 @@ stemPoints = function(las, method = stm.hough()){
   if(abs(min(las$Z)) > 0.5)
     warning('point cloud apparently not normalized')
 
-  las %<>% method()
+  las = method(las)
+  las@data[is.na(Stem)]$Stem = FALSE
 
   return(las)
 
@@ -616,7 +617,7 @@ stemSegmentation = function(las, method=sgt.ransac.circle()){
   if(!hasAttribute(method, 'stem_sgmt_mtd'))
     stop('invalid method: check ?stemSegmentation')
 
-  las %>% method %>% return()
+  return(method(las))
 
 }
 
