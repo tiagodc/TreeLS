@@ -1,1 +1,1 @@
-#' @param las \code{LAS} object.
+#' @param las \code{\link[lidR:LAS]{LAS}} object.

@@ -1,1 +1,1 @@
-#' @return \code{LAS} object.
+#' @return \code{\link[lidR:LAS]{LAS}} object.

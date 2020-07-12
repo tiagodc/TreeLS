@@ -260,8 +260,8 @@ pan3d = function(button){
 #' @template param-colnames
 #' @template return-las
 #' @examples
-#' cld = matrix(runif(300, 0, 10), ncol=3)
-#' cld = setTLS(cld)
+#' cloud = matrix(runif(300, 0, 10), ncol=3)
+#' cloud = setTLS(cld)
 #' summary(cld)
 #' @export
 setTLS = function(cloud, col_names=NULL){
@@ -277,7 +277,7 @@ setTLS = function(cloud, col_names=NULL){
 
 
 #' Import a point cloud file into a LAS object
-#' @description Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults. Other file formats are (or try to be) read using \code{\link[utils:read.table]{read.table}}.
+#' @description Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and \emph{ply} files with \code{\link[rlas:read.las]{read.las}}. Other file formats are (or try to be) read using \code{\link[data.table:fread]{fread}}.
 #' @param file file path.
 #' @template param-colnames
 #' @param ... further arguments passed to either \code{readLAS} or \code{read.table}.
@@ -288,6 +288,7 @@ setTLS = function(cloud, col_names=NULL){
 #' summary(tls)
 #' @importFrom utils read.table
 #' @importFrom rlas read.las
+#' @importFrom data.table fread
 #' @export
 readTLS = function(file, col_names=NULL, ...){
 
@@ -299,11 +300,11 @@ readTLS = function(file, col_names=NULL, ...){
 
   }else if(format == 'ply'){
 
-    las = LAS(read.las(file, ...)) %>% setHeaderTLS
+    las = LAS(read.las(file)) %>% setHeaderTLS
 
   }else{
 
-    las = read.table(file, ...) %>% toLAS(col_names)
+    las = fread(file, ...) %>% toLAS(col_names)
 
   }
 
@@ -312,20 +313,20 @@ readTLS = function(file, col_names=NULL, ...){
 
 
 #' Resample a point cloud
-#' @description Applies an algorithm that returns a thinned point cloud.
+#' @description Applies an algorithm that reduces the point cloud's density. Sampling methods are prefixed with \code{smp}.
 #' @template param-las
-#' @param method point sampling algorithm - currently available: \code{\link{voxelize}} or \code{\link{randomize}}
+#' @param method point sampling algorithm - currently available: \code{\link{smp.voxelize}} or \code{\link{smp.randomize}}
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' summary(tls)
 #'
-#' ## sample points systematically in 3D
+#' ## sample points systematically from a 3D voxel grid
 #' vx = tlsSample(tls, smp.voxelize(0.05))
 #' summary(vx)
 #'
-#' ## sample points randomly
+#' ## sample half of the points randomly
 #' rd = tlsSample(tls, smp.randomize(0.5))
 #' summary(rd)
 #'
@@ -346,10 +347,10 @@ tlsSample = function(las, method = smp.voxelize()){
 #' Point cloud cropping
 #' @description Returns a cropped point cloud of all points inside or outside specified boundaries of circle or square shapes.
 #' @template param-las
-#' @param x,y \code{numeric} -  X and Y center coordinates of the area to be cropped.
+#' @param x,y \code{numeric} -  X and Y center coordinates of the crop region.
 #' @param len \code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square.
 #' @param circle \code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square.
-#' @param negative \code{logical} - if \code{TRUE}, returns all points outside the specified circle/square boundaries, otherwise returns all points inside the circle/square (default).
+#' @param negative \code{logical} - if \code{TRUE}, returns all points outside the specified circle/square perimeter, otherwise returns all points inside the circle/square (default).
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "model_boles.laz", package="TreeLS")
@@ -408,10 +409,10 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 
 
 #' Normalize a TLS point cloud
-#' @description Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of the ground points. If the input's ground points are not classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
+#' @description Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of the ground points. If the input's ground points are not yet classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
 #' @template param-las
-#' @param res \code{numeric} - resolution of the DTM used for normalization.
-#' @param keep_ground \code{logical} - if \code{TRUE} (default), returns a normalized point cloud with classified ground, otherwise removes the ground points.
+#' @param min_res \code{numeric} - minimum resolution of the DTM used for normalization.
+#' @param keep_ground \code{logical} - if \code{FALSE} removes the ground points from the output.
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
@@ -455,13 +456,13 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
 
 #' Map tree occurrences from TLS data
-#' @description Estimates tree occurrence regions from a \strong{normalized} point cloud.
+#' @description Estimates tree occurrence regions from a \strong{normalized} point cloud. Tree mapping methods are prefixed with \code{map}.
 #' @template param-las
-#' @param method tree mapping algorithm - currently available: \code{\link{map.hough}}.
-#' @return \code{LAS} object with \emph{tree_map} signature.
+#' @param method tree mapping algorithm - currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.
+#' @param merge \code{numeric} - parameter passed to \code{\link{treeMap.merge}}.
+#' @param positions_only \code{logical} - if \code{TRUE} returns a 3D \code{LAS} object, otherwise returns a 2D tree map as a \code{data.table}.
+#' @return signed \code{LAS} or \code{data.table}.
 #' @template example-tree-map
-#' @section Output:
-#' The output is a \code{LAS} object with extra fields in the \code{data} slot. For more details on the output fields checkout \code{\link{map.hough}}'s help page.
 #' @export
 treeMap = function(las, method = map.hough(), merge=0.2, positions_only=FALSE){
 
@@ -489,8 +490,8 @@ treeMap = function(las, method = map.hough(), merge=0.2, positions_only=FALSE){
 }
 
 
-#' Get unique tree positions from a \emph{tree_map}
-#' @description Extracts the tree XY positions from a \emph{tree_map} \code{LAS} object
+#' Convert a tree map to a 2D \code{data.table}
+#' @description Extracts the tree XY positions from a \emph{tree_map} \code{LAS} object.
 #' @param las \code{LAS} object - output from \code{\link{treeMap}}.
 #' @param plot \code{logical} - plot the tree map?
 #' @return \code{data.table} of tree IDs and XY coordinates with \emph{tree_map_dt} signature.
@@ -522,19 +523,22 @@ treeMap.positions = function(las, plot=TRUE){
 }
 
 
-#' Merge nearby trees in a tree_map object
-#' @description Check and merge TreeIDs which are too close in a tree_map object
+#' Merge nearby trees in a \emph{tree_map}
+#' @description Check all tree neighborhoods and merge TreeIDs which are too close in a \code{tree_map} object.
+#' @param las \code{LAS} or \code{data.table} object generated by \code{\link{treeMap}}.
+#' @param d \code{numeric} - distance criteria to merge 
 #' @importFrom nabor knn
 #' @export
 treeMap.merge = function(las, d=.2){
 
-  if(!hasAttribute(las, 'tree_map') && !hasAttribute(las, 'tree_map_dt'))
+  if( !(hasAttribute(las, 'tree_map') || hasAttribute(las, 'tree_map_dt')) )
     stop('las is not a tree_map object: check ?treeMap')
 
   if(d < 0)
     stop('d must be a positive number')
 
-  nxy = if(hasAttribute('tree_map_dt')) las else treeMap.positions(las, plot = F)
+  is_data_table = hasAttribute('tree_map_dt')
+  nxy = if(is_data_table) las else treeMap.positions(las, plot = F)
   nn = knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
@@ -552,18 +556,56 @@ treeMap.merge = function(las, d=.2){
 
   for(rid in 1:nrow(id_mat)){
     idx = id_mat[rid,]
-    las@data[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
+    if(is_data_table){
+      las[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
+    }else{
+      las@data[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
+    }
   }
 
   return(las)
 }
 
 
-#' Stem points classification
-#' @description Classify stem points on a \strong{normalized} point cloud.
+#' Classify areas of influence for individual trees
+#' @description Identify the \code{TreeID} of every point on a \code{LAS} object based on coordinates from a \code{\link{treeMap}}. Tree region segmentation methods are prefixed with \code{trp}.
 #' @template param-las
-#' @param method stem denoising algorithm - currently available: \code{\link{stem.hough}}.
-#' @return \code{LAS} object with \emph{stem_points} signature.
+#' @param map output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.
+#' @param method segmentation algorithm - currently available: \code{\link{trp.voronoi}} and \code{\link{trp.crop}}.
+#' @template return-las
+#' @examples
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' @export
+treePoints = function(las, map, method = trp.voronoi()){
+
+  isLAS(las)
+
+  if(hasAttribute(map, 'tree_map_dt')){
+    # map = map
+  }else if(hasAttribute(map, 'tree_map')){
+    map %<>% treeMap.positions(F)
+  }else{
+    stop('map is not a tree_map object: check ?treeMap')
+  }
+
+  if( map$TreeID %>% duplicated %>% any )
+    stop('input map must have unique TreeIDs')
+
+  if(!hasAttribute(method, 'tpt_mtd'))
+    stop('invalid method: check ?treePoints')
+
+  las %<>% method(map)
+  return(las)
+
+}
+
+
+#' Stem points classification
+#' @description Classify stem points of all trees in a \strong{normalized} point cloud. Stem denoising methods are prefixed with \code{stm}.
+#' @template param-las
+#' @param method stem denoising algorithm - currently available: \code{\link{stm.hough}}, \code{\link{stm.eigen.knn}} and \code{\link{stm.eigen.voxel}}.
+#' @return signed \code{LAS} object.
 #' @examples
 #' ### single tree
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
@@ -604,9 +646,9 @@ stemPoints = function(las, method = stm.hough()){
 
 
 #' Stem segmentation
-#' @description Measure stem segments from a classified point cloud.
+#' @description Measure stem segments from a classified point cloud. Stem segmentation methods are prefixed with \code{sgt}.
 #' @template param-las
-#' @param method stem segmentation algorithm - currently available: \code{\link{sgmt.ransac.circle}}.
+#' @param method stem segmentation algorithm - currently available: \code{\link{sgt.ransac.circle}}, \code{\link{sgt.ransac.cylinder}}, \code{\link{sgt.irls.circle}} and \code{\link{sgt.irls.cylinder}}.
 #' @return \code{data.table} of stem segments with \emph{stem_dt} signature.
 #' @template example-segmentation
 #' @export
@@ -623,7 +665,7 @@ stemSegmentation = function(las, method=sgt.ransac.circle()){
 
 
 #' Filter points based on gpstime
-#' @description This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs proportional values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
+#' @description This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs relative values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
 #' @template param-las
 #' @param from,to \code{numeric} - between 0 and 1 - gpstime quantile limits to filter by
 #' @template return-las
@@ -669,8 +711,8 @@ gpsTimeFilter = function(las, from=0, to=1){
 }
 
 
-#' Rotate point cloud towards a horizontal plane
-#' @description Check for ground points and rotates the point cloud to align its ground surface to a horizontal plane (XY).
+#' Rotate point cloud to fit a horizontal plane
+#' @description Check for ground points and rotates the point cloud aligning its ground surface to a horizontal plane (XY).
 #' This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
 #' which might present a tilted global reference system. Since the coordinates are altered in this procedure, any
 #' geographical information is erased from the LAS' header after rotation.
@@ -734,7 +776,7 @@ tlsRotate = function(las){
 #' @description Apply transformations to the XYZ axes of a point cloud.
 #' @template param-las
 #' @param xyz \code{character} vector of length 3 - \code{las}' columns to be reassigned as XYZ, respectively.
-#' Use minus signs to mirror the axes' coordinates - more details in the sections below.
+#' Use minus signs to mirror an axis` coordinates - more details in the sections below.
 #' @param bring_to_origin \code{logical} - force output to start at \code{c(0,0,0)}? If \code{TRUE},
 #' removes any geographical information from the output.
 #' @param rotate  \code{logical} - rotate the point cloud to align the ground points horizontally? If \code{TRUE},
@@ -835,7 +877,7 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 }
 
 
-#' Plot TLS outputs
+#' Plot \emph{TreeLS} outputs
 #' @description Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
 #' for usage examples.
 #' @param las \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
@@ -934,40 +976,6 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, tree_id = NULL, color = 'yellow
   }
 
   return(corner %>% invisible)
-
-}
-
-
-#' Classify areas of influence for individual trees
-#' @description Classify \code{LAS} points according to the region of influence calculated from a tree map.
-#' @template param-las
-#' @param map output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.
-#' @param method segmentation algorithm - currently available: \code{\link{trees.voronoi}}.
-#' @return \code{LAS} object with a new TreeID field.
-#' @examples
-#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' @export
-treePoints = function(las, map, method = trp.voronoi()){
-
-  isLAS(las)
-
-  if(hasAttribute(map, 'tree_map_dt')){
-    # map = map
-  }else if(hasAttribute(map, 'tree_map')){
-    map %<>% treeMap.positions(F)
-  }else{
-    stop('map is not a tree_map object: check ?treeMap')
-  }
-
-  if( map$TreeID %>% duplicated %>% any )
-    stop('input map must have unique TreeIDs')
-
-  if(!hasAttribute(method, 'tpt_mtd'))
-    stop('invalid method: check ?treePoints')
-
-  las %<>% method(map)
-  return(las)
 
 }
 
