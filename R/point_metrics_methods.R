@@ -19,9 +19,9 @@
 # ===============================================================================
 
 ptmMetricsLog = function(which_metrics){
-  metrics_log = POINT_METRICS_CHECK %in% which_metrics
+  metrics_log = AVAILABLE_POINT_METRICS %in% which_metrics
 
-  if(all(!metrics_log)) stop('Please provide at least one known metric. See ?availablePointMetrics')
+  if(all(!metrics_log)) stop('Please provide at least one valid metric. See ?pointMetrics.available')
 
   metrics_names = POINT_METRICS_NAMES[1:9][metrics_log[1:9]]
   if(metrics_log[10]) metrics_names %<>% c(POINT_METRICS_NAMES[10:12])
@@ -31,7 +31,7 @@ ptmMetricsLog = function(which_metrics){
 
 }
 
-ptmStatistics = function(las, knn, which_metrics = POINT_METRICS_CHECK){
+ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
 
   pick_metrics = ptmMetricsLog(which_metrics)
 
@@ -46,7 +46,7 @@ ptmStatistics = function(las, knn, which_metrics = POINT_METRICS_CHECK){
     colnames(ptm) = pick_metrics$names
   }
 
-  dist_metrics = POINT_METRICS_CHECK[ 12:17 ][ pick_metrics$log[12:17] ]
+  dist_metrics = AVAILABLE_POINT_METRICS[ 12:17 ][ pick_metrics$log[12:17] ]
   if(length(dist_metrics) > 0){
     dtm = cppFastApply(kds[,-1], dist_metrics) %>% do.call(what=rbind) %>% as.data.table
     colnames(dtm) = dist_metrics

@@ -30,7 +30,8 @@
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
 
 POINT_METRICS_NAMES = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValue1', 'EigenValue2', 'EigenValue3', 'EigenVector11', 'EigenVector21', 'EigenVector31', 'EigenVector12', 'EigenVector22', 'EigenVector32', 'EigenVector13', 'EigenVector23', 'EigenVector33')
-POINT_METRICS_CHECK = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance', 'VarDistance', 'SdDistance')
+AVAILABLE_POINT_METRICS = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance', 'VarDistance', 'SdDistance')
+ENABLED_POINT_METRICS = AVAILABLE_POINT_METRICS[c(1,2,5,9,12)]
 TLS_MARKER = 'TLS_MARKER'
 
 isLAS = function(las){
@@ -97,11 +98,10 @@ sizeCheck = function(las, n_new_fields, bytes=8){
   malloc = n * n_new_fields * bytes / 1000000
   can_malloc = ram - mem - malloc
   if(can_malloc < 0){
-    paste('adding', n_new_fields, 'columns to the las object is not possible - not enough RAM available') %>% message
+    paste('adding', n_new_fields, 'columns to the las object is not possible - not enough RAM available') %>% stop
   }else if((can_malloc / ram) < 0.1){
-    paste('adding', n_new_fields, 'columns to the las object will take more than 90% of the available RAM') %>% message
+    paste('adding', n_new_fields, 'columns to the las object will take more than 90% of the available RAM') %>% warning
   }
-  return(can_malloc < 0)
 }
 
 toLAS = function(data_matrix, column_names=NULL){
@@ -280,7 +280,7 @@ setTLS = function(cloud, col_names=NULL){
 #' @description Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and \emph{ply} files with \code{\link[rlas:read.las]{read.las}}. Other file formats are (or try to be) read using \code{\link[data.table:fread]{fread}}.
 #' @param file file path.
 #' @template param-colnames
-#' @param ... further arguments passed to either \code{readLAS} or \code{read.table}.
+#' @param ... further arguments passed to \code{readLAS}, \code{read.las} or \code{fread}.
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
@@ -300,7 +300,7 @@ readTLS = function(file, col_names=NULL, ...){
 
   }else if(format == 'ply'){
 
-    las = LAS(read.las(file)) %>% setHeaderTLS
+    las = LAS(read.las(file, ...)) %>% setHeaderTLS
 
   }else{
 
@@ -312,8 +312,89 @@ readTLS = function(file, col_names=NULL, ...){
 }
 
 
+#' Nearest neighborhood point filter
+#' @description Remove points from a \code{LAS} point cloud based on nearest neighborhood metrics.
+#' @template param-las
+#' @param d \code{numeric} - search radius.
+#' @param n \code{integer} - number of nearest points to search within \code{d} radius.
+#' @template return-las
+#' @examples
+#' file = system.file("extdata", "spruce.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' summary(tls)
+#'
+#' nn_tls = nnFilter(tls, 0.05, 3)
+#' summary(nn_tls)
+#' @importFrom nabor knn
+#' @export
+nnFilter = function(las, d = 0.05, n = 2){
+
+  isLAS(las)
+
+  if(d <= 0)
+    stop('d must be a number larger than 0')
+
+  if(n <= 0 )
+    stop('d must be an integer larger than 0')
+
+  sizeCheck(las, n)
+
+  rnn = knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
+
+  keep = rep(T, nrow(las@data))
+  for(i in 1:ncol(rnn)){
+    keep = keep & rnn[,i] < d
+  }
+
+  las = filter_poi(las, keep)
+  return(las)
+}
+
+
+#' Calculate metrics on point neighborhoods
+#' @description Get statistics for every point's neighborhood. Check out \code{\link{pointMetrics.available}} for information about available metrics. Neighborhood search methods are prefixed by \code{ptm}.
+#' @template param-las
+#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.
+#' @param which_metrics optional \code{character} vector - list of metrics to be calculated. Overwrites the gobally enabled metrics set with \code{pointMetrics.available()}.
+#' @return \code{LAS} object with extra fields - one for each calculated metric.
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' @export
+pointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS){
+
+  isLAS(las)
+
+  if(!hasAttribute(method, 'ptm_mtd'))
+    stop('invalid method: check ?pointMetrics')
+
+  return(method(las, which_metrics))
+}
+
+
+#' Print available point metrics
+#' @description print available point metrics - used in \code{\link{pointMetrics}}.
+#' @param enable optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to enable globally. Enabled metrics are calculated everytime you run \code{\link{pointMetrics}}.
+#' @return \code{character} vector of available metrics.
+#' @examples
+#' m = pointMetrics.available()
+#' print(m)
+#' @export
+pointMetrics.available = function(enable = AVAILABLE_POINT_METRICS){
+  if(typeof(enable) != 'character') enable = AVAILABLE_POINT_METRICS[enable]
+  enable_metrics = ptmMetricsLog(enable)
+  ENABLED_POINT_METRICS <<- enable_metrics$names
+  temp = data.frame(METRIC = AVAILABLE_POINT_METRICS, OBS = '', ENABLED = enable_metrics$log)
+  temp$OBS %<>% as.character
+  temp$OBS[12:17] = '   available for ptm.knn only'
+  print(temp)
+  cat('\n')
+  return(invisible(AVAILABLE_POINT_METRICS))
+}
+
+
 #' Resample a point cloud
-#' @description Applies an algorithm that reduces the point cloud's density. Sampling methods are prefixed with \code{smp}.
+#' @description Applies an algorithm that reduces the point cloud's density. Sampling methods are prefixed by \code{smp}.
 #' @template param-las
 #' @param method point sampling algorithm - currently available: \code{\link{smp.voxelize}} or \code{\link{smp.randomize}}
 #' @template return-las
@@ -456,7 +537,7 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
 
 #' Map tree occurrences from TLS data
-#' @description Estimates tree occurrence regions from a \strong{normalized} point cloud. Tree mapping methods are prefixed with \code{map}.
+#' @description Estimates tree occurrence regions from a \strong{normalized} point cloud. Tree mapping methods are prefixed by \code{map}.
 #' @template param-las
 #' @param method tree mapping algorithm - currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.
 #' @param merge \code{numeric} - parameter passed to \code{\link{treeMap.merge}}.
@@ -526,7 +607,7 @@ treeMap.positions = function(las, plot=TRUE){
 #' Merge nearby trees in a \emph{tree_map}
 #' @description Check all tree neighborhoods and merge TreeIDs which are too close in a \code{tree_map} object.
 #' @param las \code{LAS} or \code{data.table} object generated by \code{\link{treeMap}}.
-#' @param d \code{numeric} - distance criteria to merge 
+#' @param d \code{numeric} - distance criteria to merge
 #' @importFrom nabor knn
 #' @export
 treeMap.merge = function(las, d=.2){
@@ -568,7 +649,7 @@ treeMap.merge = function(las, d=.2){
 
 
 #' Classify areas of influence for individual trees
-#' @description Identify the \code{TreeID} of every point on a \code{LAS} object based on coordinates from a \code{\link{treeMap}}. Tree region segmentation methods are prefixed with \code{trp}.
+#' @description Identify the \code{TreeID} of every point on a \code{LAS} object based on coordinates from a \code{\link{treeMap}}. Tree region segmentation methods are prefixed by \code{trp}.
 #' @template param-las
 #' @param map output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.
 #' @param method segmentation algorithm - currently available: \code{\link{trp.voronoi}} and \code{\link{trp.crop}}.
@@ -602,7 +683,7 @@ treePoints = function(las, map, method = trp.voronoi()){
 
 
 #' Stem points classification
-#' @description Classify stem points of all trees in a \strong{normalized} point cloud. Stem denoising methods are prefixed with \code{stm}.
+#' @description Classify stem points of all trees in a \strong{normalized} point cloud. Stem denoising methods are prefixed by \code{stm}.
 #' @template param-las
 #' @param method stem denoising algorithm - currently available: \code{\link{stm.hough}}, \code{\link{stm.eigen.knn}} and \code{\link{stm.eigen.voxel}}.
 #' @return signed \code{LAS} object.
@@ -639,6 +720,7 @@ stemPoints = function(las, method = stm.hough()){
 
   las = method(las)
   las@data[is.na(Stem)]$Stem = FALSE
+  las@data$Stem %<>% as.logical
 
   return(las)
 
@@ -646,7 +728,7 @@ stemPoints = function(las, method = stm.hough()){
 
 
 #' Stem segmentation
-#' @description Measure stem segments from a classified point cloud. Stem segmentation methods are prefixed with \code{sgt}.
+#' @description Measure stem segments from a classified point cloud. Stem segmentation methods are prefixed by \code{sgt}.
 #' @template param-las
 #' @param method stem segmentation algorithm - currently available: \code{\link{sgt.ransac.circle}}, \code{\link{sgt.ransac.cylinder}}, \code{\link{sgt.irls.circle}} and \code{\link{sgt.irls.cylinder}}.
 #' @return \code{data.table} of stem segments with \emph{stem_dt} signature.
@@ -883,7 +965,7 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 #' @param las \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
 #' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
 #' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
-#' @param treeID optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
+#' @param tree_id optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
 #' @param color optional - color of the plotted stem segment representations.
 #' @examples
 #' ### single tree
@@ -980,72 +1062,8 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, tree_id = NULL, color = 'yellow
 }
 
 
-#' Filter isolated points
-#' @description Noise filtering algorithm based on point neighborhood distances.
-#' @template param-las
-#' @param d \code{numeric} - distance to search for neighboring points.
-#' @param n \code{integer} - number of points below which a neighborhood (within distance \emph{d}) will be assigned as noise
-#' @param max_points \code{numeric} - total number of points tolerated per point cloud chunk to apply knn search. If the input \code{LAS} is larger than \code{max_points}, knn search will be performed over point cloud slices (along the Z axis) with \emph{N} up to \code{max_points}.
-#' @template return-las
-#' @examples
-#' file = system.file("extdata", "spruce.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' @importFrom nabor knn
-#' @export
-nnFilter = function(las, d = 0.05, n = 2){
-
-  rnn = knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
-
-  keep = rep(T, nrow(las@data))
-  for(j in 1:ncol(rnn)){
-    keep = keep & rnn[,j] < d
-  }
-
-  las = filter_poi(las, keep)
-  return(las)
-}
-
-
-#' Print available point metrics
-#' @description print available point metrics - for usage in \code{\link{pointMetrics}}.
-#' @return vector with available metrics names.
-#' @examples
-#' m = availablePointMetrics()
-#' print(m)
-#' @export
-availablePointMetrics = function(){
-  temp = data.frame(METRIC = POINT_METRICS_CHECK, OBS = '')
-  temp$OBS %<>% as.character
-  temp$OBS[12:17] = '   available for ptm.knn only'
-  print(temp)
-  cat('\n')
-  return(invisible(POINT_METRICS_CHECK))
-}
-
-
-#' Calculate metrics on point neighborhoods
-#' @description Get a list of statistics per point neighborhood. Check out \code{\link{availablePointMetrics}} for information on the available metrics.
-#' @template param-las
-#' @param which_metrics list of metrics to be calculated - must match exactly the names in \code{availablePointMetrics()}.
-#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.
-#' @return \code{LAS} object with extra fields - one for each calculated metric.
-#' @examples
-#' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' @export
-pointMetrics = function(las, method = ptm.voxels(), which_metrics = POINT_METRICS_CHECK){
-
-  isLAS(las)
-
-  if(!hasAttribute(method, 'ptm_mtd'))
-    stop('invalid method: check ?pointMetrics')
-
-  return(method(las, which_metrics))
-}
-
-
 #' Point cloud circle fit
-#' @description Fits a circle on XY coordinates from a set of 3D points.
+#' @description Fits a 2D horizontally-aligned circle on a set of 3D points.
 #' @template param-las
 #' @param method method for estimating the circle parameters. Currently available: \code{"qr"}, \code{"nm"}, \code{"irls"} and \code{"ransac"}.
 #' @template param-n-ransac
@@ -1072,7 +1090,7 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
 #' @template param-n-ransac
 #' @template param-inliers
 #' @template param-conf
-#' @param max_angle \code{numeric} - applicable when \code{method == "bf"}. It's the maximum angle a point cloud's axis can deviate from an absolute vertical axis (Z = c(0,0,1) ), in degrees.
+#' @param max_angle \code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).
 #' @export
 cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30){
   if(nrow(las@data) < 3) return(NULL)

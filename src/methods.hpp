@@ -62,4 +62,8 @@ vector<vector<vector<double> > > plotEigenHough(vector<vector<double> >& cppEige
 
 vector<unsigned int> treeIdsFromMap(vector<vector<double> >& xy, vector<vector<double> >& xymap, vector<unsigned int> ids, double length = 2.5, bool circle = true);
 
+vector<vector<double> > bfStemCylinder(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 10, double pConfidence = 0.99, double pInliers = 0.8, double max_angle = 30, double tolerance = 0.05);
+
+vector<vector<vector<double> > > bfPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence = 0.95, double pInliers = 0.8, double max_angle = 30, double tolerance = 0.05);
+
 #endif // METHODS_HPP

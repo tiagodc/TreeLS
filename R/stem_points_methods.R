@@ -105,7 +105,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
     las@data$Stem = F
     las@data$Stem[survey_points] = results$Stem
-
+    
     las@data$Segment = 0
     las@data$Segment[survey_points] = results$Segment
 
@@ -114,8 +114,6 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
     las@data$Votes = 0
     las@data$Votes[survey_points] = results$Votes
-
-    las %<>% resetLAS
 
     if(!hasField(las, 'TreeID')){
       las %<>% setAttribute("single_stem_points")

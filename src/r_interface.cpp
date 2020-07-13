@@ -532,3 +532,20 @@ SEXP bruteForceRansacCylinder(NumericMatrix& las, unsigned int nSamples, double 
   vector<vector<double> > xyz = rmatrix2cpp(las);
   return wrap( bruteForceRansacCylinder(xyz, nSamples, pConfidence, pInliers, nBest, maxAngle) );
 }
+
+// [[Rcpp::export]]
+List bfStemCylinder(NumericMatrix& las, NumericVector& segs, NumericVector& rads, unsigned int nSamples=10, double pConfidence=0.95, double pInliers=0.8, double max_angle = 30, double tolerance=0.05){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
+  return wrap(bfStemCylinder(cloud, segments, radii, nSamples, pConfidence, pInliers, max_angle, tolerance));
+}
+
+// [[Rcpp::export]]
+List bfPlotCylinders(NumericMatrix& las, NumericVector& tId, NumericVector& segs, NumericVector& rads, unsigned int nSamples = 10, double pConfidence = 0.95, double pInliers = 0.8, double max_angle = 30, double tolerance = 0.05){
+  vector<vector<double> > cloud = rmatrix2cpp(las);
+  vector<unsigned int> segments = Rcpp::as< vector<unsigned int> >( segs );
+  vector<unsigned int> treeId = Rcpp::as< vector<unsigned int> >( tId );
+  vector<double> radii = Rcpp::as< vector<double> >( rads );  
+  return wrap(bfPlotCylinders(cloud, treeId, segments, radii, nSamples, pConfidence, pInliers, max_angle,tolerance));
+}

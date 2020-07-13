@@ -863,3 +863,84 @@ vector<unsigned int> treeIdsFromMap(vector<vector<double> >& xy, vector<vector<d
 
   return treeIds;
 }
+
+vector<vector<double> > bfStemCylinder(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double max_angle, double tolerance){
+
+  vector<vector<vector<double> > > stemSlices = getChunks(cloud, segments);
+
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  vector<double> segRadii = idSortUnique(segments, radii);
+
+  set<unsigned int> uniqueIds;
+  for(auto& i : segments){
+    uniqueIds.insert(i);
+  }
+
+  vector< vector<double> > estimates;
+
+  for(unsigned int i = 0; i < stemSlices.size(); ++i){
+
+    vector<vector<double> > slice = stemSlices[i];
+
+    // cout << "... seg " << i+1 << " of " << stemSlices.size() << ", n points: " << slice[0].size() << endl;
+
+    if(slice[0].size() <= nSamples) continue;
+
+    double& hrad = segRadii[i];
+    vector<double> temp = bruteForceRansacCylinder(slice, nSamples, pConfidence, pInliers, 20, max_angle, true)[0];
+
+    double rdiff = abs(temp[2] - hrad);
+    if(rdiff > tolerance){
+      temp[0] = 0;
+      temp[1] = 0;
+      temp[2] = hrad;
+      temp[3] = 0;
+      temp[4] = 0;
+      temp[5] = 0;
+    }
+
+    unsigned int id = *next(uniqueIds.begin(), i);
+    temp.push_back(id);
+    estimates.push_back(temp);
+  }
+
+  return estimates;
+
+}
+
+vector<vector<vector<double> > > bfPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples, double pConfidence, double pInliers, double max_angle, double tolerance){
+
+  vector<vector<vector<double> > > trees = getChunks(cloud, treeId);
+  cloud.clear();
+  cloud.shrink_to_fit();
+
+  vector<unsigned int> uniqId = idSortUnique(treeId, treeId);
+  vector<vector<unsigned int> > indices = partitionIndex(treeId, segments);
+  vector<vector<double> > treeRadii = partitionIndex(treeId, radii);
+
+  vector< vector< vector<double> > > treeEstimates;
+
+  for(unsigned int i = 0; i < trees.size(); ++i){
+
+    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+
+    vector<unsigned int>& segs = indices[i];
+
+    if(segs.empty()) continue;
+
+    vector< vector<double> >& tree = trees[i];
+    vector<double>& segsRadii = treeRadii[i];
+
+    vector< vector<double> > temp = bfStemCylinder(tree, segs, segsRadii, nSamples, pConfidence, pInliers, max_angle, tolerance);
+
+    for(vector< vector<double> >::iterator t = temp.begin(); t != temp.end(); t++)
+      t->push_back(uniqId[i]);
+
+    treeEstimates.push_back(temp);
+  }
+
+  return treeEstimates;
+
+}

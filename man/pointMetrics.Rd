@@ -5,20 +5,20 @@
 \title{Calculate metrics on point neighborhoods}
 \usage{
 pointMetrics(las, method = ptm.voxels(),
-  metrics_list = POINT_METRICS_CHECK)
+  metrics_list = AVAILABLE_POINT_METRICS)
 }
 \arguments{
 \item{las}{\code{LAS} object.}
 
 \item{method}{neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.}
 
-\item{metrics_list}{list of metrics to be calculated - must match exactly the names in \code{availablePointMetrics()}.}
+\item{metrics_list}{list of metrics to be calculated - must match exactly the names in \code{pointMetrics.available()}.}
 }
 \value{
 \code{LAS} object with extra fields - one for each calculated metric.
 }
 \description{
-Get a list of statistics per point neighborhood. Check out \code{\link{availablePointMetrics}} for information on the available metrics.
+Get a list of statistics per point neighborhood. Check out \code{\link{pointMetrics.available}} for information on the available metrics.
 }
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
