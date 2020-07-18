@@ -61,10 +61,10 @@ ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
 }
 
 
-#' Point metrics algorithm: Voxel metrics
+#' Point metrics algorithm: Voxel-wise metrics
 #' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics voxel-wise.
-#' @param d \code{numeric} - voxel spacing.
-#' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search, much faster on dense point clouds (millions of points).
+#' @param d \code{numeric} - voxel spacing, in point cloud units.
+#' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search unisg integer index hashing, much faster on large point clouds (several million points).
 #' @export
 ptm.voxel = function(d = .1, exact=FALSE){
 
@@ -120,9 +120,9 @@ ptm.voxel = function(d = .1, exact=FALSE){
 
 
 #' Point metrics algorithm: Nearest Neighborhood metrics
-#' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics from a point's nearest neighborhood.
-#' @param k \code{numeric} - number of closest points to search.
-#' @param r \code{numeric} - limit radius for nearest neighbor search. If r == 0, no distance limit is applied.
+#' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics from a point's nearest neighborhood (KNN).
+#' @param k \code{numeric} - number of closest points to search per neighborhood.
+#' @param r \code{numeric} - limit radius for nearest neighbor search. If \code{r == 0}, no distance limit is applied.
 #' @export
 ptm.knn = function(k = 30, r = 0){
 

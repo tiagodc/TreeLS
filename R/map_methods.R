@@ -278,8 +278,9 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
 
 
 #' Tree mapping algorithm: pick trees manually
-#' @description This function is meant to be used inside \code{\link{treeMap}}. It opens a new \code{rgl} plot on which the user can point the tree locations by clicking.
-#' @param min_h,max_h minimum/maximum height thresholds to filter the point cloud before plotting it in \code{rgl}.
+#' @description This function is meant to be used inside \code{\link{treeMap}}. It opens an interactive \code{rgl} plot where the user can specify tree locations by clicking.
+#' @param map optional \code{LAS} object with a tree map that beeds to be updated.
+#' @param min_h,max_h \code{numeric} - height thresholds to filter the point cloud before plotting.
 #' @export
 map.pick = function(map = NULL, min_h=NULL, max_h=NULL){
 
