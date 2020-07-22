@@ -1,3 +1,7 @@
+[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+![](https://cranlogs.r-pkg.org/badges/grand-total/TreeLS)
+![CRAN checks](https://cranchecks.info/badges/summary/badger)
+
 # TreeLS
 
 High performance R functions for forest inventory based on **T**errestrial **L**aser **S**canning (but not only) point clouds.
