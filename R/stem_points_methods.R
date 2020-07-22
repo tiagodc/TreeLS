@@ -105,7 +105,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
     las@data$Stem = F
     las@data$Stem[survey_points] = results$Stem
-    
+
     las@data$Segment = 0
     las@data$Segment[survey_points] = results$Segment
 
@@ -228,16 +228,23 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
     las@data = merge(las@data, votes[,.(PointID, Votes, Radius)], by='PointID', sort=F, all.x=T)
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 
+    by_cols = 'Segment'
     if(hasField(las, 'TreeID')){
       max_votes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
       las@data = merge(las@data, max_votes, by='TreeID', sort=FALSE, all.x=TRUE)
       las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
       las@data$MaxVotes = NULL
+      by_cols %<>% c('TreeID')
     }else{
       las@data$VotesWeight = las@data$Votes / max(las@data$Votes)
     }
 
     las@data$Stem = las@data$VotesWeight > votes_weight
+    radii = las@data[Radius > 0 & Stem, .(med_rad = median(Radius)), by=by_cols]
+    las@data = merge(las@data, radii, by=by_cols, sort=FALSE, all.x=TRUE)
+    las@data$Radius = las@data$med_rad
+    las@data$med_rad = NULL
+    las@data[Stem == F]$Radius = 0
 
     return(las)
   }
@@ -257,7 +264,7 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.voxel = function(h_step = .5, max_planarity = .15, max_verticality = 15, voxel_spacing = .15, max_d = .5, votes_weight = .2, v3d = FALSE){
+stm.eigen.voxel = function(h_step = .5, max_planarity = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,
@@ -332,16 +339,23 @@ stm.eigen.voxel = function(h_step = .5, max_planarity = .15, max_verticality = 1
     las@data = merge(las@data, votes[,.(VoxelID, Votes, Radius)], by='VoxelID', sort=F, all.x=T)
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 
+    by_cols = 'Segment'
     if(hasField(las, 'TreeID')){
       max_votes = las@data[,.(MaxVotes = max(Votes)), by=TreeID]
       las@data = merge(las@data, max_votes, by='TreeID', sort=F, all.x=T)
       las@data$VotesWeight = las@data$Votes / las@data$MaxVotes
       las@data$MaxVotes = NULL
+      by_cols %<>% c('TreeID')
     }else{
       las@data$VotesWeight = las@data$Votes / max(las@data$Votes)
     }
 
     las@data$Stem = las@data$VotesWeight > votes_weight
+    radii = las@data[Radius > 0 & Stem, .(med_rad = median(Radius)), by=by_cols]
+    las@data = merge(las@data, radii, by=by_cols, sort=FALSE, all.x=TRUE)
+    las@data$Radius = las@data$med_rad
+    las@data$med_rad = NULL
+    las@data[Stem == F]$Radius = 0
 
     return(las)
   }

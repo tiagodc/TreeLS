@@ -124,7 +124,7 @@ ptm.voxel = function(d = .1, exact=FALSE){
 #' @param k \code{numeric} - number of closest points to search per neighborhood.
 #' @param r \code{numeric} - limit radius for nearest neighbor search. If \code{r == 0}, no distance limit is applied.
 #' @export
-ptm.knn = function(k = 30, r = 0){
+ptm.knn = function(k = 20, r = 0){
 
   if(!is.numeric(k) || !is.numeric(r)) stop('k and r must be numbers')
   if(k < 3) stop('k must be a number larger than 3')

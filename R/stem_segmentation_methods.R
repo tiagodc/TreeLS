@@ -41,7 +41,7 @@
 #' @template reference-thesis
 #' @template example-segmentation
 #' @export
-sgt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
+sgt.ransac.circle = function(tol=0.1, n = 10, conf = 0.99, inliers = 0.8){
 
   params = list(
     tol = tol,
@@ -147,7 +147,7 @@ sgt.ransac.circle = function(tol=0.05, n = 10, conf = 0.99, inliers = 0.8){
 #' @template reference-thesis
 #' @template example-segmentation
 #' @export
-sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
+sgt.ransac.cylinder = function(tol=0.1, n = 10, conf = 0.95, inliers = 0.9){
 
   params = list(
     tol = tol,
@@ -235,7 +235,7 @@ sgt.ransac.cylinder = function(tol=0.05, n = 10, conf = 0.95, inliers = 0.9){
 #' @template param-tol
 #' @param n \code{numeric} - maximum number of points to sample when fitting a stem segment.
 #' @export
-sgt.irls.circle = function(tol=0.05, n = 500){
+sgt.irls.circle = function(tol=0.1, n = 500){
 
   params = list(
     tol = tol,
@@ -318,7 +318,7 @@ sgt.irls.circle = function(tol=0.05, n = 500){
 #' @template param-tol
 #' @param n \code{numeric} - maximum number of points to sample when fitting a stem segment.
 #' @export
-sgt.irls.cylinder = function(tol=0.05, n = 100){
+sgt.irls.cylinder = function(tol=0.1, n = 100){
 
   params = list(
     tol = tol,

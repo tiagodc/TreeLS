@@ -1,8 +1,8 @@
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 ![CRAN checks](https://cranchecks.info/badges/summary/TreeLS)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tiagodc/TreeLS)
-<!-- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tiagodc/TreeLS) -->
 ![](https://cranlogs.r-pkg.org/badges/grand-total/TreeLS)
+<!-- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tiagodc/TreeLS) -->
 
 # TreeLS
 
