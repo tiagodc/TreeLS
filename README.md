@@ -1,6 +1,6 @@
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 ![](https://cranlogs.r-pkg.org/badges/grand-total/TreeLS)
-![CRAN checks](https://cranchecks.info/badges/summary/badger)
+![CRAN checks](https://cranchecks.info/badges/summary/TreeLS)
 
 # TreeLS
 
