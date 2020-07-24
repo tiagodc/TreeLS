@@ -15,30 +15,32 @@ require(data.table)
 require(dismo)
 require(deldir)
 require(nabor)
+require(benchmarkme)
 
 rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Stem', 'Segment', 'gpstime', 'AvgHeight', 'Radius'))
 
 ###################
 
-las = readTLS('inst/extdata/pine.laz')
+las = readTLS('inst/extdata/pine_plot.laz')
 las = tlsNormalize(las, keep_ground = F)
-# las = pointMetrics(las, ptm.knn(10))
-las = stemPoints(las, stm.eigen.voxel(voxel_spacing = .05))
+map = treeMap(las, map.eigen.knn(.15, 15, .15, .5, .5, 3, 20))
+las = treePoints(las, map, trp.crop(1))
+plot(las, color='TreeID')
+las = stemPoints(las, stm.hough())
 plot(las,color='Stem')
-rad = las@data[Stem == T, mean(Radius), by='Segment']
-segs = stemSegmentation(las, sgt.ransac.circle(.1))
-segs
+segs = stemSegmentation(las, sgt.bf.cylinder(inliers = .95))
 
-seg = filter_poi(las, Segment == 3)
-plot(seg, color='Radius', clear_artifacts=F, size=2)
+
+seg = filter_poi(las, Segment == 3 & TreeID == 3 & Stem)
+plot(seg, color='Votes', clear_artifacts=F, size=2)
 temp = seg %>% filter_poi(Votes == max(Votes))
 seg@data$Radius %>% median
 
 
 cols = seg@data$Votes %>% max %>% height.colors
 # plot(temp, clear_artifacts=F)
-for(i in 1:nrow(temp@data)){
-  row = temp@data[i,]
+for(i in 1:nrow(seg@data)){
+  row = seg@data[i,]
   spheres3d(row$X, row$Y, row$Z, .005, col='white')
   lines3d(
     c(row$X - row$Radius * row$EigenVector13, row$X + row$Radius * row$EigenVector13),

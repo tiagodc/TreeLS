@@ -394,3 +394,113 @@ sgt.irls.cylinder = function(tol=0.1, n = 100){
   func %>% setAttribute('stem_sgmt_mtd') %>% return()
 
 }
+
+
+#' Stem segmentation algorithm: Brute Force cylinder fit
+#' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares cylinder fit algorithm in a RANSAC fashion over stem segments. More details are given in the sections below.
+#' @template param-tol
+#' @template param-n-ransac
+#' @template param-conf
+#' @template param-inliers
+#' @section Output Fields:
+#'
+#' \itemize{
+#' \item \code{TreeID}:  unique tree IDs - available only for multiple stems
+#' \item \code{Segment}: stem segment number (from bottom to top)
+#' \item \code{X}, \code{Y}: circle center coordinates
+#' \item \code{Radius}: estimated circles radii
+#' \item \code{Error}: least squares circle fit error
+#' \item \code{AvgHeight}: average height of stem segments
+#' \item \code{N}: number of points in the stem segments
+#' }
+#'
+#' @template section-circlefit
+#' @template section-ransac
+#' @template reference-thesis
+#' @template example-segmentation
+#' @export
+sgt.bf.cylinder = function(tol=0.1, n = 10, conf = 0.95, inliers = 0.9, z_dev = 30){
+
+  params = list(
+    tol = tol,
+    n = n,
+    conf = conf,
+    inliers = inliers,
+    z_dev = z_dev
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  if(n < 5)
+    stop('n must be at least 5')
+
+  if(conf >= 1)
+    stop('conf must be between 0 and 1')
+
+  if(inliers >= 1)
+    stop('inliers must be between 0 and 1')
+
+  if(n > 15)
+    message('beware that a large n value increases processing time exponentially')
+
+  func = function(las){
+
+    . = NULL
+
+    if(!hasField(las, 'TreeID')){
+
+      message('performing single stem segmentation')
+
+      las = filter_poi(las, Stem == TRUE)
+
+      estimates = bfStemCylinder(las %>% las2xyz, las@data$Segment, las@data$Radius, n, conf, inliers, z_dev, tol) %>%
+        do.call(what = rbind) %>% as.data.table
+      names(estimates) = c('X', 'Y', 'Radius', 'SSQ', 'DX', 'DY', 'Segment')
+
+      z = las@data[, .(AvgHeight = mean(Z), N = .N), Segment]
+
+      estimates %<>% merge(z, by='Segment')
+
+      # Segment = NULL
+      estimates = estimates[order(Segment)]
+
+      estimates %<>% setAttribute("single_stem_dt")
+
+    }else{
+
+      message('performing multiple stems segmentation')
+
+      las = filter_poi(las, Stem == TRUE)
+
+      estimates = bfPlotCylinders(las %>% las2xyz, las$TreeID, las$Segment, las$Radius, n, conf, inliers, z_dev, tol) %>%
+        lapply(do.call, what=rbind) %>%
+        do.call(what = rbind) %>% as.data.table
+      names(estimates) = c('X', 'Y', 'Radius', 'SSQ', 'DX', 'DY', 'Segment', 'TreeID')
+
+      z = las@data[, .(AvgHeight = mean(Z), N = .N), .(TreeID, Segment)]
+
+      estimates %<>% merge(z, by=c('TreeID', 'Segment'))
+
+      # TreeID = Segment = NULL
+      estimates = estimates[order(TreeID, Segment)]
+
+      estimates %<>% setAttribute("multiple_stems_dt")
+    }
+
+    return(estimates)
+  }
+
+  func %>% setAttribute('stem_sgmt_mtd') %>% return()
+
+}
