@@ -1,0 +1,1 @@
+#' @param z_dev \code{numeric} - maximum angle deviation for brute force cylinder estimation (\code{bf}), i.e. angle, in degrees (0-90), that a cylinder can be tilted in relation to a perfect vertival axis (\code{Z = c(0,0,1)}).

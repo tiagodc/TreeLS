@@ -5,4 +5,4 @@
 #' of a point cloud representing a single cylinder are iteratively rotated up
 #' to a pre defined threshold, and for every iteration a circle is estimated after 
 #' rotation is performed. The rotation that minimizes the circle parameters the most
-#' is used to describe the axis direction and the radius is taken from the circle parameters. 
+#' is used to describe the axis direction of the cylinder with the circle's radius. 

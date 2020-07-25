@@ -16,15 +16,15 @@ require(dismo)
 require(deldir)
 require(nabor)
 require(benchmarkme)
+require(glue)
 
 rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Stem', 'Segment', 'gpstime', 'AvgHeight', 'Radius'))
 
 ###################
-
-las = readTLS('inst/extdata/pine.laz')
+las = readTLS('inst/extdata/model_boles.laz')
 las = tlsNormalize(las, keep_ground = F)
-# map = treeMap(las, map.eigen.knn(.15, 15, .15, .5, .5, 3, 20))
-# las = treePoints(las, map, trp.crop(1))
+map = treeMap(las, map.eigen.knn(.15, 15, .15, .5, .5, 3, 20))
+las = treePoints(las, map, trp.crop(1))
 # plot(las, color='TreeID')
 las = stemPoints(las, stm.hough())
 plot(las,color='Stem')

@@ -1070,7 +1070,6 @@ tlsPlot = function(las, sgmt = NULL, map = NULL, tree_id = NULL, color = 'yellow
 #' @template param-inliers
 #' @template param-conf
 #' @param n_best \code{numeric} - Applicable when \code{method == "ransac"}. For \code{n_best == 0}, takes the best RANSAC iteration as estimates, otherwise, it estimates the parameters as the average of \code{n_best} RANSAC iterations.
-#' @export
 circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'qr'
@@ -1091,7 +1090,6 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
 #' @template param-inliers
 #' @template param-conf
 #' @param max_angle \code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).
-#' @export
 cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30, n_best=20){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
@@ -1108,7 +1106,29 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
 }
 
 
-shapeFit = function(stem_segment=NULL, algorithm='ransac', shape='circle', n=10, inliers=0.9, p=0.95, n_best = 10, z_dev = 30){
+#' Point cloud cylinder/circle fit
+#' @description Fits a 3D cylinder or 2D circle on a set of 3D points, retrieving the optimized parameters.
+#' @param stem_segment \code{NULL} or a \code{\link[lidR:LAS]{LAS}} object with a single stem segment. When \code{NULL} returns a parameterized function to be used as input in other functions (e.g. \code{\link{tlsInventory}}).
+#' @param shape \code{character} - either \code{circle} or \code{cylinder}.
+#' @param algorithm optimization method for estimating the shape parameters. Currently available: \code{"ransac"}, \code{"irls"}, \code{"nm"}, \code{"qr"} (circle only) ,\code{"bf"} (cylinder only).
+#' @template param-n-ransac
+#' @template param-conf
+#' @template param-inliers
+#' @template param-n-best
+#' @template param z-dev
+#' @export
+shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10, conf=0.95, inliers=0.9, n_best = 10, z_dev = 30){
+
+  ls_shapes = c('circle', 'cylinder')
+  ls_algo   = c('ransac', 'irls', 'nm', 'qr', 'bf')
+
+  if(!(shape %in% ls_shapes)){
+    stop(glue::glue("'{shape}' not available. Enter a valid shape name."))
+  }
+
+  if(!(algorithm %in% ls_algo)){
+    stop(glue::glue("'{algorithm}' not available. Enter a valid algorithm name."))
+  }
 
   if(algorithm == 'qr' && shape == 'cylinder'){
     stop('qr algorithm only available for circle shapes')
@@ -1116,14 +1136,35 @@ shapeFit = function(stem_segment=NULL, algorithm='ransac', shape='circle', n=10,
     stop('bf algorithm only available for cylinder shapes')
   }
 
+  params = list(
+    n = n,
+    conf = conf,
+    inliers = inliers,
+    n_best = n_best,
+    z_dev = z_dev
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
   if(shape == 'circle'){
     func = function(las){
-      fit = circleFit(las, algorithm, n, inliers, p, n_best)
+      fit = circleFit(las, algorithm, n, inliers, conf, n_best)
       return(fit)
     }
   }else if(shape == 'cylinder'){
     func = function(las){
-      fit = cylinderFit(las, algorithm, n, inliers, p, z_dev, n_best)
+      fit = cylinderFit(las, algorithm, n, inliers, conf, z_dev, n_best)
       return(fit)
     }
   }
@@ -1139,16 +1180,49 @@ shapeFit = function(stem_segment=NULL, algorithm='ransac', shape='circle', n=10,
 }
 
 
-tlsInventory = function(las, dh = 1.3, dw = 0.25, hp = 1, d_method = shapeFit(shape = 'circle', algorithm='ransac', n=15, n_best = 20)){
+#' Extract forest inventory metrics from a point cloud
+#' @description Estimation of diameter and height tree-wise.
+#' @param las normalized \code{\link[lidR:LAS]{LAS}} object - single tree or forest plot with stem points marked by \code{\link{stemPoints}}.
+#' @param dh \code{numeric} - height layer (above ground) from which to estimate stem diameters.
+#' @param dw \code{numeric} - height layer width.
+#' @param hp \code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height.
+#' @param d_method parameterized \code{\link(shapeFit)} function - method to use for diameter estimation.
+#' @export
+tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(shape = 'circle', algorithm='ransac', n=15, n_best = 20)){
+
+  preCheck(las)
+
+  if(!hasAttribute(las, 'Stem')){
+    stop("las must be a normalized point cloud with highlighted stem points ('Stem' field) - see ?stemPoints")
+  }
+
+  params = list(
+    dh = dh,
+    dw = dw,
+    hp = hp
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
 
   if(!hasAttribute(d_method, 'shape_fit_method')){
     stop('d_method must be a parameterized shapeFit function')
   }
 
-  hfunc = function(Z,p) as.double(quantile(Z, hp))
+  hfunc = function(Z,p) as.double(quantile(Z, p))
   dfunc = function(X,Y,Z) d_method(suppressMessages(LAS(data.table(X,Y,Z))))
 
-  dlas = filter_poi(las, Stem & Z > (dh - dw) & Z < (dh + dw))
+  dlas = filter_poi(las, Stem & Z > (dh - dw/2) & Z < (dh + dw/2))
 
   if(hasField(las, 'TreeID')){
     h = las@data[TreeID > 0, .(H = hfunc(Z, hp)), by='TreeID']
@@ -1164,11 +1238,44 @@ tlsInventory = function(las, dh = 1.3, dw = 0.25, hp = 1, d_method = shapeFit(sh
 
 }
 
+
 #########################################
 
-robustDiameter = function(dlas, pixel_size = .02, max_d = .3, votes_percentile = .7, min_den = .25, plot=FALSE, ...){
 
-  hg = getHoughCircle(dlas %>% las2xyz, pixel_size, rad_max = max_d/2, min_den = min_den, min_votes = 2) %>% do.call(what=rbind) %>% as.data.table
+#' EXPERIMENTAL - Point cloud multiple circle fit
+#' @description Searches and fits circles multiple 2D circles on a point cloud layer from a single tree.
+#' @param dlas \code{\link[lidR:LAS]{LAS}} object.
+#' @template param-pixel-size
+#' @template param-max-radius
+#' @param votes_percentile \code{numeric} - votes filter criterion for isolating nearby stems.
+#' @template param-min-density
+#' @param plot \code{logical} - plot the results?
+#' @export
+shapeFit_forked = function(dlas, pixel_size = .02, max_radius = .2, votes_percentile = .7, min_density = .25, plot=FALSE){
+
+  isLAS(dlas)
+
+  params = list(
+    pixel_size = pixel_size,
+    max_radius = max_radius,
+    votes_percentile = votes_percentile,
+    min_density = min_density
+  )
+
+  for(i in names(params)){
+    val = params[[i]]
+
+    if(!is.numeric(val))
+      stop( i %>% paste('must be Numeric') )
+
+    if(length(val) > 1)
+      stop( i %>% paste('must be of length 1') )
+
+    if(val <= 0)
+      stop( i %>% paste('must be positive') )
+  }
+
+  hg = getHoughCircle(dlas %>% las2xyz, pixel_size, rad_max = max_radius, min_den = min_density, min_votes = 2) %>% do.call(what=rbind) %>% as.data.table
   names(hg) = c('x','y','r','v')
   hg = hg[v > quantile(v, votes_percentile)]
   hg$clt = 1
