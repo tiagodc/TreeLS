@@ -1075,8 +1075,8 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'qr'
   pars = cppCircleFit(las %>% las2xyz, method, n, p, inliers, n_best)
-  pars[3] = pars[3] * 200
-  names(pars)[1:4] = c('X','Y','d', 'err')
+  pars[3] = pars[3]
+  names(pars)[1:4] = c('X','Y','radius', 'err')
   if(length(pars) == 5) names(pars)[5] = 'err2'
   pars = pars %>% t %>% as.data.frame
   return(pars)
@@ -1097,11 +1097,11 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
   pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, max_angle, n_best)
   if(method == 'bf'){
-    pars[3] = pars[3] * 200
-    names(pars) = c('x','y','d', 'err', 'ax', 'ay')
+    pars[3] = pars[3]
+    names(pars) = c('x','y','radius', 'err', 'ax', 'ay')
   }else{
-    pars[5] = pars[5] * 200
-    names(pars) = c('rho','theta','phi', 'alpha', 'd', 'err')
+    pars[5] = pars[5]
+    names(pars) = c('rho','theta','phi', 'alpha', 'radius', 'err')
   }
   pars = pars %>% t %>% as.data.frame
   return(pars)
