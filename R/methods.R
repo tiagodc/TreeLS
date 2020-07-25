@@ -133,7 +133,7 @@ toLAS = function(data_matrix, column_names=NULL){
 
   }
 
-  data_matrix %<>% LAS %>% setHeaderTLS
+  data_matrix = suppressMessages(data_matrix %>% LAS %>% setHeaderTLS)
   return(data_matrix)
 }
 
@@ -164,7 +164,7 @@ setHeaderTLS = function(las, x_scale = 0.0001, y_scale = 0.0001, z_scale = 0.000
   if(las@header@PHB$`Z scale factor` < z_scale)
     z_scale = las@header@PHB$`Z scale factor`
 
-  return(las_rescale(las, x_scale, y_scale, z_scale))
+  return(suppressMessages(las_rescale(las, x_scale, y_scale, z_scale)))
 }
 
 #' @importFrom stats runif
@@ -1092,10 +1092,10 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
 #' @template param-conf
 #' @param max_angle \code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).
 #' @export
-cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30){
+cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30, n_best=20){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
-  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, max_angle)
+  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, max_angle, n_best)
   if(method == 'bf'){
     pars[3] = pars[3] * 200
     names(pars) = c('x','y','d', 'err', 'ax', 'ay')
@@ -1105,6 +1105,63 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
   }
   pars = pars %>% t %>% as.data.frame
   return(pars)
+}
+
+
+shapeFit = function(stem_segment=NULL, algorithm='ransac', shape='circle', n=10, inliers=0.9, p=0.95, n_best = 10, z_dev = 30){
+
+  if(algorithm == 'qr' && shape == 'cylinder'){
+    stop('qr algorithm only available for circle shapes')
+  }else if(algorithm == 'bf' && shape == 'circle'){
+    stop('bf algorithm only available for cylinder shapes')
+  }
+
+  if(shape == 'circle'){
+    func = function(las){
+      fit = circleFit(las, algorithm, n, inliers, p, n_best)
+      return(fit)
+    }
+  }else if(shape == 'cylinder'){
+    func = function(las){
+      fit = cylinderFit(las, algorithm, n, inliers, p, z_dev, n_best)
+      return(fit)
+    }
+  }
+
+  func %<>% setAttribute('shape_fit_method')
+
+  if(!is.null(stem_segment)){
+    isLAS(stem_segment)
+    return(func(stem_segment))
+  }else{
+    return(func)
+  }
+}
+
+
+tlsInventory = function(las, dh = 1.3, dw = 0.25, hp = 1, d_method = shapeFit(shape = 'circle', algorithm='ransac', n=15, n_best = 20)){
+
+  if(!hasAttribute(d_method, 'shape_fit_method')){
+    stop('d_method must be a parameterized shapeFit function')
+  }
+
+  hfunc = function(Z,p) as.double(quantile(Z, hp))
+  dfunc = function(X,Y,Z) d_method(suppressMessages(LAS(data.table(X,Y,Z))))
+
+  dlas = filter_poi(las, Stem & Z > (dh - dw) & Z < (dh + dw))
+
+  if(hasField(las, 'TreeID')){
+    h = las@data[TreeID > 0, .(H = hfunc(Z, hp)), by='TreeID']
+    d = dlas@data[,dfunc(X,Y,Z),by=TreeID]
+    dh_tab = merge(d,h,by='TreeID')[order(TreeID)]
+  } else {
+    dh_tab = dlas@data %$% dfunc(X,Y,Z)
+    dh_tab$H= hfunc(las$Z, hp)
+  }
+
+  dh_tab %<>% setAttribute('tls_inventory_dt')
+  return(dh_tab)
+
 }
 
 #########################################

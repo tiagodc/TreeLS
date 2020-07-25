@@ -495,7 +495,7 @@ SEXP cppCircleFit(NumericMatrix& las, std::string method = "qr", unsigned int n 
 }
 
 // [[Rcpp::export]]
-SEXP cppCylinderFit(NumericMatrix& las, std::string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9, double max_angle = 30){
+SEXP cppCylinderFit(NumericMatrix& las, std::string method = "nm", unsigned int n = 10, double p = 0.95, double inliers = 0.9, double max_angle = 30, unsigned int n_best = 20){
   vector<vector<double> > cloud = rmatrix2cpp(las);
   vector<double> pars;
 
@@ -513,7 +513,7 @@ SEXP cppCylinderFit(NumericMatrix& las, std::string method = "nm", unsigned int 
   }else if(method == "ransac"){
     pars = ransacCylinder(cloud, n, p, inliers);
   }else if(method == "bf"){
-    pars = bruteForceRansacCylinder(cloud, n, p, inliers, 10, max_angle, true)[0];
+    pars = bruteForceRansacCylinder(cloud, n, p, inliers, n_best, max_angle, true)[0];
   }
 
   return wrap( pars );
