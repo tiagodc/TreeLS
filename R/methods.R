@@ -959,109 +959,6 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 }
 
 
-#' Plot \emph{TreeLS} outputs
-#' @description Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
-#' for usage examples.
-#' @param las \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
-#' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
-#' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
-#' @param tree_id optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
-#' @param color optional - color of the plotted stem segment representations.
-#' @examples
-#' ### single tree
-#' file = system.file("extdata", "spruce.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' tls = stemPoints(tls)
-#' df = stemSegmentation(tls)
-#'
-#' tlsPlot(tls, df)
-#'
-#' ### For further examples check:
-#' ?stemSegmentation
-#' @export
-tlsPlot = function(las, sgmt = NULL, map = NULL, tree_id = NULL, color = 'yellow'){
-
-  isLAS(las)
-
-  if(!is.null(tree_id) && (length(tree_id) != 1 || !is.numeric(tree_id)))
-      stop('tree_id must be numeric of length 1')
-
-  . = NULL
-
-  cp = pastel.colors(100)
-
-  if(hasAttribute(las, 'multiple_stem_points')){
-
-    if(is.null(tree_id)){
-
-      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=tree_id]
-
-      corner = plot(las %>% filter_poi(Stem), color='TreeID', colorPalette=cp, size=1.5)
-      las %<>% filter_poi(!Stem & Classification != 2)
-      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
-
-      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
-
-    }else{
-
-      xy = las@data[TreeID == tree_id, .(mean(X),mean(Y))]
-
-      if(nrow(xy) == 0)
-        stop('no match for tree_id ==' %>% paste(tree_id))
-
-      xy %<>% as.double
-
-      las %<>% tlsCrop(xy[1], xy[2], 1.5)
-
-      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
-
-      corner = plot(las %>% filter_poi(Stem), size=1.5)
-      las %<>% filter_poi(!Stem & Classification != 2)
-      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
-
-      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
-
-    }
-
-  }else if(hasAttribute(las, 'single_stem_points')){
-
-    corner = plot(las %>% filter_poi(Stem), size=1.5)
-    las %<>% filter_poi(!Stem & Classification != 2)
-    rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
-
-  }else{
-    corner = plot(las, size=1.5)
-  }
-
-  if(!is.null(sgmt)){
-    if(hasAttribute(sgmt, 'multiple_stems_dt') || hasAttribute(sgmt, 'single_stem_dt')){
-
-      if(!is.null(tree_id) && hasAttribute(sgmt, 'multiple_stems_dt')){
-        sgmt = sgmt[TreeID == tree_id]
-      }
-
-      sgmt %$% spheres3d(X-corner[1], Y-corner[2], AvgHeight, Radius, color=color)
-    }else{
-      message('sgmt does not have a stem_dt signature')
-    }
-  }
-
-  if(!is.null(map)){
-    if(hasAttribute(map, 'tree_map')){
-      if(!is.null(tree_id)){
-        map %<>% filter_poi(TreeID == tree_id)
-      }
-      map@data %$% rgl.points(X - corner[1], Y - corner[2], Z, color='green', size=.5)
-    }else{
-      message('map does not have a tree_map signature')
-    }
-  }
-
-  return(corner %>% invisible)
-
-}
-
-
 #' Point cloud circle fit
 #' @description Fits a 2D horizontally-aligned circle on a set of 3D points.
 #' @template param-las
@@ -1239,10 +1136,113 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 }
 
 
+#' Plot \emph{TreeLS} outputs
+#' @description Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
+#' for usage examples.
+#' @param las \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
+#' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
+#' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
+#' @param tree_id optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
+#' @param color optional - color of the plotted stem segment representations.
+#' @examples
+#' ### single tree
+#' file = system.file("extdata", "spruce.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' tls = stemPoints(tls)
+#' df = stemSegmentation(tls)
+#'
+#' tlsPlot(tls, df)
+#'
+#' ### For further examples check:
+#' ?stemSegmentation
+#' @export
+tlsPlot = function(tls, tls2 = NULL, tls2 = NULL, tree_id = NULL, segment = NULL){
+
+  isLAS(las)
+
+  if(!is.null(tree_id) && (length(tree_id) != 1 || !is.numeric(tree_id)))
+    stop('tree_id must be numeric of length 1')
+
+  . = NULL
+
+  cp = pastel.colors(100)
+
+  if(hasAttribute(las, 'multiple_stem_points')){
+
+    if(is.null(tree_id)){
+
+      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=tree_id]
+
+      corner = plot(las %>% filter_poi(Stem), color='TreeID', colorPalette=cp, size=1.5)
+      las %<>% filter_poi(!Stem & Classification != 2)
+      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
+
+      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
+
+    }else{
+
+      xy = las@data[TreeID == tree_id, .(mean(X),mean(Y))]
+
+      if(nrow(xy) == 0)
+        stop('no match for tree_id ==' %>% paste(tree_id))
+
+      xy %<>% as.double
+
+      las %<>% tlsCrop(xy[1], xy[2], 1.5)
+
+      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
+
+      corner = plot(las %>% filter_poi(Stem), size=1.5)
+      las %<>% filter_poi(!Stem & Classification != 2)
+      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
+
+      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
+
+    }
+
+  }else if(hasAttribute(las, 'single_stem_points')){
+
+    corner = plot(las %>% filter_poi(Stem), size=1.5)
+    las %<>% filter_poi(!Stem & Classification != 2)
+    rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
+
+  }else{
+    corner = plot(las, size=1.5)
+  }
+
+  if(!is.null(sgmt)){
+    if(hasAttribute(sgmt, 'multiple_stems_dt') || hasAttribute(sgmt, 'single_stem_dt')){
+
+      if(!is.null(tree_id) && hasAttribute(sgmt, 'multiple_stems_dt')){
+        sgmt = sgmt[TreeID == tree_id]
+      }
+
+      sgmt %$% spheres3d(X-corner[1], Y-corner[2], AvgHeight, Radius, color=color)
+    }else{
+      message('sgmt does not have a stem_dt signature')
+    }
+  }
+
+  if(!is.null(map)){
+    if(hasAttribute(map, 'tree_map')){
+      if(!is.null(tree_id)){
+        map %<>% filter_poi(TreeID == tree_id)
+      }
+      map@data %$% rgl.points(X - corner[1], Y - corner[2], Z, color='green', size=.5)
+    }else{
+      message('map does not have a tree_map signature')
+    }
+  }
+
+  return(corner %>% invisible)
+
+}
+
+
 #########################################
 
 
-#' EXPERIMENTAL - Point cloud multiple circle fit
+#' EXPERIMENTAL: Point cloud multiple circle fit
 #' @description Searches and fits circles multiple 2D circles on a point cloud layer from a single tree.
 #' @param dlas \code{\link[lidR:LAS]{LAS}} object.
 #' @template param-pixel-size
@@ -1251,7 +1251,7 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 #' @template param-min-density
 #' @param plot \code{logical} - plot the results?
 #' @export
-shapeFit_forked = function(dlas, pixel_size = .02, max_radius = .2, votes_percentile = .7, min_density = .25, plot=FALSE){
+shapeFit.forks = function(dlas, pixel_size = .02, max_radius = .2, votes_percentile = .7, min_density = .25, plot=FALSE){
 
   isLAS(dlas)
 
@@ -1363,8 +1363,8 @@ shapeFit_forked = function(dlas, pixel_size = .02, max_radius = .2, votes_percen
       yh = temp$y + sin(angs) * temp$r
       lines(xh,yh,col='orange',lwd=2)
 
-      xr = est$X + cos(angs) * est$d/200
-      yr = est$Y + sin(angs) * est$d/200
+      xr = est$X + cos(angs) * est$radius
+      yr = est$Y + sin(angs) * est$radius
       lines(xr,yr,col='green',lwd=2)
     }
   }

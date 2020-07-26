@@ -21,14 +21,20 @@ require(glue)
 rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Stem', 'Segment', 'gpstime', 'AvgHeight', 'Radius'))
 
 ###################
-las = readTLS('inst/extdata/model_boles.laz')
+las = readTLS('test_data/Parcela.las', filter='-keep_random_fraction 0.25', select='xyzi')
+las = readTLS('inst/extdata/pine.laz', select='xyzi')
+plot(las)
 las = tlsNormalize(las, keep_ground = F)
-map = treeMap(las, map.eigen.knn(.15, 15, .15, .5, .5, 3, 20))
+thin = tlsSample(las, smp.voxelize(.025))
+map = treeMap(thin, map.eigen.knn())
+map %>%
+  # treeMap.merge(.1) %>%
+  treeMap.positions()
 las = treePoints(las, map, trp.crop(1))
-# plot(las, color='TreeID')
-las = stemPoints(las, stm.hough())
+plot(las, color='TreeID')
+las = stemPoints(las, stm.eigen.knn())
 plot(las,color='Stem')
-segs = stemSegmentation(las, sgt.bf.cylinder(inliers = .95))
+segs = stemSegmentation(las, sgt.ransac.cylinder(inliers = .95))
 
 
 seg = filter_poi(las, Segment == 3 & TreeID == 3 & Stem)
