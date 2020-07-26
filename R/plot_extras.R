@@ -234,7 +234,6 @@ add_stemSegments = function(x, las, stems_data_table, cylinders=FALSE, color='wh
   }
 
   las = filter_poi(las, Stem)
-  las@data
 
   if('TreeID' %in% colnames(stems_data_table)){
 
