@@ -115,7 +115,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 
 
 #' Tree mapping algorithm: KNN point geometry
-#' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{pointMetrics}}.
+#' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 #' @template param-max-planarity
 #' @template param-max-verticality
 #' @param max_mean_dist \code{numeric} - maximum average distance between points tolerated in a neighborhood.
@@ -167,8 +167,8 @@ map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist
 
     check_pt_metrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_pt_metrics){
-      message('Calculating knn pointMetrics')
-      las = pointMetrics(las, ptm.knn(), mtrlst)
+      message('Calculating knn fastPointMetrics')
+      las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
     las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality & MeanDistance < max_mean_dist) %>%
@@ -197,7 +197,7 @@ map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist
 
 
 #' Tree mapping algorithm: Voxel geometry
-#' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{pointMetrics}}.
+#' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 #' @template param-max-planarity
 #' @template param-max-verticality
 #' @param voxel_spacing \code{numeric} - voxel side length to points into.
@@ -248,8 +248,8 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
     mtrlst = c('N', 'Planarity', 'Verticality')
     check_pt_metrics = c(mtrlst, 'VoxelID') %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_pt_metrics){
-      message('Calculating voxel pointMetrics')
-      las = pointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
+      message('Calculating voxel fastPointMetrics')
+      las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
     las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality) %>%

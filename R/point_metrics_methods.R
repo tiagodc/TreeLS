@@ -21,7 +21,7 @@
 ptmMetricsLog = function(which_metrics){
   metrics_log = AVAILABLE_POINT_METRICS %in% which_metrics
 
-  if(all(!metrics_log)) stop('Please provide at least one valid metric. See ?pointMetrics.available')
+  if(all(!metrics_log)) stop('Please provide at least one valid metric. See ?fastPointMetrics.available')
 
   metrics_names = POINT_METRICS_NAMES[1:9][metrics_log[1:9]]
   if(metrics_log[10]) metrics_names %<>% c(POINT_METRICS_NAMES[10:12])
@@ -42,7 +42,7 @@ ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
   ptm = data.table()
 
   if(any(pick_metrics$log[1:11])){
-    ptm =  pointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
+    ptm =  fastPointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
     colnames(ptm) = pick_metrics$names
   }
 
@@ -62,7 +62,7 @@ ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
 
 
 #' Point metrics algorithm: Voxel-wise metrics
-#' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics voxel-wise.
+#' @description This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics voxel-wise.
 #' @param d \code{numeric} - voxel spacing, in point cloud units.
 #' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search unisg integer index hashing, much faster on large point clouds (several million points).
 #' @export
@@ -120,7 +120,7 @@ ptm.voxel = function(d = .1, exact=FALSE){
 
 
 #' Point metrics algorithm: Nearest Neighborhood metrics
-#' @description This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics from a point's nearest neighborhood (KNN).
+#' @description This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics from a point's nearest neighborhood (KNN).
 #' @param k \code{numeric} - number of closest points to search per neighborhood.
 #' @param r \code{numeric} - limit radius for nearest neighbor search. If \code{r == 0}, no distance limit is applied.
 #' @export

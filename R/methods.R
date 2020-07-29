@@ -352,35 +352,35 @@ nnFilter = function(las, d = 0.05, n = 2){
 
 
 #' Calculate metrics on point neighborhoods
-#' @description Get statistics for every point's neighborhood. Check out \code{\link{pointMetrics.available}} for information about available metrics. Neighborhood search methods are prefixed by \code{ptm}.
+#' @description Get statistics for every point's neighborhood. Check out \code{\link{fastPointMetrics.available}} for information about available metrics. Neighborhood search methods are prefixed by \code{ptm}.
 #' @template param-las
 #' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.
-#' @param which_metrics optional \code{character} vector - list of metrics to be calculated. Overwrites the gobally enabled metrics set with \code{pointMetrics.available()}.
+#' @param which_metrics optional \code{character} vector - list of metrics to be calculated. Overwrites the gobally enabled metrics set with \code{fastPointMetrics.available()}.
 #' @return \code{LAS} object with extra fields - one for each calculated metric.
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-pointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS){
+fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS){
 
   isLAS(las)
 
   if(!hasAttribute(method, 'ptm_mtd'))
-    stop('invalid method: check ?pointMetrics')
+    stop('invalid method: check ?fastPointMetrics')
 
   return(method(las, which_metrics))
 }
 
 
 #' Print available point metrics
-#' @description print available point metrics - used in \code{\link{pointMetrics}}.
-#' @param enable optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to enable globally. Enabled metrics are calculated everytime you run \code{\link{pointMetrics}}.
+#' @description print available point metrics - used in \code{\link{fastPointMetrics}}.
+#' @param enable optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}.
 #' @return \code{character} vector of available metrics.
 #' @examples
-#' m = pointMetrics.available()
+#' m = fastPointMetrics.available()
 #' print(m)
 #' @export
-pointMetrics.available = function(enable = AVAILABLE_POINT_METRICS){
+fastPointMetrics.available = function(enable = AVAILABLE_POINT_METRICS){
   if(typeof(enable) != 'character') enable = AVAILABLE_POINT_METRICS[enable]
   enable_metrics = ptmMetricsLog(enable)
   ENABLED_POINT_METRICS <<- enable_metrics$names

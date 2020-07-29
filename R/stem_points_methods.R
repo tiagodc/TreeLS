@@ -133,7 +133,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
 
 #' Stem denoising algorithm: KNN geometry + voxel voting
-#' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhoods geometries (check \code{\link{pointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
+#' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhoods geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
 #' @template param-max-planarity
 #' @template param-max-verticality
@@ -178,14 +178,14 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
 
     # if(hasField(las, 'TreeID')){
     #   las@data = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
-    #     lapply(pointMetrics, method = ptm.knn(), metrics_list=mtrlst) %>%
+    #     lapply(fastPointMetrics, method = ptm.knn(), metrics_list=mtrlst) %>%
     #     lapply(function(x) x@data) %>% do.call(what=rbind) %>% as.data.table
     # }
 
     check_point_metrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_point_metrics){
-      message('Calculating knn pointMetrics')
-      las = pointMetrics(las, ptm.knn(), mtrlst)
+      message('Calculating knn fastPointMetrics')
+      las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
     las@data$Stem = with(las@data, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality)
@@ -255,7 +255,7 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
 
 
 #' Stem denoising algorithm: Voxel geometry + voting
-#' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{pointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
+#' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
 #' @template param-max-planarity
 #' @template param-max-verticality
@@ -299,8 +299,8 @@ stm.eigen.voxel = function(h_step = .5, max_planarity = .1, max_verticality = 10
 
     check_point_metrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_point_metrics){
-      message('Calculating voxel pointMetrics')
-      las = pointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
+      message('Calculating voxel fastPointMetrics')
+      las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
     las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality)
