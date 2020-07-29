@@ -152,7 +152,7 @@ hasField = function(las, field_name){
 
 cleanFields = function(las, field_names){
   for(i in field_names){
-    temp = las@data[,i]
+    temp = las@data[,..i] %>% unlist
     temp[is.na(temp) | is.nan(temp) | is.infinite(temp)] = ifelse(is.logical(temp), F, 0)
     las@data[,i] = temp
   }
@@ -224,8 +224,8 @@ tfMatrix = function(ax, ay, az, x, y, z){
 }
 
 rangeMeans = function(X,Y,Z){
-  meds = apply(cbind(X,Y), 2, function(x) sum(range(x))/2) %>% t %>% as.data.table
-  names(meds) = c('X','Y')
+  meds = apply(cbind(X,Y,Z), 2, function(x) sum(range(x))/2) %>% t %>% as.data.table
+  names(meds) = c('PX','PY','PZ')
   return(meds)
 }
 
@@ -1012,7 +1012,7 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
   }else{
     pars[5] = pars[5]
     pars %<>% c(apply(las@data[,.(X,Y,Z)], 2, function(x) sum(range(x))/2) %>% as.double)
-    names(pars) = c('rho','theta','phi', 'alpha', 'radius', 'err', 'x', 'y', 'z')
+    names(pars) = c('rho','theta','phi', 'alpha', 'radius', 'err', 'px', 'py', 'pz')
   }
   pars = pars %>% t %>% as.data.frame
   return(pars)
