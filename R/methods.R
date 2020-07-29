@@ -214,6 +214,12 @@ tfMatrix = function(ax, ay, az, x, y, z){
   return(mat)
 }
 
+rangeMeans = function(X,Y,Z){
+  meds = apply(cbind(X,Y), 2, function(x) sum(range(x))/2) %>% t %>% as.data.table
+  names(meds) = c('X','Y')
+  return(meds)
+}
+
 splitByIndex = function(las, var='Z', max_size = 1E6){
 
   npts = nrow(las@data)
@@ -996,7 +1002,8 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
     names(pars) = c('x','y','radius', 'err', 'ax', 'ay')
   }else{
     pars[5] = pars[5]
-    names(pars) = c('rho','theta','phi', 'alpha', 'radius', 'err')
+    pars %<>% c(apply(las@data[,.(X,Y,Z)], 2, function(x) sum(range(x))/2) %>% as.double)
+    names(pars) = c('rho','theta','phi', 'alpha', 'radius', 'err', 'x', 'y', 'z')
   }
   pars = pars %>% t %>% as.data.frame
   return(pars)
@@ -1089,7 +1096,7 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 
   preCheck(las)
 
-  if(!hasAttribute(las, 'Stem')){
+  if(!hasField(las, 'Stem')){
     stop("las must be a normalized point cloud with highlighted stem points ('Stem' field) - see ?stemPoints")
   }
 
@@ -1130,6 +1137,7 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
     dh_tab$H= hfunc(las$Z, hp)
   }
 
+  dh_tab$h_radius = dh
   dh_tab %<>% setAttribute('tls_inventory_dt')
   return(dh_tab)
 

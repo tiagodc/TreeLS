@@ -195,8 +195,9 @@ sgt.ransac.cylinder = function(tol=0.1, n = 10, conf = 0.95, inliers = 0.9){
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment')
 
       z = las@data[, .(AvgHeight = mean(Z), N = .N), Segment]
+      poses = las@data[,rangeMeans(X,Y,Z),by='Segment']
 
-      estimates %<>% merge(z, by='Segment')
+      estimates %<>% merge(z, by='Segment') %>% merge(poses, by='Segment')
 
       # Segment = NULL
       estimates = estimates[order(Segment)]
@@ -213,8 +214,9 @@ sgt.ransac.cylinder = function(tol=0.1, n = 10, conf = 0.95, inliers = 0.9){
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment', 'TreeID')
 
       z = las@data[, .(AvgHeight = mean(Z), N = .N), .(TreeID, Segment)]
+      poses = las@data[,rangeMeans(X,Y,Z),by=c('TreeID','Segment')]
 
-      estimates %<>% merge(z, by=c('TreeID', 'Segment'))
+      estimates %<>% merge(z, by=c('TreeID', 'Segment')) %>% merge(poses, by=c('TreeID', 'Segment'))
 
       # TreeID = Segment = NULL
       estimates = estimates[order(TreeID, Segment)]
@@ -361,8 +363,9 @@ sgt.irls.cylinder = function(tol=0.1, n = 100){
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment')
 
       z = las@data[, .(AvgHeight = mean(Z), N = .N), Segment]
+      poses = las@data[,rangeMeans(X,Y,Z),by='Segment']
 
-      estimates %<>% merge(z, by='Segment')
+      estimates %<>% merge(z, by='Segment') %>% merge(poses, by='Segment')
 
       # Segment = NULL
       estimates = estimates[order(Segment)]
@@ -379,8 +382,9 @@ sgt.irls.cylinder = function(tol=0.1, n = 100){
       names(estimates) = c('rho', 'theta', 'phi', 'alpha', 'Radius', 'Error', 'Segment', 'TreeID')
 
       z = las@data[, .(AvgHeight = mean(Z), N = .N), .(TreeID, Segment)]
+      poses = las@data[,rangeMeans(X,Y,Z),by=c('TreeID','Segment')]
 
-      estimates %<>% merge(z, by=c('TreeID', 'Segment'))
+      estimates %<>% merge(z, by=c('TreeID', 'Segment')) %>% merge(poses, by=c('TreeID', 'Segment'))
 
       # TreeID = Segment = NULL
       estimates = estimates[order(TreeID, Segment)]

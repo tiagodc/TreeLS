@@ -7,17 +7,17 @@ xprod = function(a, b){
   return(x);
 }
 
-tlsPlot.dh = function(las, pars, clear=T, wired=T, col='white'){
+tlsPlot.dh = function(las, pars, clear=T, wired=T, col='white', points=T){
   if('ax' %in% names(pars)){
-    tlsPlot.dh.bf.cylinder(las, pars$x, pars$y, pars$radius, pars$ax, pars$ay, clear, wired, col)
+    tlsPlot.dh.bf.cylinder(las, pars$x, pars$y, pars$radius, pars$ax, pars$ay, clear, wired, col, points)
   }else if('rho' %in% names(pars)){
-    tlsPlot.dh.cylinder(las, pars$rho, pars$theta, pars$phi, pars$alpha, pars$radius, clear, wired, col)
+    tlsPlot.dh.cylinder(las, pars$rho, pars$theta, pars$phi, pars$alpha, pars$radius, clear, wired, col, points)
   }else{
-    tlsPlot.dh.circle(las, pars$X, pars$Y, pars$radius, clear, wired, col)
+    tlsPlot.dh.circle(las, pars$X, pars$Y, pars$radius, clear, wired, col, points)
   }
 }
 
-tlsPlot.dh.bf.cylinder = function(las, x, y, r, ax, ay, clear=F, wired=T, col='white'){
+tlsPlot.dh.bf.cylinder = function(las, x, y, r, ax, ay, clear=F, wired=T, col='white', points=T){
   pt3d = las@data[,.(X,Y,Z)]
 
   rmat = rotationMatrix(ax*pi/180, ay*pi/180, 0)
@@ -31,7 +31,8 @@ tlsPlot.dh.bf.cylinder = function(las, x, y, r, ax, ay, clear=F, wired=T, col='w
   ccen  = c(x,y,range(temp$Z) %>% mean) %*% rmat %>% as.double
   crad  = c(x+r,y,range(temp$Z) %>% mean) %*% rmat %>% as.double
 
-  tlsPlot.dh.3d(las, cbind(cbase, ctop), cbind(ccen, crad), r, clear, wired, col)
+  tlsPlot.dh.3d(las, cbind(cbase, ctop), cbind(ccen, crad), r, clear, wired, col, points)
+  if(!points) return(NULL)
 
   ptring = cbind(
     X = x + cos(seq(0,2*pi,length.out = 36)) * r,
@@ -42,7 +43,7 @@ tlsPlot.dh.bf.cylinder = function(las, x, y, r, ax, ay, clear=F, wired=T, col='w
   if(!is.null(las)) tlsPlot.dh.2d(las, ptring, r)
 }
 
-tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T, col='white'){
+tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T, col='white', points=T){
   n = c(cos(phi) * sin(theta) , sin(phi) * sin(theta) , cos(theta))
   ntheta = c(cos(phi) * cos(theta) , sin(phi) * cos(theta) , -sin(theta))
   nphi = c(-sin(phi) * sin(theta) , cos(phi) * sin(theta) , 0);
@@ -57,7 +58,8 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   height = las$Z %>% range %>% diff %>% abs
   height = height/2
 
-  tlsPlot.dh.3d(las, cbind(meds-a*height, meds+a*height), cbind(meds, meds+n*r), r, clear, wired, col)
+  tlsPlot.dh.3d(las, cbind(meds-a*height, meds+a*height), cbind(meds, meds+n*r), r, clear, wired, col, points)
+  if(!points) return(NULL)
 
   # cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
   # if(clear) clear3d() # else rgl.open()
@@ -100,7 +102,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   # points((meds+q)[1], (meds+q)[2], col='darkred', cex=2, pch=3)
 }
 
-tlsPlot.dh.circle = function(las, x, y, r, clear=F, wired=T, col='white'){
+tlsPlot.dh.circle = function(las, x, y, r, clear=F, wired=T, col='white', points=T){
   pt3d = las@data[,.(X,Y,Z)]
   cbase = c(x,y,min(las$Z))
   ctop  = c(x,y,max(las$Z))
@@ -108,7 +110,8 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F, wired=T, col='white'){
   ccen  = c(x,y,range(las$Z) %>% mean)
   crad  = c(x+r,y,range(las$Z) %>% mean)
 
-  tlsPlot.dh.3d(las, cbind(cbase, ctop), cbind(ccen, crad), r, clear, wired, col)
+  tlsPlot.dh.3d(las, cbind(cbase, ctop), cbind(ccen, crad), r, clear, wired, col, points)
+  if(!points) return(NULL)
 
   # cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
   # if(clear) clear3d() # else rgl.open()
@@ -134,14 +137,14 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F, wired=T, col='white'){
   # points(x,y, col='darkred', cex=2, pch=3)
 }
 
-tlsPlot.dh.3d = function(las, rings, rVec, r, clear=T, wired=T, col='white'){
+tlsPlot.dh.3d = function(las, rings, rVec, r, clear=T, wired=T, col='white', points=T){
   cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
 
   if(clear) clear3d() # else rgl.open()
   bg3d('black') ; axes3d(col='white')
   lines3d(t(rings), color='darkred', lwd=3)
   lines3d(t(rVec), color='blue', lwd=3)
-  rgl.points(las %>% las2xyz, color=cols)
+  if(points) rgl.points(las %>% las2xyz, color=cols)
 
   cyl = cylinder3d(t(rings), radius=r, sides=36)
   if(wired) wire3d(cyl, color=col, lwd=3) else shade3d(cyl, color=col)
@@ -207,7 +210,7 @@ add_stemPoints = function(x, las, ...){
   las@data %$% rgl.points(X,Y,Z,...)
 }
 
-add_stemSegments = function(x, las, stems_data_table, cylinders=FALSE, color='white'){
+add_stemSegments = function(x, las, stems_data_table, color='white'){
 
   isLAS(las)
 
@@ -236,14 +239,28 @@ add_stemSegments = function(x, las, stems_data_table, cylinders=FALSE, color='wh
   las = filter_poi(las, Stem == T)
 
   if('TreeID' %in% colnames(stems_data_table)){
-
+    for(i in 1:nrow(stems_data_table)){
+      seg = stems_data_table$Segment[i]
+      id = stems_data_table$TreeID[i]
+      temp = filter_poi(las, Segment == seg & TreeID == id)
+      tlsPlot.dh(temp, vals[i,], F, T, color, F)
+    }
   }else{
     for(i in 1:nrow(stems_data_table)){
       seg = stems_data_table$Segment[i]
       temp = filter_poi(las, Segment == seg)
-      tlsPlot.dh(temp, vals[i,], F, T, 'white')
+      tlsPlot.dh(temp, vals[i,], F, T, color, F)
     }
   }
 }
 
-add_tlsInventory = function(x){}
+add_tlsInventory = function(x, inventory_data_table, color='white'){
+
+  if(!hasAttribute(inventory_data_table, 'tls_inventory_dt')){
+    stop('inventory_data_table must be the output from tlsInventory')
+  }
+
+  stems_data_table = bringToOrigin(stems_data_table, x)
+
+
+}

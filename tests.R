@@ -26,16 +26,16 @@ las = readTLS('inst/extdata/pine.laz', select='xyzi')
 plot(las)
 las = tlsNormalize(las, keep_ground = F)
 thin = tlsSample(las, smp.voxelize(.025))
-map = treeMap(thin, map.eigen.knn())
+map = treeMap(thin, map.hough())
 map %>%
   # treeMap.merge(.1) %>%
   treeMap.positions()
 las = treePoints(las, map, trp.crop(1))
 plot(las, color='TreeID')
-las = stemPoints(las, stm.eigen.knn())
+las = stemPoints(las, stm.hough())
 plot(las,color='Stem')
-segs = stemSegmentation(las, sgt.ransac.cylinder(inliers = .95))
-
+segs = stemSegmentation(las, sgt.ransac.cylinder(n = 10, inliers = .98))
+inv = tlsInventory(las)
 
 seg = filter_poi(las, Segment == 3 & TreeID == 3 & Stem)
 plot(seg, color='Votes', clear_artifacts=F, size=2)
