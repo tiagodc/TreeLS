@@ -42,7 +42,7 @@ ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
   ptm = data.table()
 
   if(any(pick_metrics$log[1:11])){
-    ptm =  fastPointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
+    ptm =  pointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
     colnames(ptm) = pick_metrics$names
   }
 

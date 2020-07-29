@@ -51,7 +51,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   a = ntheta * cos(alpha) + nphibar * sin(alpha)
   q = n*(r+rho)
 
-  meds = apply(las@data[,.(X,Y,Z)], 2, median) %>% as.double
+  meds = apply(las@data[,.(X,Y,Z)], 2, function(x) sum(range(x))/2) %>% as.double
 
   pt3d = las@data[,.(X,Y,Z)]
   height = las$Z %>% range %>% diff %>% abs
@@ -141,7 +141,7 @@ tlsPlot.dh.3d = function(las, rings, rVec, r, clear=T, wired=T, col='white'){
   bg3d('black') ; axes3d(col='white')
   lines3d(t(rings), color='darkred', lwd=3)
   lines3d(t(rVec), color='blue', lwd=3)
-  # rgl.points(las %>% las2xyz, color=cols)
+  rgl.points(las %>% las2xyz, color=cols)
 
   cyl = cylinder3d(t(rings), radius=r, sides=36)
   if(wired) wire3d(cyl, color=col, lwd=3) else shade3d(cyl, color=col)
@@ -233,7 +233,7 @@ add_stemSegments = function(x, las, stems_data_table, cylinders=FALSE, color='wh
     colnames(vals)[3] %<>% tolower
   }
 
-  las = filter_poi(las, Stem)
+  las = filter_poi(las, Stem == T)
 
   if('TreeID' %in% colnames(stems_data_table)){
 

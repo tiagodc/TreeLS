@@ -1156,7 +1156,7 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 #' ### For further examples check:
 #' ?stemSegmentation
 #' @export
-tlsPlot = function(tls, tls2 = NULL, tls2 = NULL, tree_id = NULL, segment = NULL){
+tlsPlot = function(tls, tls2 = NULL, tls3 = NULL, tree_id = NULL, segment = NULL){
 
   isLAS(las)
 
