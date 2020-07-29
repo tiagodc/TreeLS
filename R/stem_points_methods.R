@@ -115,11 +115,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
     las@data$Votes = 0
     las@data$Votes[survey_points] = results$Votes
 
-    if(!hasField(las, 'TreeID')){
-      las %<>% setAttribute("single_stem_points")
-    }else{
-      las %<>% setAttribute("multiple_stem_points")
-    }
+    las = cleanFields(las, c('Radius', 'Votes'))
 
     return(las)
 
@@ -245,6 +241,7 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
     las@data$Radius = las@data$med_rad
     las@data$med_rad = NULL
     las@data[Stem == F]$Radius = 0
+    las = cleanFields(las, c('Votes', 'VotesWeight', 'Radius'))
 
     return(las)
   }
@@ -356,6 +353,7 @@ stm.eigen.voxel = function(h_step = .5, max_planarity = .1, max_verticality = 10
     las@data$Radius = las@data$med_rad
     las@data$med_rad = NULL
     las@data[Stem == F]$Radius = 0
+    las = cleanFields(las, c('Votes', 'VotesWeight', 'Radius'))
 
     return(las)
   }

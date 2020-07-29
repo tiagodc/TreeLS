@@ -110,6 +110,7 @@ ptm.voxel = function(d = .1, exact=FALSE){
     las@data = merge(las@data, vtm, by='VoxelID', sort=F)
     las@data = las@data[,-c('VoxelID')]
     las@data$VoxelID = vx
+    las = cleanFields(las, pick_metrics$names)
 
     return(las)
   }
@@ -135,6 +136,7 @@ ptm.knn = function(k = 20, r = 0){
     k = nabor::knn(las %>% las2xyz, k = k+1, radius = r)
     ptm = ptmStatistics(las, k, which_metrics)
     las@data[,colnames(ptm)] = ptm
+    las = cleanFields(las, which_metrics)
     return(las)
   }
 

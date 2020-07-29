@@ -150,6 +150,15 @@ hasField = function(las, field_name){
   any(names(las@data) == field_name) %>% return()
 }
 
+cleanFields = function(las, field_names){
+  for(i in field_names){
+    temp = las@data[,i]
+    temp[is.na(temp) | is.nan(temp) | is.infinite(temp)] = ifelse(is.logical(temp), F, 0)
+    las@data[,i] = temp
+  }
+  return(las)
+}
+
 setHeaderTLS = function(las, x_scale = 0.0001, y_scale = 0.0001, z_scale = 0.0001){
 
   if(class(las)[1] != "LAS")
