@@ -601,7 +601,7 @@ treeMap.positions = function(las, plot=TRUE){
   if(hasAttribute(las, 'tree_map_dt')){
     pos = las
   }else{
-    if(hasAttribute(las, 'map_hough')){
+    if(hasField(las, 'TreePosition')){
       las %<>% filter_poi(TreePosition)
     }
 

@@ -199,16 +199,35 @@ tlsPlot.dh.2d = function(las, ring, r, col='darkred'){
 }
 
 add_treeIDs = function(x, las, ...){
+  if(class(las)[1] == 'LAS'){
+    if(!hasField(las, 'TreeID')) stop('TreeID field not found.')
+    las = las@data[.(TreeID,X,Y)]
+  }else{
+    if(!all(c('X','Y','Z','TreeID') %in% colnames(las))) stop('X, Y, Z and TreeID fields must be present.')
+  }
+
   las = bringToOrigin(las, x)
   minz = min(las$Z) - 0.5
-  if(class(las)[1]){
-    las = las@data[.(TreeID,X,Y)]
-  }
   las = las[TreeID > 0,.(X=mean(X), Y=mean(Y)), by='TreeID']
   las %$% text3d(X,Y,minz,TreeID, ...)
 }
 
-add_treeMap = function(){}
+add_treeMap = function(x, las, ...){
+  if(!hasAttribute(las, 'tree_map') && !hasAttribute(las, 'tree_map_dt'))
+    stop('las is not a tree_map object: check ?treeMap')
+
+  h = 1.3
+  if(hasAttribute(las, 'tree_map')){
+    if(hasField(las, 'TreePosition')){
+      las_copy %>% bringToOrigin(x) %>% las2xyz %>% rgl.points(...)
+      return(NULL)
+    }
+    h = mean(las$Z)
+    las %<>% treeMap.positions(F)
+  }
+  las = bringToOrigin(las,x)
+  spheres3d(las$X, las$Y, h, radius=.25, ...)
+}
 
 add_treePoints = function(x, las, color_func=pastel.colors, ...){
   isLAS(las)
@@ -281,7 +300,7 @@ add_tlsInventory = function(x, inventory_data_table, color='white', fast=FALSE){
     inventory_data_table = bringToOrigin(inventory_data_table, x)
     vals = inventory_data_table[,c('X','Y','Radius', 'DX', 'DY')]
     colnames(vals) = c('x', 'y', 'radius', 'ax', 'ay')
-    positions = inventory_data_table[,.(X,Y,Z=AvgHeight)]
+    positions = inventory_data_table[,.(X,Y,Z=h_radius)]
     if(fast) positions = tfBruteForceCoordinates(positions, vals$ax, vals$ay)
   }else if('rho' %in% nms){
     vals = inventory_data_table[,c('rho', 'theta', 'phi', 'alpha', 'Radius')]
@@ -291,13 +310,13 @@ add_tlsInventory = function(x, inventory_data_table, color='white', fast=FALSE){
     inventory_data_table = bringToOrigin(inventory_data_table, x)
     vals = inventory_data_table[,c('X', 'Y', 'Radius')]
     colnames(vals)[3] %<>% tolower
-    positions = inventory_data_table[,.(X,Y,Z=AvgHeight)]
+    positions = inventory_data_table[,.(X,Y,Z=h_radius)]
   }
 
   if(fast){
     spheres3d(positions, radius = inventory_data_table$Radius, color=color)
   }else{
-    len = .2
+    len = .15
     for(i in 1:nrow(inventory_data_table)){
       temp = positions[i,]
       temp = rbind(temp,temp)
@@ -307,5 +326,8 @@ add_tlsInventory = function(x, inventory_data_table, color='white', fast=FALSE){
     }
   }
 
-  positions %$% arrow3d(c(X,Y,0), c(X,Y,inventory_data_table$H), color=color, width = .1, thickness = .1, s=.05, type='rotation', n=18)
+  for(i in 1:nrow(positions)){
+    positions[i,] %$% arrow3d(c(X,Y,0), c(X,Y,inventory_data_table$H[i]), color=color, width = .1, thickness = .1, s=.05, type='rotation', n=18)
+  }
+
 }

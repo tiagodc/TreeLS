@@ -105,7 +105,6 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
     map$TreePosition %<>% as.logical
     map %<>% LAS %>% setHeaderTLS
 
-    map %<>% setAttribute('map_hough')
     return(map)
   }
 
