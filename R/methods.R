@@ -1209,12 +1209,12 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
       }
 
       if(hasField(las, 'Stem')){
-        add_stemPoints(0, las, color='yellow', size=pt_cex)
+        add_stemPoints(0, las, color='white', size=pt_cex)
         if(hasField(las, 'TreeID')) add_treePoints(0, las, size=pt_cex) else h_plot(las)
         tid_plot(las)
         sid_plot(las)
       }else if(hasAttribute(las, 'tree_map')){
-        add_treeMap(0, las, color='green')
+        add_treeMap(0, las, color='yellow')
         tid_plot(las)
       }else if(hasField(las, 'TreeID')){
         add_treePoints(0, las, size=pt_cex)
@@ -1241,7 +1241,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
         tid_plot(las)
         sid_plot(las)
       }else if(hasAttribute(las, 'tree_map_dt')){
-        add_treeMap(0, las, color='green')
+        add_treeMap(0, las, color='yellow')
         tid_plot(las)
       }
     }
