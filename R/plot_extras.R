@@ -32,6 +32,28 @@ tfBruteForceCoordinates = function(dt, ax, ay){
   return(dt)
 }
 
+pan3d = function(button){
+  start <- list()
+
+  begin <- function(x, y) {
+    start$userMatrix <<- par3d("userMatrix")
+    start$viewport <<- par3d("viewport")
+    start$scale <<- par3d("scale")
+    start$projection <<- rgl.projection()
+    start$pos <<- rgl.window2user( x/start$viewport[3], 1 - y/start$viewport[4], 0.5,
+                                   projection=start$projection)
+  }
+
+  update <- function(x, y) {
+    xlat <- (rgl.window2user( x/start$viewport[3], 1 - y/start$viewport[4], 0.5,
+                              projection = start$projection) - start$pos)*start$scale
+    mouseMatrix <- translationMatrix(xlat[1], xlat[2], xlat[3])
+    par3d(userMatrix = start$userMatrix %*% t(mouseMatrix) )
+  }
+  rgl.setMouseCallbacks(button, begin, update)
+  # cat("Pan set on button", button, "of rgl device",rgl.cur(),"\n")
+}
+
 tlsPlot.dh = function(las, pars, clear=T, wired=T, col='white'){
   if('ax' %in% names(pars)){
     tlsPlot.dh.bf.cylinder(las, pars$x, pars$y, pars$radius, pars$ax, pars$ay, clear, wired, col)
@@ -198,18 +220,39 @@ tlsPlot.dh.2d = function(las, ring, r, col='darkred'){
   points(mean(ring[,1]), mean(ring[,2]), col=col, cex=2, pch=3)
 }
 
+
+add_segmentIDs = function(x, las, ...){
+  if(class(las)[1] == 'LAS'){
+    if(!hasField(las, 'Segment')) stop('Segment field not found.')
+    las = filter_poi(las, Stem == T)
+    las = las@data
+  }else if(!('Segment' %in% colnames(las))){
+    stop('Segment field not found.')
+  }
+
+  by = 'Segment'
+  if('TreeID' %in% colnames(las)){
+    by = c('TreeID', by)
+    las = las[TreeID > 0]
+  }
+
+  las = las[,.(X=mean(X),Y=mean(Y),Z=mean(Z)),by=by]
+  las = bringToOrigin(las, x)
+  las %$% text3d(X,Y,Z,Segment, ...)
+}
+
 add_treeIDs = function(x, las, ...){
   if(class(las)[1] == 'LAS'){
     if(!hasField(las, 'TreeID')) stop('TreeID field not found.')
-    las = las@data[.(TreeID,X,Y)]
+    las = las@data
   }else{
     if(!all(c('X','Y','Z','TreeID') %in% colnames(las))) stop('X, Y, Z and TreeID fields must be present.')
   }
 
   las = bringToOrigin(las, x)
-  minz = min(las$Z) - 0.5
+  z = min(las$Z) - .5
   las = las[TreeID > 0,.(X=mean(X), Y=mean(Y)), by='TreeID']
-  las %$% text3d(X,Y,minz,TreeID, ...)
+  las %$% text3d(X,Y,z,TreeID, ...)
 }
 
 add_treeMap = function(x, las, ...){
@@ -219,7 +262,7 @@ add_treeMap = function(x, las, ...){
   h = 1.3
   if(hasAttribute(las, 'tree_map')){
     if(hasField(las, 'TreePosition')){
-      las_copy %>% bringToOrigin(x) %>% las2xyz %>% rgl.points(...)
+      las %>% bringToOrigin(x) %>% las2xyz %>% rgl.points(...)
       return(NULL)
     }
     h = mean(las$Z)

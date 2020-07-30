@@ -147,7 +147,8 @@ las2xyz = function(las){
 }
 
 hasField = function(las, field_name){
-  any(names(las@data) == field_name) %>% return()
+  if(class(las)[1] == 'LAS') las = las@data
+  any(colnames(las) == field_name) %>% return()
 }
 
 cleanFields = function(las, field_names){
@@ -244,28 +245,6 @@ splitByIndex = function(las, var='Z', max_size = 1E6){
   }
 
   return(zclass)
-}
-
-pan3d = function(button){
-  start <- list()
-
-  begin <- function(x, y) {
-    start$userMatrix <<- par3d("userMatrix")
-    start$viewport <<- par3d("viewport")
-    start$scale <<- par3d("scale")
-    start$projection <<- rgl.projection()
-    start$pos <<- rgl.window2user( x/start$viewport[3], 1 - y/start$viewport[4], 0.5,
-                                   projection=start$projection)
-  }
-
-  update <- function(x, y) {
-    xlat <- (rgl.window2user( x/start$viewport[3], 1 - y/start$viewport[4], 0.5,
-                              projection = start$projection) - start$pos)*start$scale
-    mouseMatrix <- translationMatrix(xlat[1], xlat[2], xlat[3])
-    par3d(userMatrix = start$userMatrix %*% t(mouseMatrix) )
-  }
-  rgl.setMouseCallbacks(button, begin, update)
-  cat("Pan set on button", button, "of rgl device",rgl.cur(),"\n")
 }
 
 
@@ -1180,85 +1159,95 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 #' ### For further examples check:
 #' ?stemSegmentation
 #' @export
-tlsPlot = function(tls, tls2 = NULL, tls3 = NULL, tree_id = NULL, segment = NULL){
+tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
-  isLAS(las)
+  tls = as.list(match.call(expand.dots = F))[['...']]
 
-  if(!is.null(tree_id) && (length(tree_id) != 1 || !is.numeric(tree_id)))
-    stop('tree_id must be numeric of length 1')
-
-  . = NULL
-
-  cp = pastel.colors(100)
-
-  if(hasAttribute(las, 'multiple_stem_points')){
-
-    if(is.null(tree_id)){
-
-      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=tree_id]
-
-      corner = plot(las %>% filter_poi(Stem), color='TreeID', colorPalette=cp, size=1.5)
-      las %<>% filter_poi(!Stem & Classification != 2)
-      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
-
-      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
-
-    }else{
-
-      xy = las@data[TreeID == tree_id, .(mean(X),mean(Y))]
-
-      if(nrow(xy) == 0)
-        stop('no match for tree_id ==' %>% paste(tree_id))
-
-      xy %<>% as.double
-
-      las %<>% tlsCrop(xy[1], xy[2], 1.5)
-
-      temp = filter_poi(las, Stem)@data[,.(X = mean(X), Y = mean(Y), Z = min(Z)-0.5), by=TreeID]
-
-      corner = plot(las %>% filter_poi(Stem), size=1.5)
-      las %<>% filter_poi(!Stem & Classification != 2)
-      rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
-
-      temp %$% text3d(X - corner[1], Y - corner[2], Z, TreeID, cex=1.5, col=color)
-
+  for(i in 1:length(tls)){
+    obj = tls[[i]] %>% as.character %>% get
+    tp = class(obj)[1]
+    if(!(tp %in% c('LAS', 'data.table', 'data.frame'))){
+      stop('input data must be either LAS or data.table objects.')
     }
-
-  }else if(hasAttribute(las, 'single_stem_points')){
-
-    corner = plot(las %>% filter_poi(Stem), size=1.5)
-    las %<>% filter_poi(!Stem & Classification != 2)
-    rgl.points(las$X - corner[1], las$Y - corner[2], las$Z, color='white', size=.5)
-
-  }else{
-    corner = plot(las, size=1.5)
+    tls[[i]] = obj
   }
 
-  if(!is.null(sgmt)){
-    if(hasAttribute(sgmt, 'multiple_stems_dt') || hasAttribute(sgmt, 'single_stem_dt')){
+  seg_ids = FALSE
+  tree_ids = FALSE
+  pt_cex = 1.5
 
-      if(!is.null(tree_id) && hasAttribute(sgmt, 'multiple_stems_dt')){
-        sgmt = sgmt[TreeID == tree_id]
+  tid_plot = function(obj){
+    if(tree_ids || !is.null(tree_id)) return(NULL)
+    if(!hasField(obj, 'TreeID')) return(NULL)
+    add_treeIDs(0, obj, color='yellow')
+    tree_ids <<- TRUE
+  }
+
+  sid_plot = function(obj){
+    if(tree_ids || seg_ids) return(NULL)
+    add_segmentIDs(0, obj, color='yellow', pos=4)
+    seg_ids <<- TRUE
+  }
+
+  h_plot = function(las){
+    colors = lidR:::set.colors(las$Z, lidR::height.colors(50))
+    rgl.points(las %>% las2xyz, color=colors, size=pt_cex)
+  }
+
+  open3d()
+  bg3d('black')
+
+  for(las in tls){
+    if(class(las)[1] == 'LAS'){
+
+      if(hasField(las, 'TreeID') && !is.null(tree_id)){
+        las = filter_poi(las, TreeID == tree_id)
       }
 
-      sgmt %$% spheres3d(X-corner[1], Y-corner[2], AvgHeight, Radius, color=color)
-    }else{
-      message('sgmt does not have a stem_dt signature')
-    }
-  }
-
-  if(!is.null(map)){
-    if(hasAttribute(map, 'tree_map')){
-      if(!is.null(tree_id)){
-        map %<>% filter_poi(TreeID == tree_id)
+      if(hasField(las, 'Segment') && !is.null(segment)){
+        las = filter_poi(las, Segment == segment)
       }
-      map@data %$% rgl.points(X - corner[1], Y - corner[2], Z, color='green', size=.5)
+
+      if(hasField(las, 'Stem')){
+        add_stemPoints(0, las, color='yellow', size=pt_cex)
+        if(hasField(las, 'TreeID')) add_treePoints(0, las, size=pt_cex) else h_plot(las)
+        tid_plot(las)
+        sid_plot(las)
+      }else if(hasAttribute(las, 'tree_map')){
+        add_treeMap(0, las, color='green')
+        tid_plot(las)
+      }else if(hasField(las, 'TreeID')){
+        add_treePoints(0, las, size=pt_cex)
+        tid_plot(las)
+      }else{
+        h_plot(las)
+      }
+      pt_cex = pt_cex + .5
     }else{
-      message('map does not have a tree_map signature')
+
+      if(hasField(las, 'TreeID') && !is.null(tree_id)){
+        las = las[TreeID == tree_id]
+      }
+
+      if(hasField(las, 'Segment') && !is.null(segment)){
+        las = las[Segment == segment]
+      }
+
+      if(hasAttribute(las, 'tls_inventory_dt')){
+        add_tlsInventory(0, las, fast=fast)
+        tid_plot(las)
+      }else if(hasAttribute(las, 'single_stem_dt') || hasAttribute(las, 'multiple_stems_dt')){
+        add_stemSegments(0, las, fast=fast)
+        tid_plot(las)
+        sid_plot(las)
+      }else if(hasAttribute(las, 'tree_map_dt')){
+        add_treeMap(0, las, color='green')
+        tid_plot(las)
+      }
     }
   }
 
-  return(corner %>% invisible)
+  pan3d(2)
 
 }
 
