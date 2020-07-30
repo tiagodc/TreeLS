@@ -232,7 +232,7 @@ add_stemPoints = function(x, las, ...){
   las@data %$% rgl.points(X,Y,Z,...)
 }
 
-add_stemSegments = function(x, stems_data_table, color='white', fast=F){
+add_stemSegments = function(x, stems_data_table, color='white', fast=FALSE){
 
   if(!(hasAttribute(stems_data_table, 'single_stem_dt') || hasAttribute(stems_data_table, 'multiple_stems_dt'))){
     stop('stems_data_table must be the output from stemSegmentation')
@@ -270,13 +270,42 @@ add_stemSegments = function(x, stems_data_table, color='white', fast=F){
   }
 }
 
-add_tlsInventory = function(x, inventory_data_table, color='white'){
+add_tlsInventory = function(x, inventory_data_table, color='white', fast=FALSE){
 
   if(!hasAttribute(inventory_data_table, 'tls_inventory_dt')){
     stop('inventory_data_table must be the output from tlsInventory')
   }
 
-  stems_data_table = bringToOrigin(stems_data_table, x)
+  nms = colnames(inventory_data_table)
+  if('DX' %in% nms){
+    inventory_data_table = bringToOrigin(inventory_data_table, x)
+    vals = inventory_data_table[,c('X','Y','Radius', 'DX', 'DY')]
+    colnames(vals) = c('x', 'y', 'radius', 'ax', 'ay')
+    positions = inventory_data_table[,.(X,Y,Z=AvgHeight)]
+    if(fast) positions = tfBruteForceCoordinates(positions, vals$ax, vals$ay)
+  }else if('rho' %in% nms){
+    vals = inventory_data_table[,c('rho', 'theta', 'phi', 'alpha', 'Radius')]
+    colnames(vals) %<>% tolower
+    positions = inventory_data_table[,.(X=PX,Y=PY,Z=PZ)] %>% bringToOrigin(x)
+  }else{
+    inventory_data_table = bringToOrigin(inventory_data_table, x)
+    vals = inventory_data_table[,c('X', 'Y', 'Radius')]
+    colnames(vals)[3] %<>% tolower
+    positions = inventory_data_table[,.(X,Y,Z=AvgHeight)]
+  }
 
+  if(fast){
+    spheres3d(positions, radius = inventory_data_table$Radius, color=color)
+  }else{
+    len = .2
+    for(i in 1:nrow(inventory_data_table)){
+      temp = positions[i,]
+      temp = rbind(temp,temp)
+      temp$Z[1] = temp$Z[1] - len
+      temp$Z[2] = temp$Z[2] + len
+      tlsPlot.dh(temp, vals[i,], F, T, color)
+    }
+  }
 
+  positions %$% arrow3d(c(X,Y,0), c(X,Y,inventory_data_table$H), color=color, width = .1, thickness = .1, s=.05, type='rotation', n=18)
 }

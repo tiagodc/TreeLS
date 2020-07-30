@@ -1073,12 +1073,19 @@ shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10,
   if(shape == 'circle'){
     func = function(las){
       fit = circleFit(las, algorithm, n, inliers, conf, n_best)
-      return(fit)
+      fit = fit[1:4]
+      colnames(fit) = c('X', 'Y', 'Radius', 'Error')
+      return(as.data.table(fit))
     }
   }else if(shape == 'cylinder'){
     func = function(las){
       fit = cylinderFit(las, algorithm, n, inliers, conf, z_dev, n_best)
-      return(fit)
+      if(algorithm=='bf'){
+        colnames(fit) = c('X', 'Y', 'Radius', 'Error', 'DX', 'DY')
+      } else {
+        colnames(fit)[5:9] = c('Radius', 'Error', 'PX', 'PY', 'PZ')
+      }
+      return(as.data.table(fit))
     }
   }
 
