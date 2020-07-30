@@ -321,7 +321,7 @@ add_stemSegments = function(x, stems_data_table, color='white', fast=FALSE){
   if(fast){
     spheres3d(positions, radius = stems_data_table$Radius, color=color)
   }else{
-    len = median(positions$Z[-1] - positions$Z[-nrow(positions)])/2
+    len = ifelse(nrow(stems_data_table) == 1, .15, median(positions$Z[-1] - positions$Z[-nrow(positions)])/2)
     for(i in 1:nrow(stems_data_table)){
       temp = positions[i,]
       temp = rbind(temp,temp)
