@@ -644,3 +644,8 @@ vector<unsigned int> sortIndexes(vector<double>& values) {
 
   return idx;
 }
+
+void progressPrinter(string units, unsigned int n, unsigned int total){
+  double percentage = 100.0 * (double)(++n) / (double)total;
+  cout << fixed << setprecision(2) << "Progress (" << percentage << " %): " << n << " of " << total << " " << units << "\r" << flush;
+}

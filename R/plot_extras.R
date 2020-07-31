@@ -32,7 +32,7 @@ tfBruteForceCoordinates = function(dt, ax, ay){
   return(dt)
 }
 
-pan3d = function(button){
+pan3d = function(button=2){
   start <- list()
 
   begin <- function(x, y) {

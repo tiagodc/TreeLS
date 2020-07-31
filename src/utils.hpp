@@ -81,4 +81,6 @@ vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string
 
 vector<unsigned int> sortIndexes(vector<double>& values);
 
+void progressPrinter(string units, unsigned int n, unsigned int total);
+
 #endif // UTILS_HPP

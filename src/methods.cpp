@@ -604,6 +604,7 @@ vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double> >& clou
 
   for(unsigned int i = 0; i < trees.size(); ++i){
 
+    progressPrinter("trees", i, trees.size());
     vector<unsigned int>& segs = indices[i];
 
     if(segs.empty()) continue;
@@ -637,7 +638,8 @@ vector<vector<vector<double> > > ransacPlotCylinders(vector<vector<double> >& cl
 
   for(unsigned int i = 0; i < trees.size(); ++i){
 
-    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
@@ -672,7 +674,8 @@ vector<vector<vector<double> > > irlsPlotCylinders(vector<vector<double> >& clou
 
   for(unsigned int i = 0; i < trees.size(); ++i){
 
-    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
@@ -707,7 +710,8 @@ vector<vector<vector<double> > > irlsPlotCircles(vector<vector<double> >& cloud,
 
   for(unsigned int i = 0; i < trees.size(); ++i){
 
-    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
@@ -924,7 +928,8 @@ vector<vector<vector<double> > > bfPlotCylinders(vector<vector<double> >& cloud,
 
   for(unsigned int i = 0; i < trees.size(); ++i){
 
-    cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
+    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 

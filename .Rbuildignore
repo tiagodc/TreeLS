@@ -9,3 +9,4 @@
 ^src/methods\.hpp$
 ^old\.R$
 ^tests\.R$
+^test\.cpp$
