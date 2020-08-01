@@ -131,18 +131,18 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 #' Stem denoising algorithm: KNN geometry + voxel voting
 #' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhoods geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
-#' @template param-max-planarity
+#' @template param-max-curvature
 #' @template param-max-verticality
 #' @template param-voxel-spacing
 #' @template param-max-d
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
+stm.eigen.knn = function(h_step = .5, max_curvature = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,
-    max_planarity = max_planarity,
+    max_curvature = max_curvature,
     max_verticality = max_verticality,
     voxel_spacing = voxel_spacing,
     max_d = max_d,
@@ -162,15 +162,14 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
       stop( i %>% paste('must be positive') )
   }
 
-  if(max_planarity > 1) stop('max_planarity must be a number between 0 and 1')
+  if(max_curvature > 1) stop('max_curvature must be a number between 0 and 1')
   if(max_verticality > 180) stop('max_verticality must be a number between 0 and 180')
   if(votes_weight > 1) stop('votes_weight must be a number between 0 and 1')
 
   func = function(las){
 
     las@data$PointID = 1:nrow(las@data)
-    mtrlst = c('N', 'Planarity', 'Verticality', 'EigenVectors')
-    mtrnames = c(mtrlst[-4], 'EigenVector13', 'EigenVector23', 'EigenVector33')
+    mtrlst = c('N', 'Curvature', 'Verticality', 'EigenVector13', 'EigenVector23', 'EigenVector33')
 
     # if(hasField(las, 'TreeID')){
     #   las@data = las@data %>% split(las@data$TreeID) %>% lapply(LAS) %>%
@@ -178,13 +177,13 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
     #     lapply(function(x) x@data) %>% do.call(what=rbind) %>% as.data.table
     # }
 
-    check_point_metrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    check_point_metrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_point_metrics){
       message('Calculating knn fastPointMetrics')
       las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    las@data$Stem = with(las@data, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality)
+    las@data$Stem = with(las@data, N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality)
     if(hasField(las, 'Classification')){
       las@data$Stem = las@data$Stem & las@data$Classification != 2
     }
@@ -254,18 +253,18 @@ stm.eigen.knn = function(h_step = .5, max_planarity = .1, max_verticality = 10, 
 #' Stem denoising algorithm: Voxel geometry + voting
 #' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
-#' @template param-max-planarity
+#' @template param-max-curvature
 #' @template param-max-verticality
 #' @template param-voxel-spacing
 #' @template param-max-d
 #' @template param-votes-weight
 #' @template param-v3d
 #' @export
-stm.eigen.voxel = function(h_step = .5, max_planarity = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
+stm.eigen.voxel = function(h_step = .5, max_curvature = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 
   params = list(
     h_step = h_step,
-    max_planarity = max_planarity,
+    max_curvature = max_curvature,
     max_verticality = max_verticality,
     voxel_spacing = voxel_spacing,
     max_d = max_d,
@@ -285,22 +284,21 @@ stm.eigen.voxel = function(h_step = .5, max_planarity = .1, max_verticality = 10
       stop( i %>% paste('must be positive') )
   }
 
-  if(max_planarity > 1) stop('max_planarity must be a number between 0 and 1')
+  if(max_curvature > 1) stop('max_curvature must be a number between 0 and 1')
   if(max_verticality > 180) stop('max_verticality must be a number between 0 and 180')
   if(votes_weight > 1) stop('votes_weight must be a number between 0 and 1')
 
   func = function(las){
 
-    mtrlst = c('N', 'Planarity', 'Verticality', 'EigenVectors')
-    mtrnames = c(mtrlst[-4], 'EigenVector13', 'EigenVector23', 'EigenVector33', 'VoxelID')
+    mtrlst = c('N', 'Curvature', 'Verticality', 'EigenVector13', 'EigenVector23', 'EigenVector33', 'VoxelID')
 
-    check_point_metrics = mtrnames %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
+    check_point_metrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_point_metrics){
       message('Calculating voxel fastPointMetrics')
       las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
-    las@data$Stem = with(las@data, Classification != 2 & N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality)
+    las@data$Stem = with(las@data, Classification != 2 & N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality)
 
     stem_seg = seq(0, max(las$Z)+h_step, h_step)
     las@data$Segment = cut(las$Z, stem_seg, include_lowest=T, right=F, ordered_result=T) %>% as.integer

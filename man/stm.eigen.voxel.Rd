@@ -4,14 +4,14 @@
 \alias{stm.eigen.voxel}
 \title{Stem denoising algorithm: Voxel geometry + voting}
 \usage{
-stm.eigen.voxel(h_step = 0.5, max_planarity = 0.2,
+stm.eigen.voxel(h_step = 0.5, max_curvature = 0.2,
   max_verticality = 20, voxel_spacing = 0.1, max_d = 0.5,
   votes_weight = 0.2, v3d = F)
 }
 \arguments{
 \item{h_step}{\code{numeric} - height interval to perform point filtering/assignment/classification.}
 
-\item{max_planarity}{\code{numeric} - maximum planarity accepted when filtering a point neighborhood.}
+\item{max_curvature}{\code{numeric} - maximum planarity accepted when filtering a point neighborhood.}
 
 \item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees}.}
 

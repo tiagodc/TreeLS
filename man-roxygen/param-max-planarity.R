@@ -1,1 +1,0 @@
-#' @param max_planarity \code{numeric} - maximum planarity (from 0 to 1) accepted when filtering a point neighborhood.

@@ -18,17 +18,51 @@
 #
 # ===============================================================================
 
+POINT_METRICS_NAMES = c(
+  'N',
+  'MinDist',
+  'MaxDist',
+  'MeanDist',
+  'SdDist',
+  'Linearity',
+  'Planarity',
+  'Scattering',
+  'Omnivariance',
+  'Anisotropy',
+  'Eigentropy',
+  'EigenSum',
+  'Curvature',
+  'KnnRadius',
+  'KnnDensity',
+  'Verticality',
+  'ZRange',
+  'ZSd',
+  'KnnRadius2d',
+  'KnnDensity2d',
+  'EigenSum2d',
+  'EigenRatio2d',
+  'EigenValue1',
+  'EigenValue2',
+  'EigenValue3',
+  'EigenVector11',
+  'EigenVector21',
+  'EigenVector31',
+  'EigenVector12',
+  'EigenVector22',
+  'EigenVector32',
+  'EigenVector13',
+  'EigenVector23',
+  'EigenVector33'
+)
+
+ENABLED_POINT_METRICS = POINT_METRICS_NAMES[c(1,13,16,4,32:34)]
+
+
 ptmMetricsLog = function(which_metrics){
-  metrics_log = AVAILABLE_POINT_METRICS %in% which_metrics
-
+  metrics_log = POINT_METRICS_NAMES %in% which_metrics
   if(all(!metrics_log)) stop('Please provide at least one valid metric. See ?fastPointMetrics.available')
-
-  metrics_names = POINT_METRICS_NAMES[1:9][metrics_log[1:9]]
-  if(metrics_log[10]) metrics_names %<>% c(POINT_METRICS_NAMES[10:12])
-  if(metrics_log[11]) metrics_names %<>% c(POINT_METRICS_NAMES[13:21])
-
+  metrics_names = POINT_METRICS_NAMES[metrics_log]
   return(list(log = metrics_log, names = metrics_names))
-
 }
 
 ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
@@ -36,26 +70,12 @@ ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
   pick_metrics = ptmMetricsLog(which_metrics)
 
   kid = knn$nn.idx
-  kds = knn$nn.dists
-  kds[kid == 0] = 0
+  # kds = knn$nn.dists
+  # kds[kid == 0] = 0
 
-  ptm = data.table()
-
-  if(any(pick_metrics$log[1:11])){
-    ptm =  pointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
-    colnames(ptm) = pick_metrics$names
-  }
-
-  dist_metrics = AVAILABLE_POINT_METRICS[ 12:17 ][ pick_metrics$log[12:17] ]
-  if(length(dist_metrics) > 0){
-    dtm = cppFastApply(kds[,-1], dist_metrics) %>% do.call(what=rbind) %>% as.data.table
-    colnames(dtm) = dist_metrics
-    ptm = cbind(ptm, dtm)
-  }
-
-  ptm = as.matrix(ptm)
-  ptm[is.na(ptm)] = ptm[is.nan(ptm)] = ptm[is.null(ptm)] = ptm[is.infinite(ptm)] = 0
-  ptm = as.data.table(ptm)
+  ptm = pointMetricsCpp(las %>% las2xyz, kid, pick_metrics$log) %>% do.call(what = rbind) %>% as.data.table
+  colnames(ptm) = pick_metrics$names
+  ptm = cleanFields(ptm, colnames(ptm))
 
   return(ptm)
 }
@@ -73,6 +93,12 @@ ptm.voxel = function(d = .1, exact=FALSE){
   if(!is.logical(exact)) stop('exact must be logical')
 
   func = function(las, which_metrics){
+
+    special_case = any(c('KnnDensity', 'KnnDensity2d') %in% which_metrics) && all(which_metrics != 'N')
+
+    if(special_case){
+      which_metrics = c('N', which_metrics)
+    }
 
     pick_metrics = ptmMetricsLog(which_metrics)
 
@@ -112,6 +138,18 @@ ptm.voxel = function(d = .1, exact=FALSE){
     las@data$VoxelID = vx
     las = cleanFields(las, pick_metrics$names)
 
+    if(hasField(las,'KnnDensity')){
+      las@data$KnnDensity = las$N / (d^3)
+    }
+
+    if(hasField(las,'KnnDensity2d')){
+      las@data$KnnDensity2d = las$N / (d^2)
+    }
+
+    if(special_case){
+      las@data$N = NULL
+    }
+
     return(las)
   }
 
@@ -136,7 +174,6 @@ ptm.knn = function(k = 20, r = 0){
     k = nabor::knn(las %>% las2xyz, k = k+1, radius = r)
     ptm = ptmStatistics(las, k, which_metrics)
     las@data[,colnames(ptm)] = ptm
-    las = cleanFields(las, which_metrics)
     return(las)
   }
 

@@ -29,9 +29,6 @@
 
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
 
-POINT_METRICS_NAMES = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValue1', 'EigenValue2', 'EigenValue3', 'EigenVector11', 'EigenVector21', 'EigenVector31', 'EigenVector12', 'EigenVector22', 'EigenVector32', 'EigenVector13', 'EigenVector23', 'EigenVector33')
-AVAILABLE_POINT_METRICS = c('Planarity', 'Verticality', 'LinearSaliency', 'PlanarSaliency', 'Scattering', 'Anisotropy', 'Zrange', 'Zsd', 'N', 'EigenValues', 'EigenVectors', 'MeanDistance', 'MedianDistance', 'MinDistance', 'MaxDistance', 'VarDistance', 'SdDistance')
-ENABLED_POINT_METRICS = AVAILABLE_POINT_METRICS[c(1,2,5,9,12)]
 TLS_MARKER = 'TLS_MARKER'
 
 isLAS = function(las){
@@ -152,10 +149,12 @@ hasField = function(las, field_name){
 }
 
 cleanFields = function(las, field_names){
+  is_las = class(las)[1] == 'LAS'
   for(i in field_names){
-    temp = las@data[,..i] %>% unlist
-    temp[is.na(temp) | is.nan(temp) | is.infinite(temp)] = ifelse(is.logical(temp), F, 0)
-    las@data[,i] = temp
+    temp = if(is_las) las@data[,..i] else las[,..i]
+    temp = unlist(temp)
+    temp[is.na(temp) | is.nan(temp) | is.infinite(temp) | is.null(temp)] = ifelse(is.logical(temp), F, 0)
+    if(is_las) las@data[,i] = temp else las[,i] = temp
   }
   return(las)
 }
@@ -374,16 +373,14 @@ fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_
 #' m = fastPointMetrics.available()
 #' print(m)
 #' @export
-fastPointMetrics.available = function(enable = AVAILABLE_POINT_METRICS){
-  if(typeof(enable) != 'character') enable = AVAILABLE_POINT_METRICS[enable]
+fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS){
+  if(typeof(enable) != 'character') enable = POINT_METRICS_NAMES[enable]
   enable_metrics = ptmMetricsLog(enable)
   ENABLED_POINT_METRICS <<- enable_metrics$names
-  temp = data.frame(METRIC = AVAILABLE_POINT_METRICS, OBS = '', ENABLED = enable_metrics$log)
-  temp$OBS %<>% as.character
-  temp$OBS[12:17] = '   available for ptm.knn only'
+  temp = data.frame(INDEX = 1:length(POINT_METRICS_NAMES), METRIC = POINT_METRICS_NAMES, ENABLED = enable_metrics$log)
   print(temp)
   cat('\n')
-  return(invisible(AVAILABLE_POINT_METRICS))
+  return(invisible(POINT_METRICS_NAMES))
 }
 
 

@@ -4,11 +4,11 @@
 \alias{map.eigen.voxel}
 \title{Tree mapping algorithm: Voxel geometry}
 \usage{
-map.eigen.voxel(max_planarity = 0.15, max_verticality = 15,
+map.eigen.voxel(max_curvature = 0.15, max_verticality = 15,
   voxel_spacing = 0.1, max_d = 0.5, min_h = 2, min_n = 100)
 }
 \arguments{
-\item{max_planarity}{\code{numeric} - maximum planarity accepted when filtering a point neighborhood.}
+\item{max_curvature}{\code{numeric} - maximum planarity accepted when filtering a point neighborhood.}
 
 \item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees}.}
 

@@ -25,9 +25,10 @@
 void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs){
 
   arma::mat armaCloud;
-  armaCloud.insert_cols(0, arma::vec(cloud[0]));
-  armaCloud.insert_cols(1, arma::vec(cloud[1]));
-  armaCloud.insert_cols(2, arma::vec(cloud[2]));
+
+  for(unsigned int i = 0; i < cloud.size(); ++i){
+    armaCloud.insert_cols(i, arma::vec(cloud[i]));
+  }
 
   arma::mat coeff;
   arma::mat score;
@@ -43,12 +44,37 @@ void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, 
   }
 }
 
+vector<double> pointDistances(vector<vector<double> >& cloud){
+  vector<double> dists;
+
+  if(cloud[0].size() == 1){
+    dists = {0};
+    return dists;
+  }
+
+  for(unsigned int i = 0; i < cloud[0].size(); ++i){
+    for(unsigned int j = i+1; j < cloud[0].size(); ++j){
+      double sumsq = 0;
+      for(unsigned int k = 0; k < cloud.size(); ++k) sumsq += pow(cloud[k][j] - cloud[k][i], 2);
+      dists.push_back(sqrt(sumsq));
+    }
+  }
+
+  return dists;
+}
+
 vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
 
-      vector<double> eVal;
-      vector<vector<double> > eVec;
+      vector<double> eVal3d;
+      vector<vector<double> > eVec3d;
+      eigenDecomposition(xyz, &eVal3d, &eVec3d);
+      vector<double> dists3d = pointDistances(xyz);
 
-      eigenDecomposition(xyz, &eVal, &eVec);
+      vector<vector<double> > xy = {xyz[0], xyz[1]};
+      vector<double> eVal2d;
+      vector<vector<double> > eVec2d;
+      eigenDecomposition(xy, &eVal2d, &eVec2d);
+      vector<double> dists2d = pointDistances(xy);
 
       vector<double> z = {0,0,1};
       double zmean = accumulate(xyz[2].begin(), xyz[2].end(), 0.0) / xyz[2].size();
@@ -56,40 +82,65 @@ vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
       double zmin = *min_element(xyz[2].begin(), xyz[2].end());
       double zsumsq = 0;
       for(auto& pt : xyz[2]) zsumsq += pow( pt - zmean ,2);
-
-      double planarity = eVal[2] / (eVal[0] + eVal[1] + eVal[2]);
-      double verticality = vecAngle(z, eVec[2]);
-      double linearSaliency = (eVal[0] - eVal[1]) / eVal[0];
-      double planarSaliency = (eVal[1] - eVal[2]) / eVal[0];
-      double scattering = eVal[2] / eVal[0];
-      double anisotropy = (eVal[0] - eVal[2]) / eVal[0];
-      double zrange = zmax - zmin;
-      double zsd = sqrt( zsumsq / xyz[2].size() );
-      double nobs = xyz[0].size();
+      double sumprod = 0;
+      for(auto& ev : eVal3d) sumprod += ev * log(ev);
+      
+      double n_pts = xyz[0].size();
+      double min_dist  = *min_element(dists3d.begin(), dists3d.end());
+      double max_dist  = *max_element(dists3d.begin(), dists3d.end());
+      double mean_dist = accumulate(dists3d.begin(), dists3d.end(), 0.0) / dists3d.size();
+      double sd_dist = sqrt(variance(dists3d));
+      double linearity = (eVal3d[0] - eVal3d[1]) / eVal3d[0];
+      double planarity = (eVal3d[1] - eVal3d[2]) / eVal3d[0];;
+      double scattering = eVal3d[2] / eVal3d[0];
+      double omnivariance = pow((eVal3d[0] * eVal3d[1] * eVal3d[2]), (1.0/3.0));
+      double anisotropy = (eVal3d[0] - eVal3d[2]) / eVal3d[0];
+      double eigentropy = -sumprod;
+      double eigen_sum_3d = eVal3d[0] + eVal3d[1] + eVal3d[2];
+      double surface_variation = eVal3d[2] / eigen_sum_3d;
+      double radius_knn_3d = *max_element(dists3d.begin(), dists3d.end()) / 2;
+      double density_3d = n_pts / ((4.0/3.0) * PI * pow(radius_knn_3d, 3.0));
+      double verticality = vecAngle(z, eVec3d[2]);
+      double z_range = zmax - zmin;
+      double z_sd = sqrt( zsumsq / xyz[2].size() );
+      double radius_knn_2d = *max_element(dists2d.begin(), dists2d.end()) / 2;
+      double density_2d = n_pts / (PI * pow(radius_knn_2d, 2.0));
+      double eigen_sum_2d = eVal2d[0] + eVal2d[1];
+      double eigen_ratio_2d = eVal2d[1] / eVal2d[0];
 
       vector<double> metrics = {};
+      unsigned int metric_index = 0;
 
-      if(which[0]) metrics.push_back(planarity);
-      if(which[1]) metrics.push_back(verticality);
-      if(which[2]) metrics.push_back(linearSaliency);
-      if(which[3]) metrics.push_back(planarSaliency);
-      if(which[4]) metrics.push_back(scattering);
-      if(which[5]) metrics.push_back(anisotropy);
-      if(which[6]) metrics.push_back(zrange);
-      if(which[7]) metrics.push_back(zsd);
-      if(which[8]) metrics.push_back(nobs);
+      if(which[metric_index++]) metrics.push_back(n_pts);      
+      if(which[metric_index++]) metrics.push_back(min_dist);
+      if(which[metric_index++]) metrics.push_back(max_dist);
+      if(which[metric_index++]) metrics.push_back(mean_dist);
+      if(which[metric_index++]) metrics.push_back(sd_dist);
+      if(which[metric_index++]) metrics.push_back(linearity);
+      if(which[metric_index++]) metrics.push_back(planarity);
+      if(which[metric_index++]) metrics.push_back(scattering);
+      if(which[metric_index++]) metrics.push_back(omnivariance);
+      if(which[metric_index++]) metrics.push_back(anisotropy);
+      if(which[metric_index++]) metrics.push_back(eigentropy);
+      if(which[metric_index++]) metrics.push_back(eigen_sum_3d);
+      if(which[metric_index++]) metrics.push_back(surface_variation);
+      if(which[metric_index++]) metrics.push_back(radius_knn_3d);
+      if(which[metric_index++]) metrics.push_back(density_3d);
+      if(which[metric_index++]) metrics.push_back(verticality);
+      if(which[metric_index++]) metrics.push_back(z_range);
+      if(which[metric_index++]) metrics.push_back(z_sd);
+      if(which[metric_index++]) metrics.push_back(radius_knn_2d);
+      if(which[metric_index++]) metrics.push_back(density_2d);
+      if(which[metric_index++]) metrics.push_back(eigen_sum_2d);
+      if(which[metric_index++]) metrics.push_back(eigen_ratio_2d);
 
-      if(which[9]){
-        for(auto& v : eVal){
-          metrics.push_back(v);
-        }
+      for(auto& v : eVal3d){
+        if(which[metric_index++]) metrics.push_back(v);
       }
 
-      if(which[10]){
-        for(auto& a : eVec){
-          for(auto& b : a){
-            metrics.push_back(b);
-          }
+      for(auto& a : eVec3d){
+        for(auto& b : a){
+          if(which[metric_index++]) metrics.push_back(b);
         }
       }
 

@@ -1,5 +1,4 @@
 Rcpp::sourceCpp('src/r_interface.cpp', rebuild = T)
-source('R/methods.R')
 source('R/sample_methods.R')
 source('R/map_methods.R')
 source('R/stem_points_methods.R')
@@ -7,6 +6,7 @@ source('R/stem_segmentation_methods.R')
 source('R/tree_points_methods.R')
 source('R/point_metrics_methods.R')
 source('R/plot_extras.R')
+source('R/methods.R')
 
 require(magrittr)
 require(lidR)
@@ -21,19 +21,26 @@ require(glue)
 rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Stem', 'Segment', 'gpstime', 'AvgHeight', 'Radius'))
 
 ###################
-las = readTLS('test_data/Parcela.las', filter='-keep_random_fraction 0.25', select='xyzi')
-las = readTLS('inst/extdata/pine.laz', select='xyzi')
-plot(las)
+las = readLAS('test_data/Parcela.las', filter='-keep_random_fraction 0.25', select='xyzi')
+las = readLAS('inst/extdata/pine.laz', select='xyzi')
+nrow(las@data)
+
+las = fastPointMetrics(las, ptm.voxel())
+las@data$KnnDensity %>% hist
+
+plot(las, color='VoxelID', colorPalette=pastel.colors(10000))
 las = tlsNormalize(las, keep_ground = F)
-thin = tlsSample(las, smp.voxelize(.025))
-map = treeMap(thin, map.hough())
-las = treePoints(las, map, trp.crop(1))
-las = stemPoints(las, stm.hough())
-segs = stemSegmentation(las, sgt.ransac.circle(n = 10, inliers = .98))
+# thin = tlsSample(las, smp.voxelize(.025))
+# map = treeMap(thin, map.hough())
+# las = treePoints(las, map, trp.crop(1))
+las = stemPoints(las, stm.eigen.knn())
+plot(las,color='ZRange')
+segs = stemSegmentation(las, sgt.bf.cylinder(n = 10, inliers = .95))
 inv = tlsInventory(las)
 
-tlsPlot(las, segs, inv, fast=F)
+tlsPlot(las, inv, fast=F)
 
+vm = voxelMetrics(las2xyz(las), las@data$VoxelID, POINT_METRICS_NAMES %in% 'N') %>% do.call(what = rbind) %>% unlist %>% as.double
 
 cols = seg@data$Votes %>% max %>% height.colors
 # plot(temp, clear_artifacts=F)
@@ -63,3 +70,16 @@ plot(vt, color='Votes', clear_artifacts=F)
 
 rgl.points(seg@data[,.(X,Y,Z)], color='white', size=1)
 
+cloud = 1:12 %>% matrix(ncol=3)
+dists = c()
+
+Rcpp::sourceCpp('test.cpp', rebuild = T)
+pointDistances()
+
+for(i in 1:3){
+  for(j in (i+1):4){
+    sumsq = 0;
+    for(k in 1:3) sumsq = sumsq + (cloud[j,k] - cloud[i,k])^2;
+    dists = c(dists, sqrt(sumsq))
+  }
+}

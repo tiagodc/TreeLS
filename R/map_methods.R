@@ -115,17 +115,17 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 
 #' Tree mapping algorithm: KNN point geometry
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
-#' @template param-max-planarity
+#' @template param-max-curvature
 #' @template param-max-verticality
 #' @param max_mean_dist \code{numeric} - maximum average distance between points tolerated in a neighborhood.
 #' @template param-max-d
 #' @template param-min-h
 #' @template param-min-n
 #' @export
-map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
+map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
 
   params = list(
-    max_planarity = max_planarity,
+    max_curvature = max_curvature,
     max_verticality = max_verticality,
     max_mean_dist = max_mean_dist,
     max_d = max_d,
@@ -147,8 +147,8 @@ map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist
       stop( i %>% paste('must be positive') )
   }
 
-  if(max_planarity > 1){
-    stop('max_planarity must be a number between 0 and 1')
+  if(max_curvature > 1){
+    stop('max_curvature must be a number between 0 and 1')
   }
 
   if(max_verticality > 180){
@@ -162,7 +162,7 @@ map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist
       stop('no points found in the specified min_h/max_h range')
     }
 
-    mtrlst = c('N', 'Planarity', 'Verticality', 'MeanDistance')
+    mtrlst = c('N', 'Curvature', 'Verticality', 'MeanDist')
 
     check_pt_metrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_pt_metrics){
@@ -170,7 +170,7 @@ map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist
       las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality & MeanDistance < max_mean_dist) %>%
+    las = filter_poi(las, N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < max_mean_dist) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
 
     las@data$TreeID = 0
@@ -197,17 +197,17 @@ map.eigen.knn = function(max_planarity = .1, max_verticality = 10, max_mean_dist
 
 #' Tree mapping algorithm: Voxel geometry
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
-#' @template param-max-planarity
+#' @template param-max-curvature
 #' @template param-max-verticality
 #' @param voxel_spacing \code{numeric} - voxel side length to points into.
 #' @template param-max-d
 #' @template param-min-h
 #' @template param-min-n
 #' @export
-map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
+map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
 
   params = list(
-    max_planarity = max_planarity,
+    max_curvature = max_curvature,
     max_verticality = max_verticality,
     voxel_spacing = voxel_spacing,
     max_d = max_d,
@@ -229,8 +229,8 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
       stop( i %>% paste('must be positive') )
   }
 
-  if(max_planarity > 1){
-    stop('max_planarity must be a number between 0 and 1')
+  if(max_curvature > 1){
+    stop('max_curvature must be a number between 0 and 1')
   }
 
   if(max_verticality > 180){
@@ -244,14 +244,14 @@ map.eigen.voxel = function(max_planarity = .15, max_verticality = 15, voxel_spac
       stop('no points found in the specified min_h/max_h range')
     }
 
-    mtrlst = c('N', 'Planarity', 'Verticality')
+    mtrlst = c('N', 'Curvature', 'Verticality')
     check_pt_metrics = c(mtrlst, 'VoxelID') %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_pt_metrics){
       message('Calculating voxel fastPointMetrics')
       las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
-    las = filter_poi(las, N > 3 & Planarity < max_planarity & abs(Verticality - 90) < max_verticality) %>%
+    las = filter_poi(las, N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality) %>%
       nnFilter(.1, 10)  %>% nnFilter(.25, 100)
 
     las@data$TreeID = 0
