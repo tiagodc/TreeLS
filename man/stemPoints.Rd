@@ -7,15 +7,15 @@
 stemPoints(las, method = stm.hough())
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{method}{stem denoising algorithm - currently available: \code{\link{stem.hough}}.}
+\item{method}{stem denoising algorithm - currently available: \code{\link{stm.hough}}, \code{\link{stm.eigen.knn}} and \code{\link{stm.eigen.voxel}}.}
 }
 \value{
-\code{LAS} object with \emph{stem_points} signature.
+signed \code{LAS} object.
 }
 \description{
-Classify stem points on a \strong{normalized} point cloud.
+Classify stem points of all trees in a \strong{normalized} point cloud. Stem denoising methods are prefixed by \code{stm}.
 }
 \examples{
 ### single tree

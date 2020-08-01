@@ -2,15 +2,15 @@
 % Please edit documentation in R/point_metrics_methods.R
 \name{ptm.voxel}
 \alias{ptm.voxel}
-\title{Point metrics algorithm: Voxel metrics}
+\title{Point metrics algorithm: Voxel-wise metrics}
 \usage{
-ptm.voxel(d = 0.1, exact = F)
+ptm.voxel(d = 0.1, exact = FALSE)
 }
 \arguments{
-\item{d}{\code{numeric} - voxel spacing.}
+\item{d}{\code{numeric} - voxel spacing, in point cloud units.}
 
-\item{exact}{\code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search, much faster on dense point clouds (millions of points).}
+\item{exact}{\code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search unisg integer index hashing, much faster on large point clouds (several million points).}
 }
 \description{
-This function is meant to be used inside \code{\link{pointMetrics}}. It calculates metrics voxel-wise.
+This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics voxel-wise.
 }

@@ -4,7 +4,7 @@
 \alias{sgt.ransac.circle}
 \title{Stem segmentation algorithm: RANSAC circle fit}
 \usage{
-sgt.ransac.circle(tol = 0.05, n = 10, conf = 0.99, inliers = 0.8)
+sgt.ransac.circle(tol = 0.1, n = 10, conf = 0.99, inliers = 0.8)
 }
 \arguments{
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}

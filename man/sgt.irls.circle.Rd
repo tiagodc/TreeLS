@@ -4,7 +4,7 @@
 \alias{sgt.irls.circle}
 \title{Stem segmentation algorithm: Iterated Reweighted Least Squares circle fit}
 \usage{
-sgt.irls.circle(tol = 0.05, n = 500)
+sgt.irls.circle(tol = 0.1, n = 500)
 }
 \arguments{
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}

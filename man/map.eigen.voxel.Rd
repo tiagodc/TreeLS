@@ -4,13 +4,20 @@
 \alias{map.eigen.voxel}
 \title{Tree mapping algorithm: Voxel geometry}
 \usage{
-map.eigen.voxel(max_curvature = 0.15, max_verticality = 15,
-  voxel_spacing = 0.1, max_d = 0.5, min_h = 2, min_n = 100)
+map.eigen.voxel(
+  max_curvature = 0.15,
+  max_verticality = 15,
+  voxel_spacing = 0.1,
+  max_d = 0.5,
+  min_h = 1.5,
+  max_h = 3,
+  min_n = 100
+)
 }
 \arguments{
-\item{max_curvature}{\code{numeric} - maximum planarity accepted when filtering a point neighborhood.}
+\item{max_curvature}{\code{numeric} - maximum curvature (from 0 to 1) accepted when filtering a point neighborhood.}
 
-\item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees}.}
+\item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees} (from 0 to 90).}
 
 \item{voxel_spacing}{\code{numeric} - voxel side length to points into.}
 
@@ -21,5 +28,5 @@ map.eigen.voxel(max_curvature = 0.15, max_verticality = 15,
 \item{min_n}{\code{numeric} - lowest point count accepted in a tree's point cluster.}
 }
 \description{
-This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{pointMetrics}}.
+This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 }

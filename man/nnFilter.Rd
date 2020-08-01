@@ -2,26 +2,28 @@
 % Please edit documentation in R/methods.R
 \name{nnFilter}
 \alias{nnFilter}
-\title{Filter isolated points}
+\title{Nearest neighborhood point filter}
 \usage{
 nnFilter(las, d = 0.05, n = 2)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{d}{\code{numeric} - distance to search for neighboring points.}
+\item{d}{\code{numeric} - search radius.}
 
-\item{n}{\code{integer} - number of points below which a neighborhood (within distance \emph{d}) will be assigned as noise}
-
-\item{max_points}{\code{numeric} - total number of points tolerated per point cloud chunk to apply knn search. If the input \code{LAS} is larger than \code{max_points}, knn search will be performed over point cloud slices (along the Z axis) with \emph{N} up to \code{max_points}.}
+\item{n}{\code{integer} - number of nearest points to search within \code{d} radius.}
 }
 \value{
-\code{LAS} object.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Noise filtering algorithm based on point neighborhood distances.
+Remove points from a \code{LAS} point cloud based on nearest neighborhood metrics.
 }
 \examples{
 file = system.file("extdata", "spruce.laz", package="TreeLS")
 tls = readTLS(file)
+summary(tls)
+
+nn_tls = nnFilter(tls, 0.05, 3)
+summary(nn_tls)
 }

@@ -4,11 +4,13 @@
 \alias{map.pick}
 \title{Tree mapping algorithm: pick trees manually}
 \usage{
-map.pick(min_h = NULL, max_h = NULL)
+map.pick(map = NULL, min_h = NULL, max_h = NULL)
 }
 \arguments{
-\item{min_h, max_h}{minimum/maximum height thresholds to filter the point cloud before plotting it in \code{rgl}.}
+\item{map}{optional \code{LAS} object with a tree map that beeds to be updated.}
+
+\item{min_h, max_h}{\code{numeric} - height thresholds to filter the point cloud before plotting.}
 }
 \description{
-This function is meant to be used inside \code{\link{treeMap}}. It opens a new \code{rgl} plot on which the user can point the tree locations by clicking.
+This function is meant to be used inside \code{\link{treeMap}}. It opens an interactive \code{rgl} plot where the user can specify tree locations by clicking.
 }

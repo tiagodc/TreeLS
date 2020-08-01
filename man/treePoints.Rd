@@ -7,17 +7,17 @@
 treePoints(las, map, method = trp.voronoi())
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
 \item{map}{output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.}
 
-\item{method}{segmentation algorithm - currently available: \code{\link{trees.voronoi}}.}
+\item{method}{segmentation algorithm - currently available: \code{\link{trp.voronoi}} and \code{\link{trp.crop}}.}
 }
 \value{
-\code{LAS} object with a new TreeID field.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Classify \code{LAS} points according to the region of influence calculated from a tree map.
+Identify the \code{TreeID} of every point on a \code{LAS} object based on coordinates from a \code{\link{treeMap}}. Tree region segmentation methods are prefixed by \code{trp}.
 }
 \examples{
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")

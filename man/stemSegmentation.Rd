@@ -7,15 +7,15 @@
 stemSegmentation(las, method = sgt.ransac.circle())
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{method}{stem segmentation algorithm - currently available: \code{\link{sgmt.ransac.circle}}.}
+\item{method}{stem segmentation algorithm - currently available: \code{\link{sgt.ransac.circle}}, \code{\link{sgt.ransac.cylinder}}, \code{\link{sgt.irls.circle}} and \code{\link{sgt.irls.cylinder}}.}
 }
 \value{
 \code{data.table} of stem segments with \emph{stem_dt} signature.
 }
 \description{
-Measure stem segments from a classified point cloud.
+Measure stem segments from a classified point cloud. Stem segmentation methods are prefixed by \code{sgt}.
 }
 \examples{
 ### single tree

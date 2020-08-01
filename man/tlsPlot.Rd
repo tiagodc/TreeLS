@@ -2,21 +2,20 @@
 % Please edit documentation in R/methods.R
 \name{tlsPlot}
 \alias{tlsPlot}
-\title{Plot TLS outputs}
+\title{Plot \emph{TreeLS} outputs}
 \usage{
-tlsPlot(las, sgmt = NULL, map = NULL, treeID = NULL,
-  sgmtColor = "yellow")
+tlsPlot(..., fast = FALSE, tree_id = NULL, segment = NULL)
 }
 \arguments{
+\item{tree_id}{optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.}
+
 \item{las}{\code{LAS} object - ideally an output from \code{\link{stemPoints}}.}
 
 \item{sgmt}{optional \code{data.table} - output from \code{\link{stemSegmentation}}.}
 
 \item{map}{optional \code{LAS} object - output from \code{\link{treeMap}}.}
 
-\item{treeID}{optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.}
-
-\item{sgmtColor}{optional - color of the plotted stem segment representations.}
+\item{color}{optional - color of the plotted stem segment representations.}
 }
 \description{
 Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation

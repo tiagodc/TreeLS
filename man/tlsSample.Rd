@@ -7,26 +7,26 @@
 tlsSample(las, method = smp.voxelize())
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{method}{point sampling algorithm - currently available: \code{\link{voxelize}} or \code{\link{randomize}}}
+\item{method}{point sampling algorithm - currently available: \code{\link{smp.voxelize}} or \code{\link{smp.randomize}}}
 }
 \value{
-\code{LAS} object.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Applies an algorithm that returns a thinned point cloud.
+Applies an algorithm that reduces the point cloud's density. Sampling methods are prefixed by \code{smp}.
 }
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
 summary(tls)
 
-## sample points systematically in 3D
+## sample points systematically from a 3D voxel grid
 vx = tlsSample(tls, smp.voxelize(0.05))
 summary(vx)
 
-## sample points randomly
+## sample half of the points randomly
 rd = tlsSample(tls, smp.randomize(0.5))
 summary(rd)
 

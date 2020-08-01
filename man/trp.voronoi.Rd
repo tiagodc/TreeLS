@@ -2,10 +2,10 @@
 % Please edit documentation in R/tree_points_methods.R
 \name{trp.voronoi}
 \alias{trp.voronoi}
-\title{Tree points algorithm: assign tree points by voronoi polygons.}
+\title{Tree points algorithm: define tree regions by voronoi polygons.}
 \usage{
 trp.voronoi()
 }
 \description{
-This function is meant to be used inside \code{\link{treePoints}}. Assign all points to a \emph{TreeID}, based on the closest \code{\link{treeMap}} coordinate.
+This function is meant to be used inside \code{\link{treePoints}}. Assign all points to a \emph{TreeID}, based on their closest \code{\link{treeMap}} coordinate.
 }

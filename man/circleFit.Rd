@@ -4,11 +4,10 @@
 \alias{circleFit}
 \title{Point cloud circle fit}
 \usage{
-circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99,
-  n_best = 0)
+circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99, n_best = 0)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
 \item{method}{method for estimating the circle parameters. Currently available: \code{"qr"}, \code{"nm"}, \code{"irls"} and \code{"ransac"}.}
 
@@ -21,5 +20,5 @@ circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99,
 \item{conf}{\code{numeric} - confidence level.}
 }
 \description{
-Fits a circle on XY coordinates from a set of 3D points.
+Fits a 2D horizontally-aligned circle on a set of 3D points.
 }

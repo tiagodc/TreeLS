@@ -4,14 +4,18 @@
 \alias{tlsTransform}
 \title{Alter point cloud's coordinates}
 \usage{
-tlsTransform(las, xyz = c("X", "Y", "Z"), bring_to_origin = FALSE,
-  rotate = FALSE)
+tlsTransform(
+  las,
+  xyz = c("X", "Y", "Z"),
+  bring_to_origin = FALSE,
+  rotate = FALSE
+)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
 \item{xyz}{\code{character} vector of length 3 - \code{las}' columns to be reassigned as XYZ, respectively.
-Use minus signs to mirror the axes' coordinates - more details in the sections below.}
+Use minus signs to mirror an axis` coordinates - more details in the sections below.}
 
 \item{bring_to_origin}{\code{logical} - force output to start at \code{c(0,0,0)}? If \code{TRUE},
 removes any geographical information from the output.}
@@ -20,7 +24,7 @@ removes any geographical information from the output.}
 removes any geographical information from the output. Checkout \code{\link{tlsRotate}} for more information.}
 }
 \value{
-\code{LAS} object.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
 Apply transformations to the XYZ axes of a point cloud.

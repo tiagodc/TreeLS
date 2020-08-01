@@ -2,12 +2,12 @@
 % Please edit documentation in R/tree_points_methods.R
 \name{trp.crop}
 \alias{trp.crop}
-\title{Tree points algorithm: assign tree points by fixed area.}
+\title{Tree points algorithm: define tree regions on fixed areas.}
 \usage{
-trp.crop(l = 1, circle = T)
+trp.crop(l = 1, circle = TRUE)
 }
 \arguments{
-\item{l}{\code{numeric} - circle radius (for circle == TRUE), or square side length (for circle == FALSE).}
+\item{l}{\code{numeric} - circle radius or square side length.}
 
 \item{circle}{\code{logical} - assign \emph{TreeID}s inside circles (TRUE) or squares (FALSE)?}
 }

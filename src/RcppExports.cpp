@@ -368,8 +368,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cppCylinderFit
-SEXP cppCylinderFit(NumericMatrix& las, std::string method, unsigned int n, double p, double inliers, double max_angle);
-RcppExport SEXP _TreeLS_cppCylinderFit(SEXP lasSEXP, SEXP methodSEXP, SEXP nSEXP, SEXP pSEXP, SEXP inliersSEXP, SEXP max_angleSEXP) {
+SEXP cppCylinderFit(NumericMatrix& las, std::string method, unsigned int n, double p, double inliers, double max_angle, unsigned int n_best);
+RcppExport SEXP _TreeLS_cppCylinderFit(SEXP lasSEXP, SEXP methodSEXP, SEXP nSEXP, SEXP pSEXP, SEXP inliersSEXP, SEXP max_angleSEXP, SEXP n_bestSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -379,7 +379,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type p(pSEXP);
     Rcpp::traits::input_parameter< double >::type inliers(inliersSEXP);
     Rcpp::traits::input_parameter< double >::type max_angle(max_angleSEXP);
-    rcpp_result_gen = Rcpp::wrap(cppCylinderFit(las, method, n, p, inliers, max_angle));
+    Rcpp::traits::input_parameter< unsigned int >::type n_best(n_bestSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppCylinderFit(las, method, n, p, inliers, max_angle, n_best));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -414,6 +415,43 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bfStemCylinder
+List bfStemCylinder(NumericMatrix& las, NumericVector& segs, NumericVector& rads, unsigned int nSamples, double pConfidence, double pInliers, double max_angle, double tolerance);
+RcppExport SEXP _TreeLS_bfStemCylinder(SEXP lasSEXP, SEXP segsSEXP, SEXP radsSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP max_angleSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type segs(segsSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type rads(radsSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
+    Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
+    Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
+    Rcpp::traits::input_parameter< double >::type max_angle(max_angleSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(bfStemCylinder(las, segs, rads, nSamples, pConfidence, pInliers, max_angle, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bfPlotCylinders
+List bfPlotCylinders(NumericMatrix& las, NumericVector& tId, NumericVector& segs, NumericVector& rads, unsigned int nSamples, double pConfidence, double pInliers, double max_angle, double tolerance);
+RcppExport SEXP _TreeLS_bfPlotCylinders(SEXP lasSEXP, SEXP tIdSEXP, SEXP segsSEXP, SEXP radsSEXP, SEXP nSamplesSEXP, SEXP pConfidenceSEXP, SEXP pInliersSEXP, SEXP max_angleSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type las(lasSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type tId(tIdSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type segs(segsSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type rads(radsSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nSamples(nSamplesSEXP);
+    Rcpp::traits::input_parameter< double >::type pConfidence(pConfidenceSEXP);
+    Rcpp::traits::input_parameter< double >::type pInliers(pInliersSEXP);
+    Rcpp::traits::input_parameter< double >::type max_angle(max_angleSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(bfPlotCylinders(las, tId, segs, rads, nSamples, pConfidence, pInliers, max_angle, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_thinCloud", (DL_FUNC) &_TreeLS_thinCloud, 2},
@@ -439,9 +477,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_TreeLS_plotEigenHough", (DL_FUNC) &_TreeLS_plotEigenHough, 8},
     {"_TreeLS_cppFastApply", (DL_FUNC) &_TreeLS_cppFastApply, 2},
     {"_TreeLS_cppCircleFit", (DL_FUNC) &_TreeLS_cppCircleFit, 6},
-    {"_TreeLS_cppCylinderFit", (DL_FUNC) &_TreeLS_cppCylinderFit, 6},
+    {"_TreeLS_cppCylinderFit", (DL_FUNC) &_TreeLS_cppCylinderFit, 7},
     {"_TreeLS_treeIdsFromMap", (DL_FUNC) &_TreeLS_treeIdsFromMap, 5},
     {"_TreeLS_bruteForceRansacCylinder", (DL_FUNC) &_TreeLS_bruteForceRansacCylinder, 6},
+    {"_TreeLS_bfStemCylinder", (DL_FUNC) &_TreeLS_bfStemCylinder, 8},
+    {"_TreeLS_bfPlotCylinders", (DL_FUNC) &_TreeLS_bfPlotCylinders, 9},
     {NULL, NULL, 0}
 };
 

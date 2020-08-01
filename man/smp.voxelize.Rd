@@ -7,7 +7,7 @@
 smp.voxelize(spacing = 0.05)
 }
 \arguments{
-\item{spacing}{\code{numeric} - voxel side length.}
+\item{spacing}{\code{numeric} - voxel side length, in point cloud units.}
 }
 \description{
 This function is meant to be used inside \code{\link{tlsSample}}. It selects one random point per voxel at a given spatial resolution. For more details check out \code{\link{tlsSample}}.

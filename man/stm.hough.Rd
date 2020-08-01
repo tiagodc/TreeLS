@@ -4,8 +4,14 @@
 \alias{stm.hough}
 \title{Stem denoising algorithm: Hough Transform}
 \usage{
-stm.hough(h_step = 0.5, max_radius = 0.25, h_base = c(1, 2.5),
-  pixel_size = 0.025, min_density = 0.1, min_votes = 3)
+stm.hough(
+  h_step = 0.5,
+  max_radius = 0.25,
+  h_base = c(1, 2.5),
+  pixel_size = 0.025,
+  min_density = 0.1,
+  min_votes = 3
+)
 }
 \arguments{
 \item{h_step}{\code{numeric} - height interval to perform point filtering/assignment/classification.}

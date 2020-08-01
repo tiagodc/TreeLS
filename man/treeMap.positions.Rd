@@ -2,9 +2,9 @@
 % Please edit documentation in R/methods.R
 \name{treeMap.positions}
 \alias{treeMap.positions}
-\title{Get unique tree positions from a \emph{tree_map}}
+\title{Convert a tree map to a 2D \code{data.table}}
 \usage{
-treeMap.positions(las, plot = T)
+treeMap.positions(las, plot = TRUE)
 }
 \arguments{
 \item{las}{\code{LAS} object - output from \code{\link{treeMap}}.}
@@ -15,7 +15,7 @@ treeMap.positions(las, plot = T)
 \code{data.table} of tree IDs and XY coordinates with \emph{tree_map_dt} signature.
 }
 \description{
-Extracts the tree XY positions from a \emph{tree_map} \code{LAS} object
+Extracts the tree XY positions from a \emph{tree_map} \code{LAS} object.
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

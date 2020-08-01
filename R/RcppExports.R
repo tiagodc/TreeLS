@@ -93,8 +93,8 @@ cppCircleFit <- function(las, method = "qr", n = 5L, p = 0.99, inliers = 0.8, nb
     .Call(`_TreeLS_cppCircleFit`, las, method, n, p, inliers, nbest)
 }
 
-cppCylinderFit <- function(las, method = "nm", n = 10L, p = 0.95, inliers = 0.9, max_angle = 30) {
-    .Call(`_TreeLS_cppCylinderFit`, las, method, n, p, inliers, max_angle)
+cppCylinderFit <- function(las, method = "nm", n = 10L, p = 0.95, inliers = 0.9, max_angle = 30, n_best = 20L) {
+    .Call(`_TreeLS_cppCylinderFit`, las, method, n, p, inliers, max_angle, n_best)
 }
 
 treeIdsFromMap <- function(las, xycenters, uniqueIds, length, circle) {
@@ -103,5 +103,13 @@ treeIdsFromMap <- function(las, xycenters, uniqueIds, length, circle) {
 
 bruteForceRansacCylinder <- function(las, nSamples, pConfidence, pInliers, nBest, maxAngle) {
     .Call(`_TreeLS_bruteForceRansacCylinder`, las, nSamples, pConfidence, pInliers, nBest, maxAngle)
+}
+
+bfStemCylinder <- function(las, segs, rads, nSamples = 10L, pConfidence = 0.95, pInliers = 0.8, max_angle = 30, tolerance = 0.05) {
+    .Call(`_TreeLS_bfStemCylinder`, las, segs, rads, nSamples, pConfidence, pInliers, max_angle, tolerance)
+}
+
+bfPlotCylinders <- function(las, tId, segs, rads, nSamples = 10L, pConfidence = 0.95, pInliers = 0.8, max_angle = 30, tolerance = 0.05) {
+    .Call(`_TreeLS_bfPlotCylinders`, las, tId, segs, rads, nSamples, pConfidence, pInliers, max_angle, tolerance)
 }
 

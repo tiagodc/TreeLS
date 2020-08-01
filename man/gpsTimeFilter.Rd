@@ -7,15 +7,15 @@
 gpsTimeFilter(las, from = 0, to = 1)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
 \item{from, to}{\code{numeric} - between 0 and 1 - gpstime quantile limits to filter by}
 }
 \value{
-\code{LAS} object.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs proportional values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
+This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs relative values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
 }
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")

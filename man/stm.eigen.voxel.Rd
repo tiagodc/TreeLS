@@ -4,16 +4,22 @@
 \alias{stm.eigen.voxel}
 \title{Stem denoising algorithm: Voxel geometry + voting}
 \usage{
-stm.eigen.voxel(h_step = 0.5, max_curvature = 0.2,
-  max_verticality = 20, voxel_spacing = 0.1, max_d = 0.5,
-  votes_weight = 0.2, v3d = F)
+stm.eigen.voxel(
+  h_step = 0.5,
+  max_curvature = 0.1,
+  max_verticality = 10,
+  voxel_spacing = 0.025,
+  max_d = 0.5,
+  votes_weight = 0.2,
+  v3d = FALSE
+)
 }
 \arguments{
 \item{h_step}{\code{numeric} - height interval to perform point filtering/assignment/classification.}
 
-\item{max_curvature}{\code{numeric} - maximum planarity accepted when filtering a point neighborhood.}
+\item{max_curvature}{\code{numeric} - maximum curvature (from 0 to 1) accepted when filtering a point neighborhood.}
 
-\item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees}.}
+\item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees} (from 0 to 90).}
 
 \item{voxel_spacing}{\code{numeric} - voxel side length.}
 
@@ -24,5 +30,5 @@ stm.eigen.voxel(h_step = 0.5, max_curvature = 0.2,
 \item{v3d}{\code{logical} - count votes in 3D voxels (TRUE) or 2D pixels (FALSE).}
 }
 \description{
-This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{pointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
+This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 }

@@ -4,11 +4,18 @@
 \alias{cylinderFit}
 \title{Point cloud cylinder fit}
 \usage{
-cylinderFit(las, method = "ransac", n = 5, inliers = 0.9, p = 0.95,
-  max_angle = 30)
+cylinderFit(
+  las,
+  method = "ransac",
+  n = 5,
+  inliers = 0.9,
+  p = 0.95,
+  max_angle = 30,
+  n_best = 20
+)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
 \item{method}{method for estimating the cylinder parameters. Currently available: \code{"nm"}, \code{"irls"}, \code{"ransac"} and \code{"bf"}.}
 
@@ -16,7 +23,7 @@ cylinderFit(las, method = "ransac", n = 5, inliers = 0.9, p = 0.95,
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
 
-\item{max_angle}{\code{numeric} - applicable when \code{method == "bf"}. It's the maximum angle a point cloud's axis can deviate from an absolute vertical axis (Z = c(0,0,1) ), in degrees.}
+\item{max_angle}{\code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).}
 
 \item{conf}{\code{numeric} - confidence level.}
 }

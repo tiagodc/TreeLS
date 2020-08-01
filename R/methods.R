@@ -1004,7 +1004,7 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
 #' @template param-conf
 #' @template param-inliers
 #' @template param-n-best
-#' @template param z-dev
+#' @template param-z-dev
 #' @export
 shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10, conf=0.95, inliers=0.9, n_best = 10, z_dev = 30){
 

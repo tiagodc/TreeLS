@@ -4,24 +4,23 @@
 \alias{treeMap}
 \title{Map tree occurrences from TLS data}
 \usage{
-treeMap(las, method = map.hough())
+treeMap(las, method = map.hough(), merge = 0.2, positions_only = FALSE)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{method}{tree mapping algorithm - currently available: \code{\link{map.hough}}.}
+\item{method}{tree mapping algorithm - currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.}
+
+\item{merge}{\code{numeric} - parameter passed to \code{\link{treeMap.merge}}.}
+
+\item{positions_only}{\code{logical} - if \code{TRUE} returns a 3D \code{LAS} object, otherwise returns a 2D tree map as a \code{data.table}.}
 }
 \value{
-\code{LAS} object with \emph{tree_map} signature.
+signed \code{LAS} or \code{data.table}.
 }
 \description{
-Estimates tree occurrence regions from a \strong{normalized} point cloud.
+Estimates tree occurrence regions from a \strong{normalized} point cloud. Tree mapping methods are prefixed by \code{map}.
 }
-\section{Output}{
-
-The output is a \code{LAS} object with extra fields in the \code{data} slot. For more details on the output fields checkout \code{\link{map.hough}}'s help page.
-}
-
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")
 tls = readTLS(file)

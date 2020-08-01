@@ -4,8 +4,15 @@
 \alias{map.hough}
 \title{Tree mapping algorithm: Hough Transform}
 \usage{
-map.hough(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025,
-  max_d = 0.5, min_density = 0.1, min_votes = 3)
+map.hough(
+  min_h = 1,
+  max_h = 3,
+  h_step = 0.5,
+  pixel_size = 0.025,
+  max_d = 0.5,
+  min_density = 0.1,
+  min_votes = 3
+)
 }
 \arguments{
 \item{min_h, max_h}{\code{numeric} - height thresholds within the point cloud in which circle search will be performed.}

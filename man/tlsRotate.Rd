@@ -2,18 +2,18 @@
 % Please edit documentation in R/methods.R
 \name{tlsRotate}
 \alias{tlsRotate}
-\title{Rotate point cloud towards a horizontal plane}
+\title{Rotate point cloud to fit a horizontal plane}
 \usage{
 tlsRotate(las)
 }
 \arguments{
-\item{las}{\code{LAS} object.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 }
 \value{
-\code{LAS} object.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Check for ground points and rotates the point cloud to align its ground surface to a horizontal plane (XY).
+Check for ground points and rotates the point cloud aligning its ground surface to a horizontal plane (XY).
 This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
 which might present a tilted global reference system. Since the coordinates are altered in this procedure, any
 geographical information is erased from the LAS' header after rotation.

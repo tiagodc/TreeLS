@@ -4,7 +4,7 @@
 \alias{sgt.irls.cylinder}
 \title{Stem segmentation algorithm: Iterated Reweighted Least Squares cylinder fit}
 \usage{
-sgt.irls.cylinder(tol = 0.05, n = 100)
+sgt.irls.cylinder(tol = 0.1, n = 100)
 }
 \arguments{
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}

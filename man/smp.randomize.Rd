@@ -7,7 +7,7 @@
 smp.randomize(p = 0.5)
 }
 \arguments{
-\item{p}{\code{numeric} - between 0 and 1 - proportion of points to keep.}
+\item{p}{\code{numeric} - sampling probability (from 0 to 1).}
 }
 \description{
 This function is meant to be used inside \code{\link{tlsSample}}. It selects points randomly, returning a fraction of the input point cloud. For more details check out \code{\link{tlsSample}}.

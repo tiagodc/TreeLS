@@ -9,15 +9,15 @@ readTLS(file, col_names = NULL, ...)
 \arguments{
 \item{file}{file path.}
 
-\item{col_names}{optional - \code{character} vector. Only used for table-like files. It states the column names - if not set, only the 3 first columns will be converted to XYZ.}
+\item{col_names}{optional - \code{character} vector. Only used for table-like files. It states the column names. If not set, only the 3 first columns will be used and assigned to the XYZ fields.}
 
-\item{...}{further arguments passed to either \code{readLAS} or \code{read.table}.}
+\item{...}{further arguments passed to \code{readLAS}, \code{read.las} or \code{fread}.}
 }
 \value{
-\code{LAS} object.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and alters the header defaults. Other file formats are (or try to be) read using \code{\link[utils:read.table]{read.table}}.
+Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and \emph{ply} files with \code{\link[rlas:read.las]{read.las}}. Other file formats are (or try to be) read using \code{\link[data.table:fread]{fread}}.
 }
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
