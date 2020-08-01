@@ -55,8 +55,8 @@ POINT_METRICS_NAMES = c(
   'EigenVector33'
 )
 
-ENABLED_POINT_METRICS = POINT_METRICS_NAMES[c(1,13,16,4,32:34)]
-
+ENABLED_POINT_METRICS = new.env()
+ENABLED_POINT_METRICS$names = POINT_METRICS_NAMES[c(1,13,16,4,32:34)]
 
 ptmMetricsLog = function(which_metrics){
   metrics_log = POINT_METRICS_NAMES %in% which_metrics
@@ -65,7 +65,7 @@ ptmMetricsLog = function(which_metrics){
   return(list(log = metrics_log, names = metrics_names))
 }
 
-ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS){
+ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS$names){
 
   pick_metrics = ptmMetricsLog(which_metrics)
 

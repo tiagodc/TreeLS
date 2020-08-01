@@ -354,7 +354,7 @@ nnFilter = function(las, d = 0.05, n = 2){
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
 #' @export
-fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS){
+fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS$names){
 
   isLAS(las)
 
@@ -373,10 +373,10 @@ fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_
 #' m = fastPointMetrics.available()
 #' print(m)
 #' @export
-fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS){
+fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
   if(typeof(enable) != 'character') enable = POINT_METRICS_NAMES[enable]
   enable_metrics = ptmMetricsLog(enable)
-  ENABLED_POINT_METRICS <<- enable_metrics$names
+  ENABLED_POINT_METRICS$names <- enable_metrics$names
   temp = data.frame(INDEX = 1:length(POINT_METRICS_NAMES), METRIC = POINT_METRICS_NAMES, ENABLED = enable_metrics$log)
   print(temp)
   cat('\n')
