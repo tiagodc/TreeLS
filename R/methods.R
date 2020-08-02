@@ -347,9 +347,10 @@ nnFilter = function(las, d = 0.05, n = 2){
 #' Calculate metrics on point neighborhoods
 #' @description Get statistics for every point's neighborhood. Check out \code{\link{fastPointMetrics.available}} for information about available metrics. Neighborhood search methods are prefixed by \code{ptm}.
 #' @template param-las
-#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxels}} and \code{\link{ptm.knn}}.
+#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.
 #' @param which_metrics optional \code{character} vector - list of metrics to be calculated. Overwrites the gobally enabled metrics set with \code{fastPointMetrics.available()}.
-#' @return \code{LAS} object with extra fields - one for each calculated metric.
+#' @return \code{LAS} object with updated fields - one for each calculated metric.
+#' @template section-point-metrics
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
@@ -1082,7 +1083,7 @@ shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10,
 #' @param dh \code{numeric} - height layer (above ground) from which to estimate stem diameters.
 #' @param dw \code{numeric} - height layer width.
 #' @param hp \code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height.
-#' @param d_method parameterized \code{\link(shapeFit)} function - method to use for diameter estimation.
+#' @param d_method parameterized \code{\link{shapeFit}} function - method to use for diameter estimation.
 #' @export
 tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(shape = 'circle', algorithm='ransac', n=15, n_best = 20)){
 

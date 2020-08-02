@@ -84,7 +84,7 @@ ptmStatistics = function(las, knn, which_metrics = ENABLED_POINT_METRICS$names){
 #' Point metrics algorithm: Voxel-wise metrics
 #' @description This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics voxel-wise.
 #' @param d \code{numeric} - voxel spacing, in point cloud units.
-#' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search unisg integer index hashing, much faster on large point clouds (several million points).
+#' @param exact \code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search using integer index hashing, much faster on large point clouds (several million points).
 #' @export
 ptm.voxel = function(d = .1, exact=FALSE){
 
@@ -161,7 +161,7 @@ ptm.voxel = function(d = .1, exact=FALSE){
 #' Point metrics algorithm: Nearest Neighborhood metrics
 #' @description This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics from a point's nearest neighborhood (KNN).
 #' @param k \code{numeric} - number of closest points to search per neighborhood.
-#' @param r \code{numeric} - limit radius for nearest neighbor search. If \code{r == 0}, no distance limit is applied.
+#' @param r \code{numeric} - limited search radius. If \code{r == 0}, no distance limit is applied.
 #' @export
 ptm.knn = function(k = 20, r = 0){
 

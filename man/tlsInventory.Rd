@@ -21,7 +21,7 @@ tlsInventory(
 
 \item{hp}{\code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height.}
 
-\item{d_method}{parameterized \code{\link(shapeFit)} function - method to use for diameter estimation.}
+\item{d_method}{parameterized \code{\link{shapeFit}} function - method to use for diameter estimation.}
 }
 \description{
 Estimation of diameter and height tree-wise.

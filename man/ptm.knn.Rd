@@ -9,7 +9,7 @@ ptm.knn(k = 20, r = 0)
 \arguments{
 \item{k}{\code{numeric} - number of closest points to search per neighborhood.}
 
-\item{r}{\code{numeric} - limit radius for nearest neighbor search. If \code{r == 0}, no distance limit is applied.}
+\item{r}{\code{numeric} - limited search radius. If \code{r == 0}, no distance limit is applied.}
 }
 \description{
 This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics from a point's nearest neighborhood (KNN).

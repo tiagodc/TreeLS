@@ -4,7 +4,7 @@
 \alias{fastPointMetrics.available}
 \title{Print available point metrics}
 \usage{
-fastPointMetrics.available(enable = ENABLED_POINT_METRICS)
+fastPointMetrics.available(enable = ENABLED_POINT_METRICS$names)
 }
 \arguments{
 \item{enable}{optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}.}

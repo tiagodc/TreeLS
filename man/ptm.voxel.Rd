@@ -9,7 +9,7 @@ ptm.voxel(d = 0.1, exact = FALSE)
 \arguments{
 \item{d}{\code{numeric} - voxel spacing, in point cloud units.}
 
-\item{exact}{\code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search unisg integer index hashing, much faster on large point clouds (several million points).}
+\item{exact}{\code{logical} - use exact voxel search? If \code{FALSE}, applies approximate voxel search using integer index hashing, much faster on large point clouds (several million points).}
 }
 \description{
 This function is meant to be used inside \code{\link{fastPointMetrics}}. It calculates metrics voxel-wise.
