@@ -7,15 +7,54 @@
 fastPointMetrics.available(enable = ENABLED_POINT_METRICS$names)
 }
 \arguments{
-\item{enable}{optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}.}
+\item{enable}{optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to 
+enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}. By default, 
+only metrics used internally in other \emph{TreeLS} methods are enabled.}
 }
 \value{
-\code{character} vector of available metrics.
+\code{character} vector of all metrics.
 }
 \description{
-print available point metrics - used in \code{\link{fastPointMetrics}}.
+Print available point metrics for \code{\link{fastPointMetrics}}.
 }
+\section{List of available point metrics}{
+
+
+\loadmathjax
+
+\itemize{
+   \item \code{N}: number of nearest neighbors
+   \item \code{MinDist}: minimum distance among neighbors 
+   \item \code{MaxDist}: maximum distance among neighbors
+   \item \code{MeanDist}: mean distance
+   \item \code{SdDist}: standard deviation of within neighborhood distances
+   \item \code{Linearity}: linear saliency, \mjeqn{(EV_{1} + EV_{2}) / EV_{1}}{}
+   \item \code{Planarity}: planar Saliency, \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
+   \item \code{Scattering}: \mjeqn{EV_{3} / EV_{1}}{}
+   \item \code{Omnivariance}: \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
+   \item \code{Anisotropy}: \mjeqn{(EV_{1} - EV_{3}) / EV_{1}}{}
+   \item \code{Eigentropy}: \mjeqn{\sum_{i=1}^{n=3} EV_{i} * ln(EV_{i})}{}
+   \item \code{EigenSum}: sum of eigenvalues, \mjeqn{\sum_{i=1}^{n=3} EV_{i}}{}
+   \item \code{Curvature}: surface variation, \mjeqn{EV_{3} / EigenSum}{}
+   \item \code{KnnRadius}: 3D neighborhood radius
+   \item \code{KnnDensity}: 3D point density (N / sphere volume)
+   \item \code{Verticality}: absolute vertical deviation, in degrees 
+   \item \code{ZRange}: point neighborhood height difference
+   \item \code{ZSd}: standard deviation of point neighborhood heights
+   \item \code{KnnRadius2d}: 2D neighborhood radius 
+   \item \code{KnnDensity2d}: 2D point density (N / circle area)
+   \item \code{EigenSum2d}: sum of 2D eigenvalues, \mjeqn{\sum_{i=1}^{n=2} EV2D_{i}}{}
+   \item \code{EigenRatio2d}: \mjeqn{EV2D_{2} / EV2D_{1}}{}
+   \item \code{EigenValue\emph{i}}: 3D eigenvalues
+   \item \code{EigenVector\emph{ij}}: 3D eigenvector coefficients, \emph{i}-th load of \emph{j}-th eigenvector
+}
+
+\emph{EVi} = \emph{i}-th 3D eigen value
+
+\emph{EV2Di} = \emph{i}-th 2D eigen value
+}
+
 \examples{
 m = fastPointMetrics.available()
-print(m)
+length(m)
 }

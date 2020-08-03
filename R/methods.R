@@ -345,15 +345,41 @@ nnFilter = function(las, d = 0.05, n = 2){
 
 
 #' Calculate metrics on point neighborhoods
-#' @description Get statistics for every point's neighborhood. Check out \code{\link{fastPointMetrics.available}} for information about available metrics. Neighborhood search methods are prefixed by \code{ptm}.
+#' @description Get statistics for every point. Neighborhood search methods are prefixed by \code{ptm}.
 #' @template param-las
 #' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.
-#' @param which_metrics optional \code{character} vector - list of metrics to be calculated. Overwrites the gobally enabled metrics set with \code{fastPointMetrics.available()}.
-#' @return \code{LAS} object with updated fields - one for each calculated metric.
+#' @param which_metrics optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} to see all metrics.
+#' @return \code{LAS} object with updated fields - one column for each metric.
+#' @section Rationale:
+#' 
+#' Individual or voxel-wise point metrics build up the basis for research studies involving TLS in forestry. This
+#' function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may 
+#' be useful to users interested in developing their own custom methods for point cloud classification of vegetation 
+#' features or build up input datasets for machine learning classifiers.
+#' 
+#' \code{fastPointMetrics} provides a way to calculate several geometry metrics (listed below) in an optimized way.
+#' All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}. 
+#' This function is provided for convenience, as it allows very fast calculations of several complex variables 
+#' on a single line of code, seeding up heavy work loads. For a more flexible approach that allows user defined 
+#' metrics check out \code{\link[lidR:point_metrics]{point_metrics}} from the \emph{lidR} package.
+#'  
+#' In order to avoid excessive memory use, not all available metrics are calculated by default.
+#' The calculated metrics can be specified every time \code{fasPoinMetrics} is run by naming the desired metrics
+#' into the \code{which_metrics} argument, or changed globally for the active R session by setting new default 
+#' metrics using \code{\link{fastPointMetrics.available}}.
+#' 
 #' @template section-point-metrics
+#' @template reference-wang
+#' @template reference-zhou
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file)
+#' tls = readTLS(file, select='xyz')
+#' 
+#' all_metrics = fastPointMetrics.available()
+#' my_metrics = all_metrics[c(1,4,6)]
+#' 
+#' tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
+#' head(tls@data)
 #' @export
 fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS$names){
 
@@ -367,12 +393,15 @@ fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_
 
 
 #' Print available point metrics
-#' @description print available point metrics - used in \code{\link{fastPointMetrics}}.
-#' @param enable optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}.
-#' @return \code{character} vector of available metrics.
+#' @description Print available point metrics for \code{\link{fastPointMetrics}}.
+#' @param enable optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to 
+#' enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}. By default, 
+#' only metrics used internally in other \emph{TreeLS} methods are enabled.
+#' @return \code{character} vector of all metrics.
+#' @template section-point-metrics
 #' @examples
 #' m = fastPointMetrics.available()
-#' print(m)
+#' length(m)
 #' @export
 fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
   if(typeof(enable) != 'character') enable = POINT_METRICS_NAMES[enable]
@@ -428,7 +457,6 @@ tlsSample = function(las, method = smp.voxelize()){
 #' @examples
 #' file = system.file("extdata", "model_boles.laz", package="TreeLS")
 #' tls = readTLS(file)
-#' plot(tls)
 #'
 #' tls = tlsCrop(tls, 2, 3, 1.5, TRUE, TRUE)
 #' plot(tls)

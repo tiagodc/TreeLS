@@ -10,6 +10,6 @@
 #'
 #' For instance, a point neighborhood that belongs to a perfect flat
 #' surface will have all of its variance explained by the first two eigen values, 
-#' and none explained by the third eigen value. The 'normal' of such a surface,
+#' and none explained by the third eigen value. The 'normal' of such surface,
 #' i.e. the vector oriented in the direction orthogonal to the surface, 
 #' is therefore represented by the third eigenvector.

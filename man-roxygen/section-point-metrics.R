@@ -2,10 +2,6 @@
 #' 
 #' \loadmathjax
 #' 
-#' \emph{EVi} = \emph{i}-th 3D eigen value
-#' 
-#' \emph{EV2Di} = \emph{i}-th 2D eigen value
-#' 
 #' \itemize{
 #'    \item \code{N}: number of nearest neighbors
 #'    \item \code{MinDist}: minimum distance among neighbors 
@@ -20,15 +16,19 @@
 #'    \item \code{Eigentropy}: \mjeqn{\sum_{i=1}^{n=3} EV_{i} * ln(EV_{i})}{}
 #'    \item \code{EigenSum}: sum of eigenvalues, \mjeqn{\sum_{i=1}^{n=3} EV_{i}}{}
 #'    \item \code{Curvature}: surface variation, \mjeqn{EV_{3} / EigenSum}{}
-#'    \item \code{KnnRadius}: 3D neighborhood inclusion radius
+#'    \item \code{KnnRadius}: 3D neighborhood radius
 #'    \item \code{KnnDensity}: 3D point density (N / sphere volume)
 #'    \item \code{Verticality}: absolute vertical deviation, in degrees 
 #'    \item \code{ZRange}: point neighborhood height difference
 #'    \item \code{ZSd}: standard deviation of point neighborhood heights
-#'    \item \code{KnnRadius2d}: 2D neighborhood inclusion radius 
+#'    \item \code{KnnRadius2d}: 2D neighborhood radius 
 #'    \item \code{KnnDensity2d}: 2D point density (N / circle area)
 #'    \item \code{EigenSum2d}: sum of 2D eigenvalues, \mjeqn{\sum_{i=1}^{n=2} EV2D_{i}}{}
 #'    \item \code{EigenRatio2d}: \mjeqn{EV2D_{2} / EV2D_{1}}{}
 #'    \item \code{EigenValue\emph{i}}: 3D eigenvalues
 #'    \item \code{EigenVector\emph{ij}}: 3D eigenvector coefficients, \emph{i}-th load of \emph{j}-th eigenvector
 #' }
+#' 
+#' \emph{EVi} = \emph{i}-th 3D eigen value
+#' 
+#' \emph{EV2Di} = \emph{i}-th 2D eigen value

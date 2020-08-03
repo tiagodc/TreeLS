@@ -15,22 +15,38 @@ fastPointMetrics(
 
 \item{method}{neighborhood search algorithm - currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.}
 
-\item{which_metrics}{optional \code{character} vector - list of metrics to be calculated. Overwrites the gobally enabled metrics set with \code{fastPointMetrics.available()}.}
+\item{which_metrics}{optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} to see all metrics.}
 }
 \value{
-\code{LAS} object with updated fields - one for each calculated metric.
+\code{LAS} object with updated fields - one column for each metric.
 }
 \description{
-Get statistics for every point's neighborhood. Check out \code{\link{fastPointMetrics.available}} for information about available metrics. Neighborhood search methods are prefixed by \code{ptm}.
+Get statistics for every point. Neighborhood search methods are prefixed by \code{ptm}.
 }
+\section{Rationale}{
+
+
+Individual or voxel-wise point metrics build up the basis for research studies involving TLS in forestry. This
+function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may 
+be useful to users interested in developing their own custom methods for point cloud classification of vegetation 
+features or build up input datasets for machine learning classifiers.
+
+\code{fastPointMetrics} provides a way to calculate several geometry metrics (listed below) in an optimized way.
+All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}. 
+This function is provided for convenience, as it allows very fast calculations of several complex variables 
+on a single line of code, seeding up heavy work loads. For a more flexible approach that allows user defined 
+metrics check out \code{\link[lidR:point_metrics]{point_metrics}} from the \emph{lidR} package.
+ 
+In order to avoid excessive memory use, not all available metrics are calculated by default.
+The calculated metrics can be specified every time \code{fasPoinMetrics} is run by naming the desired metrics
+into the \code{which_metrics} argument, or changed globally for the active R session by setting new default 
+metrics using \code{\link{fastPointMetrics.available}}.
+}
+
 \section{List of available point metrics}{
 
 
 \loadmathjax
-
-\emph{EVi} = \emph{i}-th 3D eigen value
-
-\emph{EV2Di} = \emph{i}-th 2D eigen value
 
 \itemize{
    \item \code{N}: number of nearest neighbors
@@ -46,21 +62,36 @@ Get statistics for every point's neighborhood. Check out \code{\link{fastPointMe
    \item \code{Eigentropy}: \mjeqn{\sum_{i=1}^{n=3} EV_{i} * ln(EV_{i})}{}
    \item \code{EigenSum}: sum of eigenvalues, \mjeqn{\sum_{i=1}^{n=3} EV_{i}}{}
    \item \code{Curvature}: surface variation, \mjeqn{EV_{3} / EigenSum}{}
-   \item \code{KnnRadius}: 3D neighborhood inclusion radius
+   \item \code{KnnRadius}: 3D neighborhood radius
    \item \code{KnnDensity}: 3D point density (N / sphere volume)
    \item \code{Verticality}: absolute vertical deviation, in degrees 
    \item \code{ZRange}: point neighborhood height difference
    \item \code{ZSd}: standard deviation of point neighborhood heights
-   \item \code{KnnRadius2d}: 2D neighborhood inclusion radius 
+   \item \code{KnnRadius2d}: 2D neighborhood radius 
    \item \code{KnnDensity2d}: 2D point density (N / circle area)
    \item \code{EigenSum2d}: sum of 2D eigenvalues, \mjeqn{\sum_{i=1}^{n=2} EV2D_{i}}{}
    \item \code{EigenRatio2d}: \mjeqn{EV2D_{2} / EV2D_{1}}{}
    \item \code{EigenValue\emph{i}}: 3D eigenvalues
    \item \code{EigenVector\emph{ij}}: 3D eigenvector coefficients, \emph{i}-th load of \emph{j}-th eigenvector
 }
+
+\emph{EVi} = \emph{i}-th 3D eigen value
+
+\emph{EV2Di} = \emph{i}-th 2D eigen value
 }
 
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
-tls = readTLS(file)
+tls = readTLS(file, select='xyz')
+
+all_metrics = fastPointMetrics.available()
+my_metrics = all_metrics[c(1,4,6)]
+
+tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
+head(tls@data)
+}
+\references{
+Wang, D.; Hollaus, M.; Pfeifer, N., 2017. Feasibility of machine learning methods for separating wood and leaf points from terrestrial laser scanning data. ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, Volume IV-2/W4.
+
+Zhou et al. 2019. Separating leaf and wood points in terrestrial scanning data using multiple optimal scales. Sensors, 19, 1852.
 }

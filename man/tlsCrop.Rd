@@ -26,7 +26,6 @@ Returns a cropped point cloud of all points inside or outside specified boundari
 \examples{
 file = system.file("extdata", "model_boles.laz", package="TreeLS")
 tls = readTLS(file)
-plot(tls)
 
 tls = tlsCrop(tls, 2, 3, 1.5, TRUE, TRUE)
 plot(tls)
