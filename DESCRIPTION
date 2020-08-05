@@ -6,7 +6,7 @@ Authors@R: c(person("Tiago", "de Conto", email = "tdc.florestal@gmail.com", role
 Description: Algorithms for tree detection, noise removal, stem modelling, 3D visualization and manipulation of terrestrial 'LiDAR' (but not only) point clouds, currently focusing on high performance applications for forest inventory - being fully compatible with the 'LAS' infrastructure provided by 'lidR'. For in depth descriptions of the stem classification and segmentation algorithms check out Conto et al. (2017) <doi:10.1016/j.compag.2017.10.019>.
 URL: https://github.com/tiagodc/TreeLS    
 Depends: R (>= 3.3.0), data.table (>= 1.12.0), magrittr (>= 1.5), lidR (>= 3.0.0)
-Imports: rgl (>= 0.99.0), raster (>= 2.8.19), deldir, dismo, nabor, benchmarkme, rlas
+Imports: rgl (>= 0.99.0), raster (>= 2.8.19), deldir, dismo, nabor, benchmarkme, rlas, glue
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

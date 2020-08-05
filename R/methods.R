@@ -4,7 +4,7 @@
 #
 # Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
 #
-# COPYRIGHT: Tiago de Conto, 2019
+# COPYRIGHT: Tiago de Conto, 2020
 #
 # This piece of software is open and free to use, redistribution and modifications
 # should be done in accordance to the GNU General Public License >= 3
@@ -25,6 +25,7 @@
 #' @import dismo
 #' @import deldir
 #' @import nabor
+#' @import glue
 #' @useDynLib TreeLS, .registration = TRUE
 
 . = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL

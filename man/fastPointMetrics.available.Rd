@@ -22,6 +22,10 @@ Print available point metrics for \code{\link{fastPointMetrics}}.
 
 \loadmathjax
 
+* \emph{EVi} = \emph{i}-th 3D eigen value 
+
+* \emph{EV2Di} = \emph{i}-th 2D eigen value
+
 \itemize{
    \item \code{N}: number of nearest neighbors
    \item \code{MinDist}: minimum distance among neighbors 
@@ -48,10 +52,6 @@ Print available point metrics for \code{\link{fastPointMetrics}}.
    \item \code{EigenValue\emph{i}}: 3D eigenvalues
    \item \code{EigenVector\emph{ij}}: 3D eigenvector coefficients, \emph{i}-th load of \emph{j}-th eigenvector
 }
-
-\emph{EVi} = \emph{i}-th 3D eigen value
-
-\emph{EV2Di} = \emph{i}-th 2D eigen value
 }
 
 \examples{

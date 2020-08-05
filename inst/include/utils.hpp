@@ -4,7 +4,7 @@
 //
 //  Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
 //
-//  COPYRIGHT: Tiago de Conto, 2019
+//  COPYRIGHT: Tiago de Conto, 2020
 //
 //  This piece of software is open and free to use, redistribution and modifications
 //  should be done in accordance to the GNU General Public License >= 3
@@ -67,6 +67,8 @@ vector<double> xprod(vector<double>& a, vector<double>& b);
 
 void eigenDecomposition(vector<vector<double> >& cloud, vector<double>* eiVals, vector<vector<double> >* eiVecs);
 
+vector<double> pointDistances(vector<vector<double> >& cloud);
+
 vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which);
 
 vector<vector<unsigned int> > intmatrix2cpp(NumericMatrix& idxMatrix);
@@ -80,5 +82,7 @@ vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector
 vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string>& funcList);
 
 vector<unsigned int> sortIndexes(vector<double>& values);
+
+void progressPrinter(string units, unsigned int n, unsigned int total);
 
 #endif // UTILS_HPP

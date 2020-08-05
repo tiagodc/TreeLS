@@ -32,29 +32,20 @@ This function is meant to be used inside \code{\link{stemSegmentation}}. It appl
 }
 }
 
-\section{Least Squares Circle Fit}{
-
-
-The circle fit method applied in \emph{TreeLS} estimates the circle parameters from a 
-pre-selected (denoised) set of points 
-by \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}.
-The optimization criterion for selecting the best circle parameters among several possible candidates
-is the least squares method, that selects a set of circle parameters that minimize the sum of squared 
-distances between the model circle and its originating points.
-}
-
 \section{RANSAC Algorithm}{
 
+
+\loadmathjax
 
 The \strong{RAN}dom \strong{SA}mple \strong{C}onsensus algorithm is a method that relies on resampling 
 a data set as many times as necessary to find a subset comprised of only inliers - e.g. observations
 belonging to a desired model. The RANSAC algorithm provides a way of estimating the necessary number of
 iterations necessary to fit a model using inliers only, at least once, as shown in the equation:
-\deqn{k = log(1 - p) / log(1 - w^n)}
+\mjdeqn{k = log(1 - p) / log(1 - w^{n})}{}
 where:
 \itemize{
 \item \emph{k}: number of iterations
-\item \emph{p}: confidence level - desired probability of success 
+\item \emph{p}: confidence level, i.e. desired probability of success 
 \item \emph{w}: proportion of inliers expected in the \emph{full} dataset
 \item \emph{n}: number of observations sampled on every iteration
 }
@@ -63,6 +54,34 @@ The models reiterated in \emph{TreeLS} usually relate to circle or cylinder
 fitting over a set of 3D coordinates, selecting the best possible model through the RANSAC algorithm
 
 For more information, checkout \href{https://en.wikipedia.org/wiki/Random_sample_consensus}{this wikipedia page}.
+}
+
+\section{Least Squares Cylinder Fit}{
+
+
+\loadmathjax
+
+The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
+cylinder`s axis direction and radius. The algorithm used internally 
+to optimize the cylinder parameters is the
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex}, 
+which takes as objective function the model describing the distance from any point 
+to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
+
+\mjdeqn{D_{p} = |(p - q) \times a| - r}{}
+
+where:
+
+\itemize{
+   \item \emph{Dp}: distance from a point to the model cylinder`s surface
+   \item \emph{p}: a point on the cylinder`s surface
+   \item \emph{q}: a point on the cylinder`s axis
+   \item \emph{a}: unit vector of cylinder`s direction
+   \item \emph{r}: cylinder`s radius
+}
+
+The Nelder-Mead algorithm minimizes the sum of squared \emph{Dp} from
+a set of points belonging to a stem segment - in the context of \emph{TreeLS}.
 }
 
 \examples{

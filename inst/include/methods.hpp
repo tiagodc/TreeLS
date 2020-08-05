@@ -4,7 +4,7 @@
 //
 //  Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
 //
-//  COPYRIGHT: Tiago de Conto, 2019
+//  COPYRIGHT: Tiago de Conto, 2020
 //
 //  This piece of software is open and free to use, redistribution and modifications
 //  should be done in accordance to the GNU General Public License >= 3
@@ -61,5 +61,9 @@ vector<vector<vector<double> > > treeEigenHough(vector<vector<double> >& cppEige
 vector<vector<vector<double> > > plotEigenHough(vector<vector<double> >& cppEigenCloud, vector<unsigned int>& pointId, vector<unsigned int>& treeId, vector<unsigned int>& segId, double voxel_size, double max_rad, bool is2d = true, bool getSpace = false);
 
 vector<unsigned int> treeIdsFromMap(vector<vector<double> >& xy, vector<vector<double> >& xymap, vector<unsigned int> ids, double length = 2.5, bool circle = true);
+
+vector<vector<double> > bfStemCylinder(vector<vector<double> >& cloud, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples = 10, double pConfidence = 0.99, double pInliers = 0.8, double max_angle = 30, double tolerance = 0.05);
+
+vector<vector<vector<double> > > bfPlotCylinders(vector<vector<double> >& cloud, vector<unsigned int>& treeId, vector<unsigned int>& segments, vector<double>& radii, unsigned int nSamples=10, double pConfidence = 0.95, double pInliers = 0.8, double max_angle = 30, double tolerance = 0.05);
 
 #endif // METHODS_HPP

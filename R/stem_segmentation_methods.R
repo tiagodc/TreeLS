@@ -4,7 +4,7 @@
 #
 # Tiago de Conto - tdc.florestal@gmail.com -  https://github.com/tiagodc/
 #
-# COPYRIGHT: Tiago de Conto, 2019
+# COPYRIGHT: Tiago de Conto, 2020
 #
 # This piece of software is open and free to use, redistribution and modifications
 # should be done in accordance to the GNU General Public License >= 3
@@ -142,8 +142,8 @@ sgt.ransac.circle = function(tol=0.1, n = 10, conf = 0.99, inliers = 0.8){
 #' \item \code{N}: number of points in the stem segments
 #' }
 #'
-#' @template section-circlefit
 #' @template section-ransac
+#' @template section-cylinderfit
 #' @template reference-thesis
 #' @template example-segmentation
 #' @export
@@ -319,6 +319,7 @@ sgt.irls.circle = function(tol=0.1, n = 500){
 #' @description This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a reweighted least squares cylinder fit algorithm using M-estimators and Nelder-Mead optimization in order to remove outlier effects.
 #' @template param-tol
 #' @param n \code{numeric} - maximum number of points to sample when fitting a stem segment.
+#' @template section-cylinderfit
 #' @export
 sgt.irls.cylinder = function(tol=0.1, n = 100){
 
