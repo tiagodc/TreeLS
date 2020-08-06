@@ -10,3 +10,12 @@
 ^old\.R$
 ^tests\.R$
 ^test\.cpp$
+^src/algorithms\.hpp$
+^src/optim\.hpp$
+^src/utils\.hpp$
+^src/constrained$
+^src/line_search$
+^src/misc$
+^src/unconstrained$
+^src/zeros$
+^CHANGELOG\.md$

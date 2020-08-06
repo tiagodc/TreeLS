@@ -40,7 +40,7 @@
 #' of its stem segment (\code{PointSourceID})
 #' \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
 #' \item \code{TreeID}: unique tree ID of the point
-#' \item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
+#' \item \code{TreePosition}: if \code{TRUE}, the point represents the tree's position coordinate
 #' }
 #'
 #' @template section-hough-transform
@@ -117,10 +117,16 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 #' @template param-max-curvature
 #' @template param-max-verticality
-#' @param max_mean_dist \code{numeric} - maximum average distance between points tolerated in a neighborhood.
+#' @param max_mean_dist \code{numeric} - maximum mean distance tolerated from a point to its nearest neighbors.
 #' @template param-max-d
-#' @template param-min-h
+#' @template param-min_h-max_h
 #' @template param-min-n
+#' @details
+#' Point metrics are calculated for every point. Points are then removed depending on their point
+#' metrics parameters and clustered to represent individual tree regions.
+#' Clusters are defined as a function of the expected maximum diameter. Any fields added to the
+#' point cloud are described in \code{\link{fastPointMetrics}}.
+#' @template section-eigen-decomposition
 #' @export
 map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
 
@@ -199,10 +205,16 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 #' @template param-max-curvature
 #' @template param-max-verticality
-#' @param voxel_spacing \code{numeric} - voxel side length to points into.
+#' @param voxel_spacing \code{numeric} - voxel side length, in point cloud units.
 #' @template param-max-d
-#' @template param-min-h
+#' @template param-min_h-max_h
 #' @template param-min-n
+#' @details
+#' Point metrics are calculated for every voxel. Points are then removed depending on their voxel's metrics
+#' metrics parameters and clustered to represent individual tree regions.
+#' Clusters are defined as a function of the expected maximum diameter. Any fields added to the
+#' point cloud are described in \code{\link{fastPointMetrics}}.
+#' @template section-eigen-decomposition
 #' @export
 map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
 
@@ -278,10 +290,10 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
 
 #' Tree mapping algorithm: pick trees manually
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It opens an interactive \code{rgl} plot where the user can specify tree locations by clicking.
-#' @param map optional \code{LAS} object with a tree map that beeds to be updated.
-#' @param min_h,max_h \code{numeric} - height thresholds to filter the point cloud before plotting.
+#' @param map optional tree map to be manually updated.
+#' @template param-min_h-max_h
 #' @export
-map.pick = function(map = NULL, min_h=NULL, max_h=NULL){
+map.pick = function(map = NULL, min_h=1, max_h=5){
 
   if(min_h >= max_h){
     stop('max_h must be larger than min_h')

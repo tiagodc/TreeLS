@@ -13,3 +13,10 @@
 #' and none explained by the third eigen value. The 'normal' of such surface,
 #' i.e. the vector oriented in the direction orthogonal to the surface, 
 #' is therefore represented by the third eigenvector.
+#' 
+#' Methods for both tree mapping and stem segmentation use those metrics, so in order 
+#' to speed up the workflow one might apply \code{\link{fastPointMetrics}} to the point
+#' cloud before other methods. The advantages of this approach are that users
+#' can parameterize the point neighborhoods themselves when calculating their metrics. 
+#' Those calculations won't be performed again internally in the tree mapping or stem 
+#' denoising methods, reducing the overall processing time.

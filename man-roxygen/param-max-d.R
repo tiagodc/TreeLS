@@ -1,1 +1,1 @@
-#' @param max_d \code{numeric} - maximum diameter tolerated for a tree segment.
+#' @param max_d \code{numeric} - largest tree diameter expected in the point cloud.
