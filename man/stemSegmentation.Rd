@@ -59,7 +59,7 @@ Liang et al. (2012).The Nelder-Mead algorithm implemented in Rcpp was provided b
 The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
 from a pre-selected (denoised) set of points in a least squares fashion 
 by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
-with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex} 
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex} 
 optimization combined the IRLS approach.
 }
 
@@ -71,7 +71,7 @@ optimization combined the IRLS approach.
 The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
 cylinder`s axis direction and radius. The algorithm used internally 
 to optimize the cylinder parameters is the
-\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex}, 
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}, 
 which takes as objective function the model describing the distance from any point 
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 

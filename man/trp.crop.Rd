@@ -2,15 +2,15 @@
 % Please edit documentation in R/tree_points_methods.R
 \name{trp.crop}
 \alias{trp.crop}
-\title{Tree points algorithm: define tree regions on fixed areas.}
+\title{Tree points algorithm: fixed size patches.}
 \usage{
 trp.crop(l = 1, circle = TRUE)
 }
 \arguments{
 \item{l}{\code{numeric} - circle radius or square side length.}
 
-\item{circle}{\code{logical} - assign \emph{TreeID}s inside circles (TRUE) or squares (FALSE)?}
+\item{circle}{\code{logical} - assign \code{TreeID}s to circular (\code{TRUE}) or squared (\code{FALSE}) patches.}
 }
 \description{
-This function is meant to be used inside \code{\link{treePoints}}. Assign points to a \emph{TreeID} inside circles/squares of fixed area around \code{\link{treeMap}} coordinates.
+This function is meant to be used inside \code{\link{treePoints}}. Assign points to a \code{TreeID} inside circles/squares of fixed area around \code{\link{treeMap}} coordinates.
 }

@@ -17,7 +17,7 @@ treePoints(las, map, method = trp.voronoi())
 \code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Assigns the \code{TreeID} of points on a \code{LAS} object based on coordinates extracted from a
+Assigns \code{TreeID}s to a \code{LAS} object based on coordinates extracted from a
 \code{\link{treeMap}} object. Tree region segmentation methods are prefixed by \code{trp}.
 }
 \examples{

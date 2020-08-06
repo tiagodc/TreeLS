@@ -17,7 +17,7 @@ nnFilter(las, d = 0.05, n = 2)
 \code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Remove points from a \code{LAS} point cloud based on their neighborhood distances.
+Remove isolated points from a \code{LAS} point cloud based on their neighborhood distances.
 }
 \examples{
 file = system.file("extdata", "spruce.laz", package="TreeLS")

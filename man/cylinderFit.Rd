@@ -19,7 +19,7 @@ cylinderFit(
 
 \item{method}{method for estimating the cylinder parameters. Currently available: \code{"nm"}, \code{"irls"}, \code{"ransac"} and \code{"bf"}.}
 
-\item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
+\item{n}{\code{numeric} - number of points selected on every RANSAC iteration.}
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
 

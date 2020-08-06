@@ -1051,6 +1051,9 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
 #' @template section-ransac
 #' @template section-irls
 #' @template section-brute-force
+#' @template reference-liang
+#' @template reference-olofsson
+#' @template reference-thesis
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)

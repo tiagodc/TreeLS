@@ -11,7 +11,7 @@ circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99, n_best = 0)
 
 \item{method}{method for estimating the circle parameters. Currently available: \code{"qr"}, \code{"nm"}, \code{"irls"} and \code{"ransac"}.}
 
-\item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
+\item{n}{\code{numeric} - number of points selected on every RANSAC iteration.}
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
 

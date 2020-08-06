@@ -10,5 +10,5 @@ smp.randomize(p = 0.5)
 \item{p}{\code{numeric} - sampling probability (from 0 to 1).}
 }
 \description{
-This function is meant to be used inside \code{\link{tlsSample}}. It selects points randomly, returning a fraction of the input point cloud. For more details check out \code{\link{tlsSample}}.
+This function is meant to be used inside \code{\link{tlsSample}}. It selects points randomly, returning a fraction of the input point cloud.
 }

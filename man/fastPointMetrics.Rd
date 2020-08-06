@@ -56,7 +56,7 @@ metrics using \code{\link{fastPointMetrics.available}}.
    \item \code{MeanDist}: mean distance
    \item \code{SdDist}: standard deviation of within neighborhood distances
    \item \code{Linearity}: linear saliency, \mjeqn{(EV_{1} + EV_{2}) / EV_{1}}{}
-   \item \code{Planarity}: planar Saliency, \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
+   \item \code{Planarity}: planar saliency, \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
    \item \code{Scattering}: \mjeqn{EV_{3} / EV_{1}}{}
    \item \code{Omnivariance}: \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
    \item \code{Anisotropy}: \mjeqn{(EV_{1} - EV_{3}) / EV_{1}}{}
@@ -86,6 +86,7 @@ my_metrics = all_metrics[c(1,4,6)]
 
 tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
 head(tls@data)
+plot(tls, color='Linearity')
 }
 \references{
 Wang, D.; Hollaus, M.; Pfeifer, N., 2017. Feasibility of machine learning methods for separating wood and leaf points from terrestrial laser scanning data. ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, Volume IV-2/W4.

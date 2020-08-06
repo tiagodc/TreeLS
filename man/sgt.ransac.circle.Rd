@@ -9,7 +9,7 @@ sgt.ransac.circle(tol = 0.1, n = 10, conf = 0.99, inliers = 0.8)
 \arguments{
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}
 
-\item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
+\item{n}{\code{numeric} - number of points selected on every RANSAC iteration.}
 
 \item{conf}{\code{numeric} - confidence level.}
 
@@ -38,7 +38,7 @@ This function is meant to be used inside \code{\link{stemSegmentation}}. It appl
 The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
 from a pre-selected (denoised) set of points in a least squares fashion 
 by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
-with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex} 
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex} 
 optimization combined the IRLS approach.
 }
 

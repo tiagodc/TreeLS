@@ -22,7 +22,7 @@ This function is meant to be used inside \code{\link{stemSegmentation}}. It appl
 The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
 cylinder`s axis direction and radius. The algorithm used internally 
 to optimize the cylinder parameters is the
-\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex}, 
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}, 
 which takes as objective function the model describing the distance from any point 
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 

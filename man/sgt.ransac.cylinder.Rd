@@ -9,7 +9,7 @@ sgt.ransac.cylinder(tol = 0.1, n = 10, conf = 0.95, inliers = 0.9)
 \arguments{
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}
 
-\item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
+\item{n}{\code{numeric} - number of points selected on every RANSAC iteration.}
 
 \item{conf}{\code{numeric} - confidence level.}
 
@@ -64,7 +64,7 @@ For more information, checkout \href{https://en.wikipedia.org/wiki/Random_sample
 The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
 cylinder`s axis direction and radius. The algorithm used internally 
 to optimize the cylinder parameters is the
-\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex}, 
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}, 
 which takes as objective function the model describing the distance from any point 
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 

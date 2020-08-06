@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{tlsTransform}
 \alias{tlsTransform}
-\title{Apply simple operations to point cloud objects}
+\title{Simple operations on point cloud objects}
 \usage{
 tlsTransform(
   las,

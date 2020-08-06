@@ -22,7 +22,7 @@ shapeFit(
 
 \item{algorithm}{optimization method for estimating the shape's parameters. Currently available: \code{"ransac"}, \code{"irls"}, \code{"nm"}, \code{"qr"} (circle only) ,\code{"bf"} (cylinder only).}
 
-\item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
+\item{n}{\code{numeric} - number of points selected on every RANSAC iteration.}
 
 \item{conf}{\code{numeric} - confidence level.}
 
@@ -46,7 +46,7 @@ the \code{nm} or \code{qr} algorithms can be used with as good reliability, whil
 The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
 from a pre-selected (denoised) set of points in a least squares fashion 
 by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
-with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex} 
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex} 
 optimization combined the IRLS approach.
 }
 
@@ -58,7 +58,7 @@ optimization combined the IRLS approach.
 The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
 cylinder`s axis direction and radius. The algorithm used internally 
 to optimize the cylinder parameters is the
-\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex}, 
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}, 
 which takes as objective function the model describing the distance from any point 
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 
@@ -134,4 +134,11 @@ pars = shapeFit(segment, shape='circle', algorithm='irls')
 segment@data \%$\% plot(Y ~ X, pch=20, asp=1)
 pars \%$\% points(X,Y,col='red', pch=3, cex=2)
 pars \%$\% lines(c(X,X+Radius),c(Y,Y), col='red',lwd=2,lty=2)
+}
+\references{
+Liang, X. et al., 2012. Automatic stem mapping using single-scan terrestrial laser scanning. IEEE Transactions on Geoscience and Remote Sensing, 50(2), pp.661–670.
+
+Olofsson, K., Holmgren, J. & Olsson, H., 2014. Tree stem and height measurements using terrestrial laser scanning and the RANSAC algorithm. Remote Sensing, 6(5), pp.4323–4344.
+
+Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
 }

@@ -30,5 +30,5 @@ stm.eigen.knn(
 \item{v3d}{\code{logical} - count votes in 3D voxels (TRUE) or 2D pixels (FALSE).}
 }
 \description{
-This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhoods geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
+This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhood geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 }

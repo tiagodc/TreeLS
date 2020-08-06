@@ -15,7 +15,7 @@ tlsSample(las, method = smp.voxelize())
 \code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Applies for reducing a point cloud's density. Sampling methods are prefixed by \code{smp}.
+Applies a sampling algorithm to reduce a point cloud's density. Sampling methods are prefixed by \code{smp}.
 }
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
