@@ -129,7 +129,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
 
 #' Stem denoising algorithm: KNN geometry + voxel voting
-#' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhoods geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
+#' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhood geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
 #' @template param-max-curvature
 #' @template param-max-verticality

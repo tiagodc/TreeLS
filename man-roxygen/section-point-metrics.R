@@ -13,7 +13,7 @@
 #'    \item \code{MeanDist}: mean distance
 #'    \item \code{SdDist}: standard deviation of within neighborhood distances
 #'    \item \code{Linearity}: linear saliency, \mjeqn{(EV_{1} + EV_{2}) / EV_{1}}{}
-#'    \item \code{Planarity}: planar Saliency, \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
+#'    \item \code{Planarity}: planar saliency, \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
 #'    \item \code{Scattering}: \mjeqn{EV_{3} / EV_{1}}{}
 #'    \item \code{Omnivariance}: \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{}
 #'    \item \code{Anisotropy}: \mjeqn{(EV_{1} - EV_{3}) / EV_{1}}{}

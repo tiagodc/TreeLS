@@ -309,7 +309,7 @@ readTLS = function(file, col_names=NULL, ...){
 
 
 #' Nearest neighborhood point filter
-#' @description Remove points from a \code{LAS} point cloud based on their neighborhood distances.
+#' @description Remove isolated points from a \code{LAS} point cloud based on their neighborhood distances.
 #' @template param-las
 #' @param d \code{numeric} - search radius.
 #' @param n \code{numeric} - number of neighbors within \code{d} distance a point must have to be kept in the output.
@@ -383,6 +383,7 @@ nnFilter = function(las, d = 0.05, n = 2){
 #'
 #' tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
 #' head(tls@data)
+#' plot(tls, color='Linearity')
 #' @export
 fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS$names){
 
@@ -418,7 +419,7 @@ fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
 
 
 #' Resample a point cloud
-#' @description Applies for reducing a point cloud's density. Sampling methods are prefixed by \code{smp}.
+#' @description Applies a sampling algorithm to reduce a point cloud's density. Sampling methods are prefixed by \code{smp}.
 #' @template param-las
 #' @param method point sampling algorithm. Currently available: \code{\link{smp.voxelize}} and \code{\link{smp.randomize}}
 #' @template return-las
@@ -884,7 +885,7 @@ tlsRotate = function(las){
 }
 
 
-#' Apply simple operations to point cloud objects
+#' Simple operations on point cloud objects
 #' @description Apply transformations to the XYZ axes of a point cloud.
 #' @template param-las
 #' @param xyz \code{character} vector of length 3 - \code{LAS}' columns to be reassigned as XYZ, respectively.

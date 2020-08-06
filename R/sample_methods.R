@@ -19,7 +19,7 @@
 # ===============================================================================
 
 #' Point sampling algorithm: systematic voxel grid
-#' @description This function is meant to be used inside \code{\link{tlsSample}}. It selects one random point per voxel at a given spatial resolution. For more details check out \code{\link{tlsSample}}.
+#' @description This function is meant to be used inside \code{\link{tlsSample}}. It selects one random point per voxel at a given spatial resolution.
 #' @param spacing \code{numeric} - voxel side length, in point cloud units.
 #' @export
 smp.voxelize = function(spacing = 0.05){
@@ -37,7 +37,7 @@ smp.voxelize = function(spacing = 0.05){
 }
 
 #' Point sampling algorithm: random sample
-#' @description This function is meant to be used inside \code{\link{tlsSample}}. It selects points randomly, returning a fraction of the input point cloud. For more details check out \code{\link{tlsSample}}.
+#' @description This function is meant to be used inside \code{\link{tlsSample}}. It selects points randomly, returning a fraction of the input point cloud.
 #' @param p \code{numeric} - sampling probability (from 0 to 1).
 #' @importFrom stats rbinom
 #' @export
