@@ -1,1 +1,1 @@
-#' @param n \code{integer} - number of points selected on every RANSAC iteration.
+#' @param n \code{numeric} - number of points selected on every RANSAC iteration.
