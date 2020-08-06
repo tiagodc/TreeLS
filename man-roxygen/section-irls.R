@@ -1,4 +1,4 @@
-#' @section Iterative Reweighted Least Squares (IRLS):
+#' @section Iterative Reweighted Least Squares (IRLS) Algorithm:
 #'
 #' \emph{irls} \code{circle} or \code{cylinder} estimation methods 
 #' perform automatic outlier assigning through iterative reweighting

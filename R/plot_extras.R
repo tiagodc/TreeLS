@@ -220,7 +220,8 @@ tlsPlot.dh.2d = function(las, ring, r, col='darkred'){
   points(mean(ring[,1]), mean(ring[,2]), col=col, cex=2, pch=3)
 }
 
-
+#' @rdname tlsPlot
+#' @export
 add_segmentIDs = function(x, las, ...){
   if(class(las)[1] == 'LAS'){
     if(!hasField(las, 'Segment')) stop('Segment field not found.')
@@ -241,6 +242,8 @@ add_segmentIDs = function(x, las, ...){
   las %$% text3d(X,Y,Z,Segment, ...)
 }
 
+#' @rdname tlsPlot
+#' @export
 add_treeIDs = function(x, las, ...){
   if(class(las)[1] == 'LAS'){
     if(!hasField(las, 'TreeID')) stop('TreeID field not found.')
@@ -255,6 +258,8 @@ add_treeIDs = function(x, las, ...){
   las %$% text3d(X,Y,z,TreeID, ...)
 }
 
+#' @rdname tlsPlot
+#' @export
 add_treeMap = function(x, las, ...){
   if(!hasAttribute(las, 'tree_map') && !hasAttribute(las, 'tree_map_dt'))
     stop('las is not a tree_map object: check ?treeMap')
@@ -272,6 +277,9 @@ add_treeMap = function(x, las, ...){
   spheres3d(las$X, las$Y, h, radius=.25, ...)
 }
 
+
+#' @rdname tlsPlot
+#' @export
 add_treePoints = function(x, las, color_func=pastel.colors, ...){
   isLAS(las)
   if(!hasField(las, 'TreeID')){
@@ -284,6 +292,8 @@ add_treePoints = function(x, las, color_func=pastel.colors, ...){
   las@data %$% rgl.points(X,Y,Z,color=colors,...)
 }
 
+#' @rdname tlsPlot
+#' @export
 add_stemPoints = function(x, las, ...){
   isLAS(las)
   if(!hasField(las, 'Stem')){
@@ -294,6 +304,8 @@ add_stemPoints = function(x, las, ...){
   las@data %$% rgl.points(X,Y,Z,...)
 }
 
+#' @rdname tlsPlot
+#' @export
 add_stemSegments = function(x, stems_data_table, color='white', fast=FALSE){
 
   if(!(hasAttribute(stems_data_table, 'single_stem_dt') || hasAttribute(stems_data_table, 'multiple_stems_dt'))){
@@ -332,6 +344,8 @@ add_stemSegments = function(x, stems_data_table, color='white', fast=FALSE){
   }
 }
 
+#' @rdname tlsPlot
+#' @export
 add_tlsInventory = function(x, inventory_data_table, color='white', fast=FALSE){
 
   if(!hasAttribute(inventory_data_table, 'tls_inventory_dt')){

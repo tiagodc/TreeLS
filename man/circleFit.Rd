@@ -15,9 +15,12 @@ circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99, n_best = 0)
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
 
-\item{n_best}{\code{numeric} - Applicable when \code{method == "ransac"}. For \code{n_best == 0}, takes the best RANSAC iteration as estimates, otherwise, it estimates the parameters as the average of \code{n_best} RANSAC iterations.}
+\item{n_best}{\code{integer} - estimate optimal RANSAC parameters as the median of the \code{n_best} estimations with lowest error.}
 
 \item{conf}{\code{numeric} - confidence level.}
+}
+\value{
+vector of parameters
 }
 \description{
 Fits a 2D horizontally-aligned circle on a set of 3D points.

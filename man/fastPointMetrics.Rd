@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{fastPointMetrics}
 \alias{fastPointMetrics}
-\title{Calculate metrics on point neighborhoods}
+\title{Calculate point neighborhood metrics}
 \usage{
 fastPointMetrics(
   las,
@@ -13,36 +13,33 @@ fastPointMetrics(
 \arguments{
 \item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{method}{neighborhood search algorithm - currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.}
+\item{method}{neighborhood search algorithm. Currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.}
 
-\item{which_metrics}{optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} to see all metrics.}
+\item{which_metrics}{optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} for a list of all metrics.}
 }
 \value{
-\code{LAS} object with updated fields - one column for each metric.
+\code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Get statistics for every point. Neighborhood search methods are prefixed by \code{ptm}.
+Get statistics for every point in a \code{LAS} object. Neighborhood search methods are prefixed by \code{ptm}.
 }
-\section{Rationale}{
+\details{
+Individual or voxel-wise point metrics build up the basis for many studies involving TLS in forestry. This
+function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may
+be useful to users interested in developing their own custom methods for point cloud classification/filtering of
+vegetation features or build up input datasets for machine learning classifiers.
 
-
-Individual or voxel-wise point metrics build up the basis for research studies involving TLS in forestry. This
-function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may 
-be useful to users interested in developing their own custom methods for point cloud classification of vegetation 
-features or build up input datasets for machine learning classifiers.
-
-\code{fastPointMetrics} provides a way to calculate several geometry metrics (listed below) in an optimized way.
-All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}. 
-This function is provided for convenience, as it allows very fast calculations of several complex variables 
-on a single line of code, seeding up heavy work loads. For a more flexible approach that allows user defined 
+\code{fastPointMetrics} provides a way to calculate several geometry related metrics (listed below) in an optimized way.
+All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}.
+This function is provided for convenience, as it allows very fast calculations of several complex variables
+on a single line of code, speeding up heavy work loads. For a more flexible approach that allows user defined
 metrics check out \code{\link[lidR:point_metrics]{point_metrics}} from the \emph{lidR} package.
- 
+
 In order to avoid excessive memory use, not all available metrics are calculated by default.
-The calculated metrics can be specified every time \code{fasPoinMetrics} is run by naming the desired metrics
-into the \code{which_metrics} argument, or changed globally for the active R session by setting new default 
+The calculated metrics can be specified every time \code{fastPointMetrics} is run by naming the desired metrics
+into the \code{which_metrics} argument, or changed globally for the active R session by setting new default
 metrics using \code{\link{fastPointMetrics.available}}.
 }
-
 \section{List of available point metrics}{
 
 

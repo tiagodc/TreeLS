@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{tlsTransform}
 \alias{tlsTransform}
-\title{Alter point cloud's coordinates}
+\title{Apply simple operations to point cloud objects}
 \usage{
 tlsTransform(
   las,
@@ -14,14 +14,13 @@ tlsTransform(
 \arguments{
 \item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{xyz}{\code{character} vector of length 3 - \code{las}' columns to be reassigned as XYZ, respectively.
+\item{xyz}{\code{character} vector of length 3 - \code{LAS}' columns to be reassigned as XYZ, respectively.
 Use minus signs to mirror an axis` coordinates - more details in the sections below.}
 
-\item{bring_to_origin}{\code{logical} - force output to start at \code{c(0,0,0)}? If \code{TRUE},
-removes any geographical information from the output.}
+\item{bring_to_origin}{\code{logical} - force point cloud origin to match \code{c(0,0,0)}? If \code{TRUE},
+clears the header of the \code{LAS} object.}
 
-\item{rotate}{\code{logical} - rotate the point cloud to align the ground points horizontally? If \code{TRUE},
-removes any geographical information from the output. Checkout \code{\link{tlsRotate}} for more information.}
+\item{rotate}{\code{logical} - rotate the point cloud to align the ground points horizontally (as in \code{\link{tlsRotate}})?}
 }
 \value{
 \code{\link[lidR:LAS]{LAS}} object.
@@ -32,35 +31,30 @@ Apply transformations to the XYZ axes of a point cloud.
 \section{XYZ Manipulation}{
 
 
-The \code{xyz} argument can take a few different forms, it is useful to shift axes positions in a point cloud or
-to mirror an axis' coordinates. All axes characters can be entered in lower or uppercase and also be preceeded
-by a minus sign ('-'), indicating to invert (mirror) the axis' coordinates in the output.
-Check the \emph{examples} section for a practical overview.
+The \code{xyz} argument can take a few different forms. It is useful for shifting axes positions in a point cloud or
+to mirror an axis' coordinates. All axes characters can be entered in lower or uppercase and also be preceded
+by a minus sign ('-') to reverse its coordinates.
 }
 
 \examples{
 file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
+bbox(tls)
+range(tls$Z)
 
 ### swap the Y and Z axes
-zy = tlsAlter(tls, c('x', 'z', 'y'))
+zy = tlsTransform(tls, c('x', 'z', 'y'))
 bbox(zy)
 range(zy$Z)
-plot(zy, clear_artifacts=FALSE)
-rgl::axes3d(col='white')
 
 ### return an upside down point cloud
-ud = tlsAlter(tls, c('x', 'y', '-z'))
+ud = tlsTransform(tls, c('x', 'y', '-z'))
 bbox(ud)
 range(ud$Z)
-plot(zy, clear_artifacts=FALSE)
-rgl::axes3d(col='white')
+plot(zy)
 
 ### mirror all axes, then set the point cloud's starting point as the origin
 rv = tlsAlter(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
 bbox(rv)
 range(rv$Z)
-plot(rv, clear_artifacts=FALSE)
-rgl::axes3d(col='white')
-
 }

@@ -32,7 +32,7 @@ This function is meant to be used inside \code{\link{stemSegmentation}}. It appl
 }
 }
 
-\section{RANSAC Algorithm}{
+\section{Random Sample Consensus (RANSAC) Algorithm}{
 
 
 \loadmathjax

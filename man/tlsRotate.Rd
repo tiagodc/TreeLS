@@ -2,7 +2,7 @@
 % Please edit documentation in R/methods.R
 \name{tlsRotate}
 \alias{tlsRotate}
-\title{Rotate point cloud to fit a horizontal plane}
+\title{Rotate point cloud to fit a horizontal ground plane}
 \usage{
 tlsRotate(las)
 }
@@ -14,21 +14,6 @@ tlsRotate(las)
 }
 \description{
 Check for ground points and rotates the point cloud aligning its ground surface to a horizontal plane (XY).
-This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
-which might present a tilted global reference system. Since the coordinates are altered in this procedure, any
-geographical information is erased from the LAS' header after rotation.
-}
-\examples{
-file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-tls = readTLS(file)
-
-### note the tilted ground
-plot(tls)
-rgl::axes3d(col='white')
-
-### after rotation
-tls = tlsRotate(tls)
-plot(tls)
-rgl::axes3d(col='white')
-
+This function is especially useful for point clouds not georeferenced or generated through mobile scanning,
+which might present a tilted coordinate system.
 }

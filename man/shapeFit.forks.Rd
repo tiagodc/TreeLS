@@ -20,12 +20,12 @@ shapeFit.forks(
 
 \item{max_radius}{\code{numeric} - approximately the largest stem cross section radius expected in the point cloud.}
 
-\item{votes_percentile}{\code{numeric} - votes filter criterion for isolating nearby stems.}
+\item{votes_percentile}{\code{numeric} - use only estimates with more votes than \code{votes_percentile}.}
 
 \item{min_density}{\code{numeric} - between 0 and 1 - minimum point density within a pixel evaluated on the Hough Transform - i.e. only \emph{dense} point clousters will undergo circle search.}
 
 \item{plot}{\code{logical} - plot the results?}
 }
 \description{
-Searches and fits circles multiple 2D circles on a point cloud layer from a single tree.
+Search and fit multiple 2D circles on a point cloud layer from a single tree, i.e. a forked stem segment.
 }

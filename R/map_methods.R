@@ -103,7 +103,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
     map$Keypoint_flag %<>% as.logical
     map$PointSourceID %<>% as.integer
     map$TreePosition %<>% as.logical
-    map %<>% LAS %>% setHeaderTLS
+    map = suppressMessages(map %>% LAS %>% setHeaderTLS)
 
     return(map)
   }

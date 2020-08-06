@@ -18,9 +18,9 @@ shapeFit(
 \arguments{
 \item{stem_segment}{\code{NULL} or a \code{\link[lidR:LAS]{LAS}} object with a single stem segment. When \code{NULL} returns a parameterized function to be used as input in other functions (e.g. \code{\link{tlsInventory}}).}
 
-\item{shape}{\code{character} - either \code{circle} or \code{cylinder}.}
+\item{shape}{\code{character}, either \code{"circle"} or \code{"cylinder"}.}
 
-\item{algorithm}{optimization method for estimating the shape parameters. Currently available: \code{"ransac"}, \code{"irls"}, \code{"nm"}, \code{"qr"} (circle only) ,\code{"bf"} (cylinder only).}
+\item{algorithm}{optimization method for estimating the shape's parameters. Currently available: \code{"ransac"}, \code{"irls"}, \code{"nm"}, \code{"qr"} (circle only) ,\code{"bf"} (cylinder only).}
 
 \item{n}{\code{integer} - number of points selected on every RANSAC iteration.}
 
@@ -34,4 +34,104 @@ shapeFit(
 }
 \description{
 Fits a 3D cylinder or 2D circle on a set of 3D points, retrieving the optimized parameters.
+}
+\details{
+The \code{ransac} and \code{irls} methods are \emph{robust}, which means they estimate the circle/cylinder parameters in a way
+that takes into consideration outlier effects (noise). If the input data is already noise free,
+the \code{nm} or \code{qr} algorithms can be used with as good reliability, while being much faster.
+}
+\section{Least Squares Circle Fit}{
+
+
+The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
+from a pre-selected (denoised) set of points in a least squares fashion 
+by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex} 
+optimization combined the IRLS approach.
+}
+
+\section{Least Squares Cylinder Fit}{
+
+
+\loadmathjax
+
+The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
+cylinder`s axis direction and radius. The algorithm used internally 
+to optimize the cylinder parameters is the
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelser-Mead simplex}, 
+which takes as objective function the model describing the distance from any point 
+to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
+
+\mjdeqn{D_{p} = |(p - q) \times a| - r}{}
+
+where:
+
+\itemize{
+   \item \emph{Dp}: distance from a point to the model cylinder`s surface
+   \item \emph{p}: a point on the cylinder`s surface
+   \item \emph{q}: a point on the cylinder`s axis
+   \item \emph{a}: unit vector of cylinder`s direction
+   \item \emph{r}: cylinder`s radius
+}
+
+The Nelder-Mead algorithm minimizes the sum of squared \emph{Dp} from
+a set of points belonging to a stem segment - in the context of \emph{TreeLS}.
+}
+
+\section{Random Sample Consensus (RANSAC) Algorithm}{
+
+
+\loadmathjax
+
+The \strong{RAN}dom \strong{SA}mple \strong{C}onsensus algorithm is a method that relies on resampling 
+a data set as many times as necessary to find a subset comprised of only inliers - e.g. observations
+belonging to a desired model. The RANSAC algorithm provides a way of estimating the necessary number of
+iterations necessary to fit a model using inliers only, at least once, as shown in the equation:
+\mjdeqn{k = log(1 - p) / log(1 - w^{n})}{}
+where:
+\itemize{
+\item \emph{k}: number of iterations
+\item \emph{p}: confidence level, i.e. desired probability of success 
+\item \emph{w}: proportion of inliers expected in the \emph{full} dataset
+\item \emph{n}: number of observations sampled on every iteration
+}
+
+The models reiterated in \emph{TreeLS} usually relate to circle or cylinder 
+fitting over a set of 3D coordinates, selecting the best possible model through the RANSAC algorithm
+
+For more information, checkout \href{https://en.wikipedia.org/wiki/Random_sample_consensus}{this wikipedia page}.
+}
+
+\section{Iterative Reweighted Least Squares (IRLS) Algorithm}{
+
+
+\emph{irls} \code{circle} or \code{cylinder} estimation methods 
+perform automatic outlier assigning through iterative reweighting
+with M-estimators, followed by a Nelder-Mead optimization of squared distance sums
+to determine the best circle/cylinder parameters for a given point
+cloud. The reweighting strategy used in \emph{TreeLS} is based on 
+Liang et al. (2012).The Nelder-Mead algorithm implemented in Rcpp was provided by 
+\href{https://github.com/kthohr/optim}{kthohr/optim}.
+}
+
+\section{Brute Force Cylinder Fit}{
+
+
+The brute force cylinder fit approach estimates the axis rotation
+angles by brute force combined with 2D ransac circle fit. The coordinates
+of a point cloud representing a single cylinder are iteratively rotated up
+to a pre defined threshold, and for every iteration a circle is estimated after 
+rotation is performed. The rotation that minimizes the circle parameters the most
+is used to describe the axis direction of the cylinder with the circle's radius.
+}
+
+\examples{
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file)
+segment = filter_poi(tls, Z > 1 & Z < 2)
+pars = shapeFit(segment, shape='circle', algorithm='irls')
+
+segment@data \%$\% plot(Y ~ X, pch=20, asp=1)
+pars \%$\% points(X,Y,col='red', pch=3, cex=2)
+pars \%$\% lines(c(X,X+Radius),c(Y,Y), col='red',lwd=2,lty=2)
 }

@@ -1,4 +1,4 @@
-#' @section RANSAC Algorithm:
+#' @section Random Sample Consensus (RANSAC) Algorithm:
 #'
 #' \loadmathjax
 #' 

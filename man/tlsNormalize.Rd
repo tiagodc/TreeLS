@@ -9,7 +9,7 @@ tlsNormalize(las, min_res = 0.25, keep_ground = TRUE)
 \arguments{
 \item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{min_res}{\code{numeric} - minimum resolution of the DTM used for normalization.}
+\item{min_res}{\code{numeric} - minimum resolution of the DTM used for normalization, in point cloud units.}
 
 \item{keep_ground}{\code{logical} - if \code{FALSE} removes the ground points from the output.}
 }
@@ -25,9 +25,7 @@ tls = readTLS(file)
 plot(tls)
 rgl::axes3d(col='white')
 
-### remove topography effect
 tls = tlsNormalize(tls, 0.5, FALSE)
 plot(tls)
 rgl::axes3d(col='white')
-
 }

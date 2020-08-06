@@ -76,13 +76,14 @@ preCheck = function(las){
     has_ground = any(las$Classification == 2)
 
     if(has_ground){
-
       mean_ground = las$Z[ las$Classification == 2 ] %>% mean(na.rm=T) %>% abs
-
       if(mean_ground > 0.2)
         message("point cloud apparently not normalized")
     } else {
-      message("ground points not classified")
+      n = ifelse(nrow(las@data) > 50, 50, nrow(las@data))
+      mean_ground = las$Z %>% sort %>% head(50) %>% mean %>% abs
+      if(mean_ground > 0.2)
+        message("point cloud apparently not normalized")
     }
   }
 
@@ -248,15 +249,15 @@ splitByIndex = function(las, var='Z', max_size = 1E6){
 }
 
 
-#' Reset or create a \code{LAS} object depending on the input's type
-#' @description Reset the input's header if it is a \code{LAS} object, or generate a new \code{LAS} from a table-like input. For more information, checkout the \code{\link[lidR:LAS]{lidR::LAS}} description page.
-#' @param cloud \code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted or reset.
+#' (Re-)Create a \code{LAS} object depending on the input's type
+#' @description Reset the input's header if it is a \code{LAS} object, or generate a new \code{LAS} from a table-like input. For more information, checkout \code{\link[lidR:LAS]{lidR::LAS}}.
+#' @param cloud \code{LAS}, \code{data.frame}, \code{matrix} or similar object to be converted.
 #' @template param-colnames
 #' @template return-las
 #' @examples
 #' cloud = matrix(runif(300, 0, 10), ncol=3)
-#' cloud = setTLS(cld)
-#' summary(cld)
+#' cloud = setTLS(cloud)
+#' summary(cloud)
 #' @export
 setTLS = function(cloud, col_names=NULL){
 
@@ -271,16 +272,17 @@ setTLS = function(cloud, col_names=NULL){
 
 
 #' Import a point cloud file into a LAS object
-#' @description Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and \emph{ply} files with \code{\link[rlas:read.las]{read.las}}. Other file formats are (or try to be) read using \code{\link[data.table:fread]{fread}}.
+#' @description Wrapper to read point cloud files straight into LAS objects. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}}, \emph{ply} files with \code{\link[rlas:read.las]{read.las}} and other file formats with \code{\link[data.table:fread]{fread}} (txt, xyz, 3d or any other table like format).
 #' @param file file path.
 #' @template param-colnames
-#' @param ... further arguments passed to \code{readLAS}, \code{read.las} or \code{fread}.
+#' @param ... further arguments passed down to \code{readLAS}, \code{read.las} or \code{fread}.
 #' @template return-las
 #' @examples
-#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' cloud = matrix(runif(300), ncol=3)
+#' file = 'random_points.txt'
+#' fwrite(cloud, file)
 #' tls = readTLS(file)
 #' summary(tls)
-#' @importFrom utils read.table
 #' @importFrom rlas read.las
 #' @importFrom data.table fread
 #' @export
@@ -307,18 +309,18 @@ readTLS = function(file, col_names=NULL, ...){
 
 
 #' Nearest neighborhood point filter
-#' @description Remove points from a \code{LAS} point cloud based on nearest neighborhood metrics.
+#' @description Remove points from a \code{LAS} point cloud based on their neighborhood distances.
 #' @template param-las
 #' @param d \code{numeric} - search radius.
-#' @param n \code{integer} - number of nearest points to search within \code{d} radius.
+#' @param n \code{numeric} - number of neighbors within \code{d} distance a point must have to be kept in the output.
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "spruce.laz", package="TreeLS")
 #' tls = readTLS(file)
-#' summary(tls)
+#' nrow(tls@data)
 #'
 #' nn_tls = nnFilter(tls, 0.05, 3)
-#' summary(nn_tls)
+#' nrow(nn_tls@data)
 #' @importFrom nabor knn
 #' @export
 nnFilter = function(las, d = 0.05, n = 2){
@@ -345,40 +347,40 @@ nnFilter = function(las, d = 0.05, n = 2){
 }
 
 
-#' Calculate metrics on point neighborhoods
-#' @description Get statistics for every point. Neighborhood search methods are prefixed by \code{ptm}.
+#' Calculate point neighborhood metrics
+#' @description Get statistics for every point in a \code{LAS} object. Neighborhood search methods are prefixed by \code{ptm}.
 #' @template param-las
-#' @param method neighborhood search algorithm - currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.
-#' @param which_metrics optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} to see all metrics.
-#' @return \code{LAS} object with updated fields - one column for each metric.
-#' @section Rationale:
-#' 
-#' Individual or voxel-wise point metrics build up the basis for research studies involving TLS in forestry. This
-#' function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may 
-#' be useful to users interested in developing their own custom methods for point cloud classification of vegetation 
-#' features or build up input datasets for machine learning classifiers.
-#' 
-#' \code{fastPointMetrics} provides a way to calculate several geometry metrics (listed below) in an optimized way.
-#' All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}. 
-#' This function is provided for convenience, as it allows very fast calculations of several complex variables 
-#' on a single line of code, seeding up heavy work loads. For a more flexible approach that allows user defined 
+#' @param method neighborhood search algorithm. Currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.
+#' @param which_metrics optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} for a list of all metrics.
+#' @template return-las
+#' @details
+#'
+#' Individual or voxel-wise point metrics build up the basis for many studies involving TLS in forestry. This
+#' function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may
+#' be useful to users interested in developing their own custom methods for point cloud classification/filtering of
+#' vegetation features or build up input datasets for machine learning classifiers.
+#'
+#' \code{fastPointMetrics} provides a way to calculate several geometry related metrics (listed below) in an optimized way.
+#' All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}.
+#' This function is provided for convenience, as it allows very fast calculations of several complex variables
+#' on a single line of code, speeding up heavy work loads. For a more flexible approach that allows user defined
 #' metrics check out \code{\link[lidR:point_metrics]{point_metrics}} from the \emph{lidR} package.
-#'  
+#'
 #' In order to avoid excessive memory use, not all available metrics are calculated by default.
-#' The calculated metrics can be specified every time \code{fasPoinMetrics} is run by naming the desired metrics
-#' into the \code{which_metrics} argument, or changed globally for the active R session by setting new default 
+#' The calculated metrics can be specified every time \code{fastPointMetrics} is run by naming the desired metrics
+#' into the \code{which_metrics} argument, or changed globally for the active R session by setting new default
 #' metrics using \code{\link{fastPointMetrics.available}}.
-#' 
+#'
 #' @template section-point-metrics
 #' @template reference-wang
 #' @template reference-zhou
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file, select='xyz')
-#' 
+#'
 #' all_metrics = fastPointMetrics.available()
 #' my_metrics = all_metrics[c(1,4,6)]
-#' 
+#'
 #' tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
 #' head(tls@data)
 #' @export
@@ -394,10 +396,10 @@ fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_
 
 
 #' Print available point metrics
-#' @description Print available point metrics for \code{\link{fastPointMetrics}}.
-#' @param enable optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to 
-#' enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}. By default, 
-#' only metrics used internally in other \emph{TreeLS} methods are enabled.
+#' @description Print the list of available metrics for \code{\link{fastPointMetrics}}.
+#' @param enable optional \code{integer} or \code{character} vector containing indices or names of the metrics you want to
+#' enable globally. Enabled metrics are calculated every time you run \code{\link{fastPointMetrics}} by default.
+#' Only metrics used internally in other \emph{TreeLS} methods are enabled out-of-the-box.
 #' @return \code{character} vector of all metrics.
 #' @template section-point-metrics
 #' @examples
@@ -416,22 +418,22 @@ fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
 
 
 #' Resample a point cloud
-#' @description Applies an algorithm that reduces the point cloud's density. Sampling methods are prefixed by \code{smp}.
+#' @description Applies for reducing a point cloud's density. Sampling methods are prefixed by \code{smp}.
 #' @template param-las
-#' @param method point sampling algorithm - currently available: \code{\link{smp.voxelize}} or \code{\link{smp.randomize}}
+#' @param method point sampling algorithm. Currently available: \code{\link{smp.voxelize}} and \code{\link{smp.randomize}}
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
-#' summary(tls)
+#' nrow(tls@data)
 #'
 #' ## sample points systematically from a 3D voxel grid
 #' vx = tlsSample(tls, smp.voxelize(0.05))
-#' summary(vx)
+#' nrow(vx@data)
 #'
 #' ## sample half of the points randomly
 #' rd = tlsSample(tls, smp.randomize(0.5))
-#' summary(rd)
+#' nrow(rd@data)
 #'
 #' @export
 tlsSample = function(las, method = smp.voxelize()){
@@ -452,8 +454,8 @@ tlsSample = function(las, method = smp.voxelize()){
 #' @template param-las
 #' @param x,y \code{numeric} -  X and Y center coordinates of the crop region.
 #' @param len \code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square.
-#' @param circle \code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square.
-#' @param negative \code{logical} - if \code{TRUE}, returns all points outside the specified circle/square perimeter, otherwise returns all points inside the circle/square (default).
+#' @param circle \code{logical} -  crops a circle (if \code{TRUE}) or a square.
+#' @param negative \code{logical} - if \code{TRUE}, returns all points **outside** the specified circle/square perimeter.
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "model_boles.laz", package="TreeLS")
@@ -513,7 +515,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' Normalize a TLS point cloud
 #' @description Fast normalization of TLS point clouds based on a Digital Terrain Model (DTM) of the ground points. If the input's ground points are not yet classified, the \code{\link[lidR:csf]{csf}} algorithm is applied internally.
 #' @template param-las
-#' @param min_res \code{numeric} - minimum resolution of the DTM used for normalization.
+#' @param min_res \code{numeric} - minimum resolution of the DTM used for normalization, in point cloud units.
 #' @param keep_ground \code{logical} - if \code{FALSE} removes the ground points from the output.
 #' @template return-las
 #' @examples
@@ -522,11 +524,9 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' plot(tls)
 #' rgl::axes3d(col='white')
 #'
-#' ### remove topography effect
 #' tls = tlsNormalize(tls, 0.5, FALSE)
 #' plot(tls)
 #' rgl::axes3d(col='white')
-#'
 #' @importFrom raster raster extent res<-
 #' @export
 tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
@@ -560,9 +560,9 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 #' Map tree occurrences from TLS data
 #' @description Estimates tree occurrence regions from a \strong{normalized} point cloud. Tree mapping methods are prefixed by \code{map}.
 #' @template param-las
-#' @param method tree mapping algorithm - currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.
-#' @param merge \code{numeric} - parameter passed to \code{\link{treeMap.merge}}.
-#' @param positions_only \code{logical} - if \code{TRUE} returns a 3D \code{LAS} object, otherwise returns a 2D tree map as a \code{data.table}.
+#' @param method tree mapping algorithm. Currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.
+#' @param merge \code{numeric} - parameter passed down to \code{\link{treeMap.merge}} (if \code{merge > 0}).
+#' @param positions_only \code{logical} - if \code{TRUE} returns only a 2D tree map as a \code{data.table}.
 #' @return signed \code{LAS} or \code{data.table}.
 #' @template example-tree-map
 #' @export
@@ -593,10 +593,10 @@ treeMap = function(las, method = map.hough(), merge=0.2, positions_only=FALSE){
 
 
 #' Convert a tree map to a 2D \code{data.table}
-#' @description Extracts the tree XY positions from a \emph{tree_map} \code{LAS} object.
-#' @param las \code{LAS} object - output from \code{\link{treeMap}}.
+#' @description Extracts the tree XY positions from a \emph{treeMap} output.
+#' @param map object generated by \code{\link{treeMap}}.
 #' @param plot \code{logical} - plot the tree map?
-#' @return \code{data.table} of tree IDs and XY coordinates with \emph{tree_map_dt} signature.
+#' @return signed \code{data.table} of tree IDs and XY coordinates.
 #' @template example-tree-map
 #' @export
 treeMap.positions = function(las, plot=TRUE){
@@ -625,10 +625,15 @@ treeMap.positions = function(las, plot=TRUE){
 }
 
 
-#' Merge nearby trees in a \emph{tree_map}
-#' @description Check all tree neighborhoods and merge TreeIDs which are too close in a \code{tree_map} object.
-#' @param las \code{LAS} or \code{data.table} object generated by \code{\link{treeMap}}.
-#' @param d \code{numeric} - distance criteria to merge
+#' Merge tree coordinates too close on \code{treeMap} outputs.
+#' @description Check all tree neighborhoods and merge TreeIDs which are too close in a \code{treeMap}'s object.
+#' @param map object generated by \code{\link{treeMap}}.
+#' @param d \code{numeric} - distance threshold.
+#' @details
+#' The \code{d} parameter is a relative measure of close neighbors. Sorting all possible pairs by distance from a tree map,
+#' the merge criterion is that none of the closest pairs should be distant less than the next closest pair's distance minus \code{d}.
+#' This method is useful when merging forked stems or point clusters from plots with too much understory, especially if those are
+#' from forest stands with regularly spaced trees.
 #' @importFrom nabor knn
 #' @export
 treeMap.merge = function(las, d=.2){
@@ -639,7 +644,7 @@ treeMap.merge = function(las, d=.2){
   if(d < 0)
     stop('d must be a positive number')
 
-  is_data_table = hasAttribute('tree_map_dt')
+  is_data_table = hasAttribute(las, 'tree_map_dt')
   nxy = if(is_data_table) las else treeMap.positions(las, plot = F)
   nn = knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
@@ -669,15 +674,25 @@ treeMap.merge = function(las, d=.2){
 }
 
 
-#' Classify areas of influence for individual trees
-#' @description Identify the \code{TreeID} of every point on a \code{LAS} object based on coordinates from a \code{\link{treeMap}}. Tree region segmentation methods are prefixed by \code{trp}.
+#' Classify individual tree regions in a point cloud
+#' @description Assigns the \code{TreeID} of points on a \code{LAS} object based on coordinates extracted from a
+#' \code{\link{treeMap}} object. Tree region segmentation methods are prefixed by \code{trp}.
 #' @template param-las
-#' @param map output from \code{\link{treeMap}} or \code{\link{treeMap.positions}}.
-#' @param method segmentation algorithm - currently available: \code{\link{trp.voronoi}} and \code{\link{trp.crop}}.
+#' @param map object generated by \code{\link{treeMap}}.
+#' @param method tree region algorithm. Currently available: \code{\link{trp.voronoi}} and \code{\link{trp.crop}}.
 #' @template return-las
 #' @examples
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-#' tls = readTLS(file)
+#' tls = readTLS(file) %>%
+#'   tlsNormalize %>%
+#'   tlsSample
+#'
+#' map = treeMap(tls, map.hough())
+#' tls = treePoints(tls, map, trp.crop(circle=FALSE))
+#'
+#' x = plot(tls, size=1)
+#' add_treePoints(x, tls, size=2)
+#' add_treeIDs(x, tls, color='yellow', cex=2)
 #' @export
 treePoints = function(las, map, method = trp.voronoi()){
 
@@ -706,18 +721,25 @@ treePoints = function(las, map, method = trp.voronoi()){
 #' Stem points classification
 #' @description Classify stem points of all trees in a \strong{normalized} point cloud. Stem denoising methods are prefixed by \code{stm}.
 #' @template param-las
-#' @param method stem denoising algorithm - currently available: \code{\link{stm.hough}}, \code{\link{stm.eigen.knn}} and \code{\link{stm.eigen.voxel}}.
-#' @return signed \code{LAS} object.
+#' @param method stem denoising algorithm. Currently available: \code{\link{stm.hough}}, \code{\link{stm.eigen.knn}} and \code{\link{stm.eigen.voxel}}.
+#' @template return-las
 #' @examples
 #' ### single tree
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file)
+#' tls = readTLS(file) %>% tlsNormalize
 #' tls = stemPoints(tls)
 #' plot(tls, color='Stem')
 #'
-#' ### forest plot - check the example given for the stem segmentation function
-#' ?stemSegmentation
+#' ### entire forest plot
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+#' tls = readTLS(file) %>%
+#'   tlsNormalize %>%
+#'   tlsSample
 #'
+#' map = treeMap(tls, map.hough())
+#' tls = treePoints(tls, map, trp.crop(circle=FALSE))
+#' tls = stemPoints(tls, stm.hough(pixel_size = 0.03))
+#' tlsPlot(tls)
 #' @export
 stemPoints = function(las, method = stm.hough()){
 
@@ -749,11 +771,23 @@ stemPoints = function(las, method = stm.hough()){
 
 
 #' Stem segmentation
-#' @description Measure stem segments from a classified point cloud. Stem segmentation methods are prefixed by \code{sgt}.
+#' @description Measure stem segments from a point cloud with assigned stem points. Stem segmentation methods are prefixed by \code{sgt}.
 #' @template param-las
-#' @param method stem segmentation algorithm - currently available: \code{\link{sgt.ransac.circle}}, \code{\link{sgt.ransac.cylinder}}, \code{\link{sgt.irls.circle}} and \code{\link{sgt.irls.cylinder}}.
-#' @return \code{data.table} of stem segments with \emph{stem_dt} signature.
-#' @template example-segmentation
+#' @param method stem segmentation algorithm. Currently available: \code{\link{sgt.ransac.circle}}, \code{\link{sgt.ransac.cylinder}}, \code{\link{sgt.irls.circle}}, \code{\link{sgt.irls.cylinder}} and \code{\link{sgt.bf.cylinder}}.
+#' @return signed \code{data.table} of stem segments.
+#' @template section-ransac
+#' @template section-irls
+#' @template section-circlefit
+#' @template section-cylinderfit
+#' @template section-brute-force
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file) %>%
+#'   tlsNormalize
+#'
+#' tls = stemPoints(tls, stm.hough())
+#' sgt = stemSegmentation(tls, sgt.ransac.circle(n=20))
+#' tlsPlot(tls, sgt)
 #' @export
 stemSegmentation = function(las, method=sgt.ransac.circle()){
 
@@ -767,23 +801,12 @@ stemSegmentation = function(las, method=sgt.ransac.circle()){
 }
 
 
-#' Filter points based on gpstime
-#' @description This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs relative values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
+#' Filter points based on the \code{gpstime} field
+#' @description This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as input relative values instead of absolute time stamps for filtering \code{LAS} object based on the gpstime. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
 #' @template param-las
-#' @param from,to \code{numeric} - between 0 and 1 - gpstime quantile limits to filter by
+#' @param from,to \code{numeric} - gpstime percentile thresholds (from 0 to 1) to keep points in between.
 #' @template return-las
 #' @importFrom stats quantile
-#' @examples
-#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
-#' tls = readTLS(file)
-#'
-#' ### color points according to its chronological time stamp
-#' plot(tls, color='gpstime')
-#'
-#' ### keep points registered in the 70% to 95% time interval
-#' tls = gpsTimeFilter(tls, .7, .95)
-#' plot(tls, color='gpstime')
-#'
 #' @export
 gpsTimeFilter = function(las, from=0, to=1){
 
@@ -814,26 +837,12 @@ gpsTimeFilter = function(las, from=0, to=1){
 }
 
 
-#' Rotate point cloud to fit a horizontal plane
+#' Rotate point cloud to fit a horizontal ground plane
 #' @description Check for ground points and rotates the point cloud aligning its ground surface to a horizontal plane (XY).
-#' This function is especially useful for point clouds not georreferenced or generated through mobile scanning,
-#' which might present a tilted global reference system. Since the coordinates are altered in this procedure, any
-#' geographical information is erased from the LAS' header after rotation.
+#' This function is especially useful for point clouds not georeferenced or generated through mobile scanning,
+#' which might present a tilted coordinate system.
 #' @template param-las
 #' @template return-las
-#' @examples
-#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-#' tls = readTLS(file)
-#'
-#' ### note the tilted ground
-#' plot(tls)
-#' rgl::axes3d(col='white')
-#'
-#' ### after rotation
-#' tls = tlsRotate(tls)
-#' plot(tls)
-#' rgl::axes3d(col='white')
-#'
 #' @export
 tlsRotate = function(las){
 
@@ -875,48 +884,42 @@ tlsRotate = function(las){
 }
 
 
-#' Alter point cloud's coordinates
+#' Apply simple operations to point cloud objects
 #' @description Apply transformations to the XYZ axes of a point cloud.
 #' @template param-las
-#' @param xyz \code{character} vector of length 3 - \code{las}' columns to be reassigned as XYZ, respectively.
+#' @param xyz \code{character} vector of length 3 - \code{LAS}' columns to be reassigned as XYZ, respectively.
 #' Use minus signs to mirror an axis` coordinates - more details in the sections below.
-#' @param bring_to_origin \code{logical} - force output to start at \code{c(0,0,0)}? If \code{TRUE},
-#' removes any geographical information from the output.
-#' @param rotate  \code{logical} - rotate the point cloud to align the ground points horizontally? If \code{TRUE},
-#' removes any geographical information from the output. Checkout \code{\link{tlsRotate}} for more information.
+#' @param bring_to_origin \code{logical} - force point cloud origin to match \code{c(0,0,0)}? If \code{TRUE},
+#' clears the header of the \code{LAS} object.
+#' @param rotate  \code{logical} - rotate the point cloud to align the ground points horizontally (as in \code{\link{tlsRotate}})?
 #' @template return-las
 #' @section XYZ Manipulation:
 #'
-#' The \code{xyz} argument can take a few different forms, it is useful to shift axes positions in a point cloud or
-#' to mirror an axis' coordinates. All axes characters can be entered in lower or uppercase and also be preceeded
-#' by a minus sign ('-'), indicating to invert (mirror) the axis' coordinates in the output.
-#' Check the \emph{examples} section for a practical overview.
+#' The \code{xyz} argument can take a few different forms. It is useful for shifting axes positions in a point cloud or
+#' to mirror an axis' coordinates. All axes characters can be entered in lower or uppercase and also be preceded
+#' by a minus sign ('-') to reverse its coordinates.
 #'
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file)
+#' bbox(tls)
+#' range(tls$Z)
 #'
 #' ### swap the Y and Z axes
-#' zy = tlsAlter(tls, c('x', 'z', 'y'))
+#' zy = tlsTransform(tls, c('x', 'z', 'y'))
 #' bbox(zy)
 #' range(zy$Z)
-#' plot(zy, clear_artifacts=FALSE)
-#' rgl::axes3d(col='white')
 #'
 #' ### return an upside down point cloud
-#' ud = tlsAlter(tls, c('x', 'y', '-z'))
+#' ud = tlsTransform(tls, c('x', 'y', '-z'))
 #' bbox(ud)
 #' range(ud$Z)
-#' plot(zy, clear_artifacts=FALSE)
-#' rgl::axes3d(col='white')
+#' plot(zy)
 #'
 #' ### mirror all axes, then set the point cloud's starting point as the origin
 #' rv = tlsAlter(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
 #' bbox(rv)
 #' range(rv$Z)
-#' plot(rv, clear_artifacts=FALSE)
-#' rgl::axes3d(col='white')
-#'
 #' @export
 tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, rotate = FALSE){
 
@@ -987,7 +990,8 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 #' @template param-n-ransac
 #' @template param-inliers
 #' @template param-conf
-#' @param n_best \code{numeric} - Applicable when \code{method == "ransac"}. For \code{n_best == 0}, takes the best RANSAC iteration as estimates, otherwise, it estimates the parameters as the average of \code{n_best} RANSAC iterations.
+#' @template param-n-best
+#' @return vector of parameters
 circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'qr'
@@ -1008,6 +1012,8 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
 #' @template param-inliers
 #' @template param-conf
 #' @param max_angle \code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).
+#' @template param-n-best
+#' @return vector of parameters
 cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30, n_best=20){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
@@ -1028,13 +1034,31 @@ cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle
 #' Point cloud cylinder/circle fit
 #' @description Fits a 3D cylinder or 2D circle on a set of 3D points, retrieving the optimized parameters.
 #' @param stem_segment \code{NULL} or a \code{\link[lidR:LAS]{LAS}} object with a single stem segment. When \code{NULL} returns a parameterized function to be used as input in other functions (e.g. \code{\link{tlsInventory}}).
-#' @param shape \code{character} - either \code{circle} or \code{cylinder}.
-#' @param algorithm optimization method for estimating the shape parameters. Currently available: \code{"ransac"}, \code{"irls"}, \code{"nm"}, \code{"qr"} (circle only) ,\code{"bf"} (cylinder only).
+#' @param shape \code{character}, either \code{"circle"} or \code{"cylinder"}.
+#' @param algorithm optimization method for estimating the shape's parameters. Currently available: \code{"ransac"}, \code{"irls"}, \code{"nm"}, \code{"qr"} (circle only) ,\code{"bf"} (cylinder only).
 #' @template param-n-ransac
 #' @template param-conf
 #' @template param-inliers
 #' @template param-n-best
 #' @template param-z-dev
+#' @details
+#' The \code{ransac} and \code{irls} methods are \emph{robust}, which means they estimate the circle/cylinder parameters in a way
+#' that takes into consideration outlier effects (noise). If the input data is already noise free,
+#' the \code{nm} or \code{qr} algorithms can be used with as good reliability, while being much faster.
+#' @template section-circlefit
+#' @template section-cylinderfit
+#' @template section-ransac
+#' @template section-irls
+#' @template section-brute-force
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file)
+#' segment = filter_poi(tls, Z > 1 & Z < 2)
+#' pars = shapeFit(segment, shape='circle', algorithm='irls')
+#'
+#' segment@data %$% plot(Y ~ X, pch=20, asp=1)
+#' pars %$% points(X,Y,col='red', pch=3, cex=2)
+#' pars %$% lines(c(X,X+Radius),c(Y,Y), col='red',lwd=2,lty=2)
 #' @export
 shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10, conf=0.95, inliers=0.9, n_best = 10, z_dev = 30){
 
@@ -1107,12 +1131,25 @@ shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10,
 
 
 #' Extract forest inventory metrics from a point cloud
-#' @description Estimation of diameter and height tree-wise.
-#' @param las normalized \code{\link[lidR:LAS]{LAS}} object - single tree or forest plot with stem points marked by \code{\link{stemPoints}}.
-#' @param dh \code{numeric} - height layer (above ground) from which to estimate stem diameters.
-#' @param dw \code{numeric} - height layer width.
-#' @param hp \code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height.
-#' @param d_method parameterized \code{\link{shapeFit}} function - method to use for diameter estimation.
+#' @description Estimation of diameter and height tree-wise for normalized point clouds with assigned stem points.
+#' @template param-las
+#' @param dh \code{numeric} - height layer (above ground) to estimate stem diameters, in point cloud units.
+#' @param dw \code{numeric} - height layer width, in point cloud units.
+#' @param hp \code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height, i.e. the highest point.
+#' @param d_method parameterized \code{\link{shapeFit}} function, i.e. method to use for diameter estimation.
+#' @examples
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+#' tls = readTLS(file) %>%
+#'   tlsNormalize %>%
+#'   tlsSample
+#'
+#' map = treeMap(tls, map.hough())
+#' tls = treePoints(tls, map, trp.crop(circle=FALSE))
+#' tls = stemPoints(tls, stm.hough())
+#'
+#' dmt = shapeFit(shape = 'circle', algorithm='ransac', n=20)
+#' inv = tlsInventory(tls, d_method = dmt)
+#' tlsPlot(tls, inv)
 #' @export
 tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(shape = 'circle', algorithm='ransac', n=15, n_best = 20)){
 
@@ -1167,36 +1204,43 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 
 
 #' Plot \emph{TreeLS} outputs
-#' @description Plot the \code{LAS} outputs of tls functions on the same scene using \code{rgl}. Check ?stemSegmentation
-#' for usage examples.
-#' @param las \code{LAS} object - ideally an output from \code{\link{stemPoints}}.
-#' @param sgmt optional \code{data.table} - output from \code{\link{stemSegmentation}}.
-#' @param map optional \code{LAS} object - output from \code{\link{treeMap}}.
-#' @param tree_id optional \code{numeric} - single \emph{TreeID} to extract from \code{las}.
-#' @param color optional - color of the plotted stem segment representations.
+#' @description Plot the outputs of \emph{TreeLS} methods on the same scene using \code{rgl}.
+#' @param ... in \code{tlsPlot}: any object returned from a \emph{TreeLS} method. In the \code{add_*} methods: parameters passed down to 3D plotting \code{rgl} functions.
+#' @param fast \code{logical}, use \code{TRUE} to plot spheres representing tree diameters or \code{FALSE} to plot detailed 3D cylinders.
+#' @param tree_id \code{numeric} - plot only the tree matching this tree id.
+#' @param segment \code{numeric} - plot only stem segments matching this segment id.
+#' @template param-las
+#' @param color_func color palette function used in \code{add_treePoints}.
+#' @param stems_data_table,inventory_data_table \code{data.table} objects generated by \code{stemSegmentation} and \code{tlsInventory}.
 #' @examples
-#' ### single tree
-#' file = system.file("extdata", "spruce.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' tls = stemPoints(tls)
-#' df = stemSegmentation(tls)
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file) %>%
+#'   tlsNormalize %>%
+#'   stemPoints(stm.hough())
 #'
-#' tlsPlot(tls, df)
+#' dmt = shapeFit(shape = 'circle', algorithm='ransac', n=20)
+#' inv = tlsInventory(tls, d_method = dmt)
 #'
-#' ### For further examples check:
-#' ?stemSegmentation
+#' ### quick plot
+#' tlsPlot(tls, inv)
+#'
+#' ### customizable plots
+#' x = plot(tls)
+#' add_stemPoints(x, tls, color='red', size=3)
+#' add_tlsInventory(x, inv, color='yellow')
+#' add_segmentIDs(x, tls, color='white', cex=2, pos=4)
 #' @export
 tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
-  tls = as.list(match.call(expand.dots = F))[['...']]
+  .tls_dots_list = as.list(match.call(expand.dots = F))[['...']]
 
-  for(i in 1:length(tls)){
-    obj = tls[[i]] %>% as.character %>% get
+  for(i in 1:length(.tls_dots_list)){
+    obj = .tls_dots_list[[i]] %>% as.character %>% get
     tp = class(obj)[1]
     if(!(tp %in% c('LAS', 'data.table', 'data.frame'))){
       stop('input data must be either LAS or data.table objects.')
     }
-    tls[[i]] = obj
+    .tls_dots_list[[i]] = obj
   }
 
   seg_ids = FALSE
@@ -1224,7 +1268,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
   open3d()
   bg3d('black')
 
-  for(las in tls){
+  for(las in .tls_dots_list){
     if(class(las)[1] == 'LAS'){
 
       if(hasField(las, 'TreeID') && !is.null(tree_id)){
@@ -1275,7 +1319,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
   }
 
   pan3d(2)
-
+  return(0)
 }
 
 
@@ -1283,11 +1327,11 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
 
 #' EXPERIMENTAL: Point cloud multiple circle fit
-#' @description Searches and fits circles multiple 2D circles on a point cloud layer from a single tree.
+#' @description Search and fit multiple 2D circles on a point cloud layer from a single tree, i.e. a forked stem segment.
 #' @param dlas \code{\link[lidR:LAS]{LAS}} object.
 #' @template param-pixel-size
 #' @template param-max-radius
-#' @param votes_percentile \code{numeric} - votes filter criterion for isolating nearby stems.
+#' @param votes_percentile \code{numeric} - use only estimates with more votes than \code{votes_percentile}.
 #' @template param-min-density
 #' @param plot \code{logical} - plot the results?
 #' @export
@@ -1346,7 +1390,7 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_radius = .2, votes_percent
   }
 
   if(plot){
-    plot(dlas$Y ~ dlas$X, cex=.5, asp=1, pch=20, ylab='Y (m)', xlab='X (m)')#, ...)
+    plot(dlas$Y ~ dlas$X, cex=.5, asp=1, pch=20, ylab='Y', xlab='X')#, ...)
     vcols = lidR:::set.colors(hough_clusters$v, height.colors(hough_clusters$v %>% unique %>% length))
     vcols = lidR:::set.colors(hough_clusters$clt, height.colors(hough_clusters$clt %>% unique %>% length))
     points(hough_clusters$x, hough_clusters$y, col=vcols, pch=20, cex=1)
@@ -1366,7 +1410,7 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_radius = .2, votes_percent
     if(is.null(est)) next
 
     dst = cld@data %$% sqrt( (X - est$X)^2 + (Y - est$Y)^2 )
-    rad = est$d / 200
+    rad = est$radius
     thickness = ifelse(rad/2 > pixel_size, pixel_size,  rad/2)
 
     inner = dst <= thickness
@@ -1406,6 +1450,8 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_radius = .2, votes_percent
       xr = est$X + cos(angs) * est$radius
       yr = est$Y + sin(angs) * est$radius
       lines(xr,yr,col='green',lwd=2)
+
+      legend('topright', lty=c(1,1), lwd=2, col=c('orange', 'green'), legend = c('Hough Transform', 'RANSAC circle'))
     }
   }
 

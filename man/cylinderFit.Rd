@@ -25,7 +25,12 @@ cylinderFit(
 
 \item{max_angle}{\code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).}
 
+\item{n_best}{\code{integer} - estimate optimal RANSAC parameters as the median of the \code{n_best} estimations with lowest error.}
+
 \item{conf}{\code{numeric} - confidence level.}
+}
+\value{
+vector of parameters
 }
 \description{
 Fits a cylinder on a set of 3D points.

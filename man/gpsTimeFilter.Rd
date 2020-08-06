@@ -2,30 +2,18 @@
 % Please edit documentation in R/methods.R
 \name{gpsTimeFilter}
 \alias{gpsTimeFilter}
-\title{Filter points based on gpstime}
+\title{Filter points based on the \code{gpstime} field}
 \usage{
 gpsTimeFilter(las, from = 0, to = 1)
 }
 \arguments{
 \item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{from, to}{\code{numeric} - between 0 and 1 - gpstime quantile limits to filter by}
+\item{from, to}{\code{numeric} - gpstime percentile thresholds (from 0 to 1) to keep points in between.}
 }
 \value{
 \code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as inputs relative values instead of absolute time stamp values for filtering a point cloud object based on the gpstime field. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
-}
-\examples{
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
-tls = readTLS(file)
-
-### color points according to its chronological time stamp
-plot(tls, color='gpstime')
-
-### keep points registered in the 70\% to 95\% time interval
-tls = gpsTimeFilter(tls, .7, .95)
-plot(tls, color='gpstime')
-
+This is a simple wrapper to \code{\link[lidR:filter_poi]{filter_poi}} that takes as input relative values instead of absolute time stamps for filtering \code{LAS} object based on the gpstime. This function is particularly useful to check narrow intervals of point cloud frames from mobile scanning data.
 }

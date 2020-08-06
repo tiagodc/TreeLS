@@ -13,9 +13,9 @@ tlsCrop(las, x, y, len, circle = TRUE, negative = FALSE)
 
 \item{len}{\code{numeric} -  if \code{circle = TRUE}, \code{len} is the circle's radius, otherwise it is the side length of a square.}
 
-\item{circle}{\code{logical} -  if \code{TRUE} (default), crops a circle, otherwise a square.}
+\item{circle}{\code{logical} -  crops a circle (if \code{TRUE}) or a square.}
 
-\item{negative}{\code{logical} - if \code{TRUE}, returns all points outside the specified circle/square perimeter, otherwise returns all points inside the circle/square (default).}
+\item{negative}{\code{logical} - if \code{TRUE}, returns all points **outside** the specified circle/square perimeter.}
 }
 \value{
 \code{\link[lidR:LAS]{LAS}} object.

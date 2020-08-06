@@ -1,12 +1,12 @@
 #' @examples
-#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
-#' tls = readTLS(file)
-#' plot(tls)
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+#' tls = readTLS(file) %>%
+#'   tlsNormalize %>%
+#'   tlsSample
 #'
-#' ## build a 3D map of tree occurrences
-#' map = treeMap(tls)
-#' plot(map, color='Radii')
+#' x = plot(tls)
 #'
-#' ## get a 2D representation of the tree map
+#' map = treeMap(tls, map.hough(h_step = 1, max_h = 4))
+#' add_treeMap(x, map, color='red')
+#'
 #' xymap = treeMap.positions(map)
-#' head(xymap)

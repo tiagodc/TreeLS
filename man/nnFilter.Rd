@@ -11,19 +11,19 @@ nnFilter(las, d = 0.05, n = 2)
 
 \item{d}{\code{numeric} - search radius.}
 
-\item{n}{\code{integer} - number of nearest points to search within \code{d} radius.}
+\item{n}{\code{numeric} - number of neighbors within \code{d} distance a point must have to be kept in the output.}
 }
 \value{
 \code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Remove points from a \code{LAS} point cloud based on nearest neighborhood metrics.
+Remove points from a \code{LAS} point cloud based on their neighborhood distances.
 }
 \examples{
 file = system.file("extdata", "spruce.laz", package="TreeLS")
 tls = readTLS(file)
-summary(tls)
+nrow(tls@data)
 
 nn_tls = nnFilter(tls, 0.05, 3)
-summary(nn_tls)
+nrow(nn_tls@data)
 }

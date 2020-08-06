@@ -9,18 +9,20 @@ readTLS(file, col_names = NULL, ...)
 \arguments{
 \item{file}{file path.}
 
-\item{col_names}{optional - \code{character} vector. Only used for table-like files. It states the column names. If not set, only the 3 first columns will be used and assigned to the XYZ fields.}
+\item{col_names}{optional - \code{character} vector. Only used for table-like objects. It states the column names. If not set, only the 3 first columns will be used and assigned to the XYZ fields.}
 
-\item{...}{further arguments passed to \code{readLAS}, \code{read.las} or \code{fread}.}
+\item{...}{further arguments passed down to \code{readLAS}, \code{read.las} or \code{fread}.}
 }
 \value{
 \code{\link[lidR:LAS]{LAS}} object.
 }
 \description{
-Wrapper to read point clouds straight to LAS objects suitable for TLS applications. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}} and \emph{ply} files with \code{\link[rlas:read.las]{read.las}}. Other file formats are (or try to be) read using \code{\link[data.table:fread]{fread}}.
+Wrapper to read point cloud files straight into LAS objects. Reads \emph{las} or \emph{laz} files with \code{\link[lidR:readLAS]{readLAS}}, \emph{ply} files with \code{\link[rlas:read.las]{read.las}} and other file formats with \code{\link[data.table:fread]{fread}} (txt, xyz, 3d or any other table like format).
 }
 \examples{
-file = system.file("extdata", "pine.laz", package="TreeLS")
+cloud = matrix(runif(300), ncol=3)
+file = 'random_points.txt'
+fwrite(cloud, file)
 tls = readTLS(file)
 summary(tls)
 }

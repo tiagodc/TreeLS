@@ -7,15 +7,15 @@
 fastPointMetrics.available(enable = ENABLED_POINT_METRICS$names)
 }
 \arguments{
-\item{enable}{optional \code{integer} or \code{character} vector. Indices or names of the metrics you want to 
-enable globally. Enabled metrics are calculated everytime you run \code{\link{fastPointMetrics}}. By default, 
-only metrics used internally in other \emph{TreeLS} methods are enabled.}
+\item{enable}{optional \code{integer} or \code{character} vector containing indices or names of the metrics you want to
+enable globally. Enabled metrics are calculated every time you run \code{\link{fastPointMetrics}} by default.
+Only metrics used internally in other \emph{TreeLS} methods are enabled out-of-the-box.}
 }
 \value{
 \code{character} vector of all metrics.
 }
 \description{
-Print available point metrics for \code{\link{fastPointMetrics}}.
+Print the list of available metrics for \code{\link{fastPointMetrics}}.
 }
 \section{List of available point metrics}{
 

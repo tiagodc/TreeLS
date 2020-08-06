@@ -13,16 +13,30 @@ tlsInventory(
 )
 }
 \arguments{
-\item{las}{normalized \code{\link[lidR:LAS]{LAS}} object - single tree or forest plot with stem points marked by \code{\link{stemPoints}}.}
+\item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{dh}{\code{numeric} - height layer (above ground) from which to estimate stem diameters.}
+\item{dh}{\code{numeric} - height layer (above ground) to estimate stem diameters, in point cloud units.}
 
-\item{dw}{\code{numeric} - height layer width.}
+\item{dw}{\code{numeric} - height layer width, in point cloud units.}
 
-\item{hp}{\code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height.}
+\item{hp}{\code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height, i.e. the highest point.}
 
-\item{d_method}{parameterized \code{\link{shapeFit}} function - method to use for diameter estimation.}
+\item{d_method}{parameterized \code{\link{shapeFit}} function, i.e. method to use for diameter estimation.}
 }
 \description{
-Estimation of diameter and height tree-wise.
+Estimation of diameter and height tree-wise for normalized point clouds with assigned stem points.
+}
+\examples{
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+tls = readTLS(file) \%>\%
+  tlsNormalize \%>\%
+  tlsSample
+
+map = treeMap(tls, map.hough())
+tls = treePoints(tls, map, trp.crop(circle=FALSE))
+tls = stemPoints(tls, stm.hough())
+
+dmt = shapeFit(shape = 'circle', algorithm='ransac', n=20)
+inv = tlsInventory(tls, d_method = dmt)
+tlsPlot(tls, inv)
 }

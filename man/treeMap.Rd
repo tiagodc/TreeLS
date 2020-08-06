@@ -9,11 +9,11 @@ treeMap(las, method = map.hough(), merge = 0.2, positions_only = FALSE)
 \arguments{
 \item{las}{\code{\link[lidR:LAS]{LAS}} object.}
 
-\item{method}{tree mapping algorithm - currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.}
+\item{method}{tree mapping algorithm. Currently available: \code{\link{map.hough}}, \code{\link{map.eigen.knn}}, \code{\link{map.eigen.voxel}} and \code{\link{map.pick}}.}
 
-\item{merge}{\code{numeric} - parameter passed to \code{\link{treeMap.merge}}.}
+\item{merge}{\code{numeric} - parameter passed down to \code{\link{treeMap.merge}} (if \code{merge > 0}).}
 
-\item{positions_only}{\code{logical} - if \code{TRUE} returns a 3D \code{LAS} object, otherwise returns a 2D tree map as a \code{data.table}.}
+\item{positions_only}{\code{logical} - if \code{TRUE} returns only a 2D tree map as a \code{data.table}.}
 }
 \value{
 signed \code{LAS} or \code{data.table}.
@@ -22,15 +22,15 @@ signed \code{LAS} or \code{data.table}.
 Estimates tree occurrence regions from a \strong{normalized} point cloud. Tree mapping methods are prefixed by \code{map}.
 }
 \examples{
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
-tls = readTLS(file)
-plot(tls)
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+tls = readTLS(file) \%>\%
+  tlsNormalize \%>\%
+  tlsSample
 
-## build a 3D map of tree occurrences
-map = treeMap(tls)
-plot(map, color='Radii')
+x = plot(tls)
 
-## get a 2D representation of the tree map
+map = treeMap(tls, map.hough(h_step = 1, max_h = 4))
+add_treeMap(x, map, color='red')
+
 xymap = treeMap.positions(map)
-head(xymap)
 }
