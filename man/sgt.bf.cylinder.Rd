@@ -14,85 +14,30 @@ sgt.bf.cylinder(tol = 0.1, n = 10, conf = 0.95, inliers = 0.9, z_dev = 30)
 \item{conf}{\code{numeric} - confidence level.}
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
+
+\item{z_dev}{\code{numeric} - maximum angle deviation for brute force cylinder estimation (\code{bf}), i.e. angle, in degrees (0-90), that a cylinder can be tilted in relation to a perfect vertival axis (\code{Z = c(0,0,1)}).}
 }
 \description{
 This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares cylinder fit algorithm in a RANSAC fashion over stem segments. More details are given in the sections below.
 }
-\section{Output Fields}{
+\section{Brute Force Cylinder Fit}{
 
 
+The brute force cylinder fit approach estimates the axis rotation
+angles by brute force combined with 2D ransac circle fit. The coordinates
+of a point cloud representing a single cylinder are iteratively rotated up
+to a pre defined threshold, and for every iteration a circle is estimated after
+rotation is performed. The rotation that minimizes the circle parameters the most
+is used to describe the axis direction of the cylinder with the circle's radius.
+
+The parameters returned by the brute force cylinder fit method are:
 \itemize{
-\item \code{TreeID}:  unique tree IDs - available only for multiple stems
-\item \code{Segment}: stem segment number (from bottom to top)
-\item \code{X}, \code{Y}: circle center coordinates
-\item \code{Radius}: estimated circles radii
-\item \code{Error}: least squares circle fit error
-\item \code{AvgHeight}: average height of stem segments
-\item \code{N}: number of points in the stem segments
-}
-}
-
-\section{Least Squares Circle Fit}{
-
-
-The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
-from a pre-selected (denoised) set of points in a least squares fashion 
-by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
-with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex} 
-optimization combined the IRLS approach.
+   \item \code{X,Y}: 2D circle center coordinates after rotation
+   \item \code{Radius}: 3D circle radius, in point cloud units
+   \item \code{Error}: model circle error from the RANSAC least squares fit, after rotation
+   \item \code{DX,DY}: absolute rotation angles (in degrees) applied to the X and Y axes, respectively
+   \item \code{AvgHeight}: average height of the stem segment's points
+   \item \code{N}: number of points belonging to the stem segment
+ }
 }
 
-\section{Random Sample Consensus (RANSAC) Algorithm}{
-
-
-\loadmathjax
-
-The \strong{RAN}dom \strong{SA}mple \strong{C}onsensus algorithm is a method that relies on resampling 
-a data set as many times as necessary to find a subset comprised of only inliers - e.g. observations
-belonging to a desired model. The RANSAC algorithm provides a way of estimating the necessary number of
-iterations necessary to fit a model using inliers only, at least once, as shown in the equation:
-\mjdeqn{k = log(1 - p) / log(1 - w^{n})}{}
-where:
-\itemize{
-\item \emph{k}: number of iterations
-\item \emph{p}: confidence level, i.e. desired probability of success 
-\item \emph{w}: proportion of inliers expected in the \emph{full} dataset
-\item \emph{n}: number of observations sampled on every iteration
-}
-
-The models reiterated in \emph{TreeLS} usually relate to circle or cylinder 
-fitting over a set of 3D coordinates, selecting the best possible model through the RANSAC algorithm
-
-For more information, checkout \href{https://en.wikipedia.org/wiki/Random_sample_consensus}{this wikipedia page}.
-}
-
-\examples{
-### single tree
-file = system.file("extdata", "pine.laz", package="TreeLS")
-tls = readTLS(file)
-tls = stemPoints(tls)
-df = stemSegmentation(tls)
-
-head(df)
-tlsPlot(tls, df)
-
-### forest plot
-file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-tls = readTLS(file)
-
-# normalize the point cloud
-tls = tlsNormalize(tls)
-
-# map the trees on a resampled point cloud so all trees have approximately the same point density
-thin = tlsSample(tls, voxelize(0.02))
-map = treeMap(thin, map.hough(min_density = 0.05))
-
-tls = stemPoints(tls, map)
-df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
-
-head(df)
-tlsPlot(tls, df, map)
-}
-\references{
-Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
-}

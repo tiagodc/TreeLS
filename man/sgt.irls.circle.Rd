@@ -9,8 +9,44 @@ sgt.irls.circle(tol = 0.1, n = 500)
 \arguments{
 \item{tol}{\code{numeric} - tolerance offset between absolute radii estimates and hough transform estimates.}
 
-\item{n}{\code{numeric} - maximum number of points to sample when fitting a stem segment.}
+\item{n}{\code{numeric} - maximum number of points to sample for fitting stem segments.}
 }
 \description{
 This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a reweighted least squares circle fit algorithm using M-estimators in order to remove outlier effects.
+}
+\section{Iterative Reweighted Least Squares (IRLS) Algorithm}{
+
+
+\emph{irls} \code{circle} or \code{cylinder} estimation methods 
+perform automatic outlier assigning through iterative reweighting
+with M-estimators, followed by a Nelder-Mead optimization of squared distance sums
+to determine the best circle/cylinder parameters for a given point
+cloud. The reweighting strategy used in \emph{TreeLS} is based on 
+Liang et al. (2012). The Nelder-Mead algorithm implemented in Rcpp was provided by 
+\href{https://github.com/kthohr/optim}{kthohr/optim}.
+}
+
+\section{Least Squares Circle Fit}{
+
+
+The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius)
+from a pre-selected (denoised) set of points in a least squares fashion
+by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}
+optimization combined the IRLS approach.
+
+The parameters returned by the circle fit methods are:
+\itemize{
+   \item \code{X,Y}: 2D circle center coordinates
+   \item \code{Radius}: 2D circle radius, in point cloud units
+   \item \code{Error}: model circle error from the least squares fit
+   \item \code{AvgHeight}: average height of the stem segment's points
+   \item \code{N}: number of points belonging to the stem segment
+ }
+}
+
+\references{
+Liang, X. et al., 2012. Automatic stem mapping using single-scan terrestrial laser scanning. IEEE Transactions on Geoscience and Remote Sensing, 50(2), pp.661–670.
+
+Conto, T. et al., 2017. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176.
 }

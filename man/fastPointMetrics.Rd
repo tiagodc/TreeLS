@@ -91,5 +91,5 @@ plot(tls, color='Linearity')
 \references{
 Wang, D.; Hollaus, M.; Pfeifer, N., 2017. Feasibility of machine learning methods for separating wood and leaf points from terrestrial laser scanning data. ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, Volume IV-2/W4.
 
-Zhou et al. 2019. Separating leaf and wood points in terrestrial scanning data using multiple optimal scales. Sensors, 19, 1852.
+Zhou, J. et. al., 2019. Separating leaf and wood points in terrestrial scanning data using multiple optimal scales. Sensors, 19(8):1852.
 }

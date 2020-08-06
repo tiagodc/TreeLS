@@ -21,3 +21,13 @@ require(glue)
 rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Stem', 'Segment', 'gpstime', 'AvgHeight', 'Radius'))
 
 ###################
+require(TreeLS)
+
+tls = readTLS('inst/extdata/pine.laz') %>%
+  tlsNormalize() %>%
+  stemPoints(stm.eigen.knn())
+
+segs = stemSegmentation(tls, sgt.bf.cylinder())
+
+chunk = filter_poi(tls, Segment == 5 & Stem)
+shapeFit(chunk, 'circle', 'irls')

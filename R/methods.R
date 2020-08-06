@@ -776,11 +776,18 @@ stemPoints = function(las, method = stm.hough()){
 #' @template param-las
 #' @param method stem segmentation algorithm. Currently available: \code{\link{sgt.ransac.circle}}, \code{\link{sgt.ransac.cylinder}}, \code{\link{sgt.irls.circle}}, \code{\link{sgt.irls.cylinder}} and \code{\link{sgt.bf.cylinder}}.
 #' @return signed \code{data.table} of stem segments.
+#' @details
+#' All stem segmentation algorithms return estimations for every stem \code{Segment} of every \code{TreeID}
+#' (if the input \code{LAS} has multiple trees). For more details and a list of all outputs for each method check
+#' the sections below.
 #' @template section-ransac
 #' @template section-irls
 #' @template section-circlefit
 #' @template section-cylinderfit
 #' @template section-brute-force
+#' @template reference-liang
+#' @template reference-olofsson
+#' @template reference-thesis
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file) %>%

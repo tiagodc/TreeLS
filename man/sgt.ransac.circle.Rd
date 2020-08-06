@@ -18,30 +18,6 @@ sgt.ransac.circle(tol = 0.1, n = 10, conf = 0.99, inliers = 0.8)
 \description{
 This function is meant to be used inside \code{\link{stemSegmentation}}. It applies a least squares circle fit algorithm in a RANSAC fashion over stem segments. More details are given in the sections below.
 }
-\section{Output Fields}{
-
-
-\itemize{
-\item \code{TreeID}:  unique tree IDs - available only for multiple stems
-\item \code{Segment}: stem segment number (from bottom to top)
-\item \code{X}, \code{Y}: circle center coordinates
-\item \code{Radius}: estimated circles radii
-\item \code{Error}: least squares circle fit error
-\item \code{AvgHeight}: average height of stem segments
-\item \code{N}: number of points in the stem segments
-}
-}
-
-\section{Least Squares Circle Fit}{
-
-
-The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
-from a pre-selected (denoised) set of points in a least squares fashion 
-by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
-with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex} 
-optimization combined the IRLS approach.
-}
-
 \section{Random Sample Consensus (RANSAC) Algorithm}{
 
 
@@ -66,33 +42,27 @@ fitting over a set of 3D coordinates, selecting the best possible model through 
 For more information, checkout \href{https://en.wikipedia.org/wiki/Random_sample_consensus}{this wikipedia page}.
 }
 
-\examples{
-### single tree
-file = system.file("extdata", "pine.laz", package="TreeLS")
-tls = readTLS(file)
-tls = stemPoints(tls)
-df = stemSegmentation(tls)
+\section{Least Squares Circle Fit}{
 
-head(df)
-tlsPlot(tls, df)
 
-### forest plot
-file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-tls = readTLS(file)
+The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius)
+from a pre-selected (denoised) set of points in a least squares fashion
+by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}
+optimization combined the IRLS approach.
 
-# normalize the point cloud
-tls = tlsNormalize(tls)
-
-# map the trees on a resampled point cloud so all trees have approximately the same point density
-thin = tlsSample(tls, voxelize(0.02))
-map = treeMap(thin, map.hough(min_density = 0.05))
-
-tls = stemPoints(tls, map)
-df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
-
-head(df)
-tlsPlot(tls, df, map)
+The parameters returned by the circle fit methods are:
+\itemize{
+   \item \code{X,Y}: 2D circle center coordinates
+   \item \code{Radius}: 2D circle radius, in point cloud units
+   \item \code{Error}: model circle error from the least squares fit
+   \item \code{AvgHeight}: average height of the stem segment's points
+   \item \code{N}: number of points belonging to the stem segment
+ }
 }
+
 \references{
-Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
+Olofsson, K., Holmgren, J. & Olsson, H., 2014. Tree stem and height measurements using terrestrial laser scanning and the RANSAC algorithm. Remote Sensing, 6(5), pp.4323–4344.
+
+Conto, T. et al., 2017. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176.
 }

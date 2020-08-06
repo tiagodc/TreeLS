@@ -43,11 +43,20 @@ the \code{nm} or \code{qr} algorithms can be used with as good reliability, whil
 \section{Least Squares Circle Fit}{
 
 
-The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius) 
-from a pre-selected (denoised) set of points in a least squares fashion 
+The circle fit methods applied in \emph{TreeLS} estimate the circle parameters (its center's XY coordinates and radius)
+from a pre-selected (denoised) set of points in a least squares fashion
 by applying either \href{https://en.wikipedia.org/wiki/QR_decomposition}{QR decompostion}, used in combination
-with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex} 
+with the RANSAC algorithm, or \href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}
 optimization combined the IRLS approach.
+
+The parameters returned by the circle fit methods are:
+\itemize{
+   \item \code{X,Y}: 2D circle center coordinates
+   \item \code{Radius}: 2D circle radius, in point cloud units
+   \item \code{Error}: model circle error from the least squares fit
+   \item \code{AvgHeight}: average height of the stem segment's points
+   \item \code{N}: number of points belonging to the stem segment
+ }
 }
 
 \section{Least Squares Cylinder Fit}{
@@ -56,10 +65,10 @@ optimization combined the IRLS approach.
 \loadmathjax
 
 The cylinder fit methods implemented in \emph{TreeLS} estimate a 3D
-cylinder`s axis direction and radius. The algorithm used internally 
+cylinder`s axis direction and radius. The algorithm used internally
 to optimize the cylinder parameters is the
-\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex}, 
-which takes as objective function the model describing the distance from any point 
+\href{https://en.wikipedia.org/wiki/Nelder-Mead_method}{Nelder-Mead simplex},
+which takes as objective function the model describing the distance from any point
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 
 \mjdeqn{D_{p} = |(p - q) \times a| - r}{}
@@ -76,6 +85,16 @@ where:
 
 The Nelder-Mead algorithm minimizes the sum of squared \emph{Dp} from
 a set of points belonging to a stem segment - in the context of \emph{TreeLS}.
+
+The parameters returned by the cylinder fit methods are:
+\itemize{
+   \item \code{rho,theta,phi,alpha}: 3D cylinder estimated axis parameters (Liang et al. 2012)
+   \item \code{Radius}: 3D cylinder radius, in point cloud units
+   \item \code{Error}: model cylinder error from the least squares fit
+   \item \code{AvgHeight}: average height of the stem segment's points
+   \item \code{N}: number of points belonging to the stem segment
+   \item \code{PX,PY,PZ}: absolute center positions of the stem segment points, in point cloud units (used for plotting)
+ }
 }
 
 \section{Random Sample Consensus (RANSAC) Algorithm}{
@@ -110,7 +129,7 @@ perform automatic outlier assigning through iterative reweighting
 with M-estimators, followed by a Nelder-Mead optimization of squared distance sums
 to determine the best circle/cylinder parameters for a given point
 cloud. The reweighting strategy used in \emph{TreeLS} is based on 
-Liang et al. (2012).The Nelder-Mead algorithm implemented in Rcpp was provided by 
+Liang et al. (2012). The Nelder-Mead algorithm implemented in Rcpp was provided by 
 \href{https://github.com/kthohr/optim}{kthohr/optim}.
 }
 
@@ -120,9 +139,19 @@ Liang et al. (2012).The Nelder-Mead algorithm implemented in Rcpp was provided b
 The brute force cylinder fit approach estimates the axis rotation
 angles by brute force combined with 2D ransac circle fit. The coordinates
 of a point cloud representing a single cylinder are iteratively rotated up
-to a pre defined threshold, and for every iteration a circle is estimated after 
+to a pre defined threshold, and for every iteration a circle is estimated after
 rotation is performed. The rotation that minimizes the circle parameters the most
 is used to describe the axis direction of the cylinder with the circle's radius.
+
+The parameters returned by the brute force cylinder fit method are:
+\itemize{
+   \item \code{X,Y}: 2D circle center coordinates after rotation
+   \item \code{Radius}: 3D circle radius, in point cloud units
+   \item \code{Error}: model circle error from the RANSAC least squares fit, after rotation
+   \item \code{DX,DY}: absolute rotation angles (in degrees) applied to the X and Y axes, respectively
+   \item \code{AvgHeight}: average height of the stem segment's points
+   \item \code{N}: number of points belonging to the stem segment
+ }
 }
 
 \examples{
@@ -140,5 +169,5 @@ Liang, X. et al., 2012. Automatic stem mapping using single-scan terrestrial las
 
 Olofsson, K., Holmgren, J. & Olsson, H., 2014. Tree stem and height measurements using terrestrial laser scanning and the RANSAC algorithm. Remote Sensing, 6(5), pp.4323–4344.
 
-Conto, T. ; Olofsson, K. ; Gorgens, E. B. ; Rodriguez, L. C. E. ; Almeida, G. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176, 2017.
+Conto, T. et al., 2017. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176.
 }
