@@ -1,5 +1,5 @@
-#' Tree points algorithm: define tree regions by voronoi polygons.
-#' @description This function is meant to be used inside \code{\link{treePoints}}. Assign all points to a \emph{TreeID}, based on their closest \code{\link{treeMap}} coordinate.
+#' Tree points algorithm: voronoi polygons.
+#' @description This function is meant to be used inside \code{\link{treePoints}}. Assign **all** points to a \code{TreeID} based on their closest \code{\link{treeMap}} coordinate.
 #' @importFrom dismo voronoi
 #' @export
 trp.voronoi = function(){
@@ -28,10 +28,10 @@ trp.voronoi = function(){
 }
 
 
-#' Tree points algorithm: define tree regions on fixed areas.
-#' @description This function is meant to be used inside \code{\link{treePoints}}. Assign points to a \emph{TreeID} inside circles/squares of fixed area around \code{\link{treeMap}} coordinates.
+#' Tree points algorithm: fixed size patches.
+#' @description This function is meant to be used inside \code{\link{treePoints}}. Assign points to a \code{TreeID} inside circles/squares of fixed area around \code{\link{treeMap}} coordinates.
 #' @param l \code{numeric} - circle radius or square side length.
-#' @param circle \code{logical} - assign \emph{TreeID}s inside circles (TRUE) or squares (FALSE)?
+#' @param circle \code{logical} - assign \code{TreeID}s to circular (\code{TRUE}) or squared (\code{FALSE}) patches.
 #' @export
 trp.crop = function(l = 1, circle=TRUE){
   func = function(las, xymap){
