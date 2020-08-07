@@ -1191,7 +1191,7 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
   }
 
   hfunc = function(Z,p) as.double(quantile(Z, p))
-  dfunc = function(X,Y,Z) d_method(suppressMessages(LAS(data.table(X,Y,Z))))
+  dfunc = function(X,Y,Z){ if(length(X) < 3) return(NULL); d_method(suppressMessages(LAS(data.table(X,Y,Z)))) }
 
   dlas = filter_poi(las, Stem & Z > (dh - dw/2) & Z < (dh + dw/2))
 
