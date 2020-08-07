@@ -15,13 +15,13 @@ map.hough(
 )
 }
 \arguments{
-\item{min_h, max_h}{\code{numeric} - height thresholds within the point cloud in which circle search will be performed.}
+\item{min_h, max_h}{\code{numeric} - height thresholds applied to filter a point cloud before processing.}
 
 \item{h_step}{\code{numeric} - height interval to perform point filtering/assignment/classification.}
 
 \item{pixel_size}{\code{numeric} - pixel side length to discretize the point cloud layers while performing the Hough Transform circle search.}
 
-\item{max_d}{\code{numeric} - maximum diameter tolerated for a tree segment.}
+\item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
 \item{min_density}{\code{numeric} - between 0 and 1 - minimum point density within a pixel evaluated on the Hough Transform - i.e. only \emph{dense} point clousters will undergo circle search.}
 
@@ -45,7 +45,7 @@ The variables describing each point in the output are:
 of its stem segment (\code{PointSourceID})
 \item \code{Radii}: approximate radius estimated by that point - always a multiple of the \code{pixel_size}
 \item \code{TreeID}: unique tree ID of the point
-\item \code{TreePosition}: if \code{TRUE}, the point represents its tree's approximate coordinate
+\item \code{TreePosition}: if \code{TRUE}, the point represents the tree's position coordinate
 }
 }
 

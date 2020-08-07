@@ -23,11 +23,9 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 require(TreeLS)
 
-tls = readTLS('inst/extdata/pine.laz') %>%
-  tlsNormalize() %>%
-  stemPoints(stm.eigen.knn())
+file = system.file("extdata", "spruce.laz", package="TreeLS")
+tls = readTLS(file) %>%
+  tlsNormalize %>%
+  stemPoints(stm.hough(h_base = c(.5,2)))
 
-segs = stemSegmentation(tls, sgt.bf.cylinder())
-
-chunk = filter_poi(tls, Segment == 5 & Stem)
-shapeFit(chunk, 'circle', 'irls')
+plot(tls, color='Stem')

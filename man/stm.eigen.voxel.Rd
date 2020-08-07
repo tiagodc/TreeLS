@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem_points_methods.R
 \name{stm.eigen.voxel}
 \alias{stm.eigen.voxel}
-\title{Stem denoising algorithm: Voxel geometry + voting}
+\title{Stem denoising algorithm: Voxel eigen decomposition + point normals intersections voting}
 \usage{
 stm.eigen.voxel(
   h_step = 0.5,
@@ -23,12 +23,68 @@ stm.eigen.voxel(
 
 \item{voxel_spacing}{\code{numeric} - voxel side length.}
 
-\item{max_d}{\code{numeric} - maximum diameter tolerated for a tree segment.}
+\item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
-\item{votes_weight}{\code{numeric} - fraction of votes a point neighborhood needs do reach in order to belong to a stem - in relation to the voxel with most votes with the same \emph{TreeID}.}
+\item{votes_weight}{\code{numeric} - fraction of votes a point neighborhood needs do reach in order to belong to a stem (applied for every \emph{TreeID}), in relation to the voxel with most votes with same \emph{TreeID}.}
 
 \item{v3d}{\code{logical} - count votes in 3D voxels (TRUE) or 2D pixels (FALSE).}
 }
 \description{
 This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
+}
+\section{Eigen Decomposition of Point Neighborhoods}{
+
+
+Point filtering/classification methods that rely on eigen
+decomposition rely on shape indices calculated for point 
+neighborhoods (knn or voxel). To derive these shape indices, eigen 
+decomposition is performed on the XYZ columns of a point cloud patch. 
+Metrics related to object curvature are calculated upon ratios of the resulting 
+eigen values, and metrics related to object orientation are caltulated from 
+approximate normals obtained from the eigen vectors.
+
+For instance, a point neighborhood that belongs to a perfect flat
+surface will have all of its variance explained by the first two eigen values, 
+and none explained by the third eigen value. The 'normal' of such surface,
+i.e. the vector oriented in the direction orthogonal to the surface, 
+is therefore represented by the third eigenvector.
+
+Methods for both tree mapping and stem segmentation use those metrics, so in order 
+to speed up the workflow one might apply \code{\link{fastPointMetrics}} to the point
+cloud before other methods. The advantages of this approach are that users
+can parameterize the point neighborhoods themselves when calculating their metrics. 
+Those calculations won't be performed again internally in the tree mapping or stem 
+denoising methods, reducing the overall processing time.
+}
+
+\section{Radius Estimation Through Normal Vectors Intersection}{
+
+
+\code{stemPoints} methods that filter points based on eigen decomposition
+metrics (knn or voxel) provide a rough estimation of stem segments radii
+by splitting every stem segment into a local voxel space and counting
+the number of times that point normals intersect on every voxel (votes).
+Every stem point then has a radius assigned to it, corresponding to the distance 
+between the point and the voxel with most votes its normal intersects. The average of
+all points' radii in a stem segment is the segment's radius. For approximately straight 
+vertical stem segments, the voting can be done in 2D (pixels). 
+
+The point normals of this method are extracted from the eigen vectors calculated by 
+\code{\link{fastPointMetrics}}. On top of the point metrics used for stem point filtering, the following 
+fields are also added to the \code{LAS} object:
+
+\itemize{
+   \item \code{Votes}: number of normal vector intersections crossing the point's normal at its estimated center 
+   \item \code{VotesWeight}: ratio of (votes count) / (highest votes count) per \emph{TreeID}
+   \item \code{Radius}: estimated stem segment radius
+}
+
+This method was inspired by the denoising algorithm developed by Olofsson & Holmgren (2016), 
+but it is not an exact reproduction of their work.
+}
+
+\references{
+Liang, X. et al., 2012. Automatic stem mapping using single-scan terrestrial laser scanning. IEEE Transactions on Geoscience and Remote Sensing, 50(2), pp.661–670.
+
+Olofsson, K. & Holmgren, J., 2016. Single Tree Stem Profile Detection Using Terrestrial Laser Scanner Data, Flatness Saliency Features and Curvature Properties. Forests, 7, 207.
 }

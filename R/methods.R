@@ -428,11 +428,11 @@ fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
 #' tls = readTLS(file)
 #' nrow(tls@data)
 #'
-#' ## sample points systematically from a 3D voxel grid
+#' ### sample points systematically from a 3D voxel grid
 #' vx = tlsSample(tls, smp.voxelize(0.05))
 #' nrow(vx@data)
 #'
-#' ## sample half of the points randomly
+#' ### sample half of the points randomly
 #' rd = tlsSample(tls, smp.randomize(0.5))
 #' nrow(rd@data)
 #'
@@ -726,9 +726,10 @@ treePoints = function(las, map, method = trp.voronoi()){
 #' @template return-las
 #' @examples
 #' ### single tree
-#' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file) %>% tlsNormalize
-#' tls = stemPoints(tls)
+#' file = system.file("extdata", "spruce.laz", package="TreeLS")
+#' tls = readTLS(file) %>%
+#'   tlsNormalize %>%
+#'   stemPoints(stm.hough(h_base = c(.5,2)))
 #' plot(tls, color='Stem')
 #'
 #' ### entire forest plot
@@ -1341,18 +1342,18 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 #' @description Search and fit multiple 2D circles on a point cloud layer from a single tree, i.e. a forked stem segment.
 #' @param dlas \code{\link[lidR:LAS]{LAS}} object.
 #' @template param-pixel-size
-#' @template param-max-radius
+#' @template param-max-d
 #' @param votes_percentile \code{numeric} - use only estimates with more votes than \code{votes_percentile}.
 #' @template param-min-density
 #' @param plot \code{logical} - plot the results?
 #' @export
-shapeFit.forks = function(dlas, pixel_size = .02, max_radius = .2, votes_percentile = .7, min_density = .25, plot=FALSE){
+shapeFit.forks = function(dlas, pixel_size = .02, max_d = .4, votes_percentile = .7, min_density = .25, plot=FALSE){
 
   isLAS(dlas)
 
   params = list(
     pixel_size = pixel_size,
-    max_radius = max_radius,
+    max_d = max_d,
     votes_percentile = votes_percentile,
     min_density = min_density
   )
@@ -1370,7 +1371,7 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_radius = .2, votes_percent
       stop( i %>% paste('must be positive') )
   }
 
-  hg = getHoughCircle(dlas %>% las2xyz, pixel_size, rad_max = max_radius, min_den = min_density, min_votes = 2) %>% do.call(what=rbind) %>% as.data.table
+  hg = getHoughCircle(dlas %>% las2xyz, pixel_size, rad_max = max_d/2, min_den = min_density, min_votes = 2) %>% do.call(what=rbind) %>% as.data.table
   names(hg) = c('x','y','r','v')
   hg = hg[v > quantile(v, votes_percentile)]
   hg$clt = 1

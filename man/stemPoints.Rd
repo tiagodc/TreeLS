@@ -19,9 +19,10 @@ Classify stem points of all trees in a \strong{normalized} point cloud. Stem den
 }
 \examples{
 ### single tree
-file = system.file("extdata", "pine.laz", package="TreeLS")
-tls = readTLS(file) \%>\% tlsNormalize
-tls = stemPoints(tls)
+file = system.file("extdata", "spruce.laz", package="TreeLS")
+tls = readTLS(file) \%>\%
+  tlsNormalize \%>\%
+  stemPoints(stm.hough(h_base = c(.5,2)))
 plot(tls, color='Stem')
 
 ### entire forest plot

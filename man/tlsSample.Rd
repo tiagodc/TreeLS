@@ -22,11 +22,11 @@ file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file)
 nrow(tls@data)
 
-## sample points systematically from a 3D voxel grid
+### sample points systematically from a 3D voxel grid
 vx = tlsSample(tls, smp.voxelize(0.05))
 nrow(vx@data)
 
-## sample half of the points randomly
+### sample half of the points randomly
 rd = tlsSample(tls, smp.randomize(0.5))
 nrow(rd@data)
 

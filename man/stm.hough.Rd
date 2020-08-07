@@ -6,7 +6,7 @@
 \usage{
 stm.hough(
   h_step = 0.5,
-  max_radius = 0.25,
+  max_d = 0.5,
   h_base = c(1, 2.5),
   pixel_size = 0.025,
   min_density = 0.1,
@@ -16,15 +16,15 @@ stm.hough(
 \arguments{
 \item{h_step}{\code{numeric} - height interval to perform point filtering/assignment/classification.}
 
-\item{max_radius}{\code{numeric} - approximately the largest stem cross section radius expected in the point cloud.}
+\item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
+
+\item{h_base}{\code{numeric} vector of length 2 - tree base height interval to initiate circle search.}
 
 \item{pixel_size}{\code{numeric} - pixel side length to discretize the point cloud layers while performing the Hough Transform circle search.}
 
 \item{min_density}{\code{numeric} - between 0 and 1 - minimum point density within a pixel evaluated on the Hough Transform - i.e. only \emph{dense} point clousters will undergo circle search.}
 
 \item{min_votes}{\code{integer} - Hough Transform parameter - minimum number of circle intersections over a pixel to assign it as a circle center candidate.}
-
-\item{hbase}{\code{numeric} vector of length 2 - tree base height interval to initiate the circle search.}
 }
 \description{
 This function is meant to be used inside \code{\link{stemPoints}}. It applies an adapted version of the Hough Transform for circle search. Mode details are given in the sections below.
@@ -61,15 +61,8 @@ This adapted version of the algorithm is very robust against outliers,
 but not against forked or leaning stems.
 }
 
-\examples{
-file = system.file("extdata", "spruce.laz", package="TreeLS")
-tls = readTLS(file)
-
-### identify stem points
-tls = stemPoints(tls, method = stm.hough(max_radius=.2))
-plot(tls, color='Stem')
-
-}
 \references{
+Olofsson, K., Holmgren, J. & Olsson, H., 2014. Tree stem and height measurements using terrestrial laser scanning and the RANSAC algorithm. Remote Sensing, 6(5), pp.4323–4344.
+
 Conto, T. et al., 2017. Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, v. 143, p. 165-176.
 }

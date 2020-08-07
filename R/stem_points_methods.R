@@ -21,7 +21,7 @@
 #' Stem denoising algorithm: Hough Transform
 #' @description This function is meant to be used inside \code{\link{stemPoints}}. It applies an adapted version of the Hough Transform for circle search. Mode details are given in the sections below.
 #' @template param-h_step
-#' @template param-max-radius
+#' @template param-max-d
 #' @template param-hbase
 #' @template param-pixel-size
 #' @template param-min-density
@@ -38,17 +38,10 @@
 #' }
 #'
 #' @template section-hough-transform
+#' @template reference-olofsson
 #' @template reference-thesis
-#' @examples
-#' file = system.file("extdata", "spruce.laz", package="TreeLS")
-#' tls = readTLS(file)
-#'
-#' ### identify stem points
-#' tls = stemPoints(tls, method = stm.hough(max_radius=.2))
-#' plot(tls, color='Stem')
-#'
 #' @export
-stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
+stm.hough = function(h_step=0.5, max_d=0.5, h_base = c(1,2.5), pixel_size=0.025, min_density=0.1, min_votes=3){
 
   if(length(h_base) != 2)
     stop('h_base must be a numeric vector of length 2')
@@ -58,7 +51,7 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
   params = list(
     h_step = h_step,
-    max_radius = max_radius,
+    max_d = max_d,
     pixel_size = pixel_size,
     min_density = min_density,
     min_votes = min_votes
@@ -96,11 +89,11 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 
     if(!hasField(las, 'TreeID')){
       message('no TreeID field found with tree_points signature: performing single stem point classification')
-      results = houghStemPoints(las2xyz(las)[survey_points,], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
+      results = houghStemPoints(las2xyz(las)[survey_points,], h_base[1], h_base[2], h_step, max_d/2, pixel_size, min_density, min_votes)
     }else{
       message('performing point classification on multiple stems')
       survey_points = survey_points & las$TreeID > 0
-      results = houghStemPlot(las2xyz(las)[survey_points,], las@data$TreeID[survey_points], h_base[1], h_base[2], h_step, max_radius, pixel_size, min_density, min_votes)
+      results = houghStemPlot(las2xyz(las)[survey_points,], las@data$TreeID[survey_points], h_base[1], h_base[2], h_step, max_d/2, pixel_size, min_density, min_votes)
     }
 
     las@data$Stem = F
@@ -128,15 +121,19 @@ stm.hough = function(h_step=0.5, max_radius=0.25, h_base = c(1,2.5), pixel_size=
 }
 
 
-#' Stem denoising algorithm: KNN geometry + voxel voting
+#' Stem denoising algorithm: KNN eigen decomposition + point normals intersections voting
 #' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their nearest neighborhood geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
 #' @template param-max-curvature
 #' @template param-max-verticality
-#' @template param-voxel-spacing
+#' @param voxel_spacing \code{numeric} - voxel (or pixel) spacing for counting point normals intersections.
 #' @template param-max-d
 #' @template param-votes-weight
 #' @template param-v3d
+#' @template section-eigen-decomposition
+#' @template section-normals-voting
+#' @template reference-liang
+#' @template reference-olofsson-2016
 #' @export
 stm.eigen.knn = function(h_step = .5, max_curvature = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 
@@ -250,7 +247,7 @@ stm.eigen.knn = function(h_step = .5, max_curvature = .1, max_verticality = 10, 
 }
 
 
-#' Stem denoising algorithm: Voxel geometry + voting
+#' Stem denoising algorithm: Voxel eigen decomposition + point normals intersections voting
 #' @description This function is meant to be used inside \code{\link{stemPoints}}. It filters points based on their voxel geometries (check \code{\link{fastPointMetrics}}) and assign them to stem patches if reaching a voxel with enough votes.
 #' @template param-h_step
 #' @template param-max-curvature
@@ -259,6 +256,10 @@ stm.eigen.knn = function(h_step = .5, max_curvature = .1, max_verticality = 10, 
 #' @template param-max-d
 #' @template param-votes-weight
 #' @template param-v3d
+#' @template section-eigen-decomposition
+#' @template section-normals-voting
+#' @template reference-liang
+#' @template reference-olofsson-2016
 #' @export
 stm.eigen.voxel = function(h_step = .5, max_curvature = .1, max_verticality = 10, voxel_spacing = .025, max_d = .5, votes_weight = .2, v3d = FALSE){
 

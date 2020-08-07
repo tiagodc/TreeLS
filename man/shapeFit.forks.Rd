@@ -7,7 +7,7 @@
 shapeFit.forks(
   dlas,
   pixel_size = 0.02,
-  max_radius = 0.2,
+  max_d = 0.4,
   votes_percentile = 0.7,
   min_density = 0.25,
   plot = FALSE
@@ -18,7 +18,7 @@ shapeFit.forks(
 
 \item{pixel_size}{\code{numeric} - pixel side length to discretize the point cloud layers while performing the Hough Transform circle search.}
 
-\item{max_radius}{\code{numeric} - approximately the largest stem cross section radius expected in the point cloud.}
+\item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
 \item{votes_percentile}{\code{numeric} - use only estimates with more votes than \code{votes_percentile}.}
 

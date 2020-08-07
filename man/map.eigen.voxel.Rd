@@ -19,14 +19,45 @@ map.eigen.voxel(
 
 \item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees} (from 0 to 90).}
 
-\item{voxel_spacing}{\code{numeric} - voxel side length to points into.}
+\item{voxel_spacing}{\code{numeric} - voxel side length, in point cloud units.}
 
-\item{max_d}{\code{numeric} - maximum diameter tolerated for a tree segment.}
+\item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
-\item{min_h}{\code{numeric} - minimum height of a point cluster to consider it as a tree.}
+\item{min_h, max_h}{\code{numeric} - height thresholds applied to filter a point cloud before processing.}
 
 \item{min_n}{\code{numeric} - lowest point count accepted in a tree's point cluster.}
 }
 \description{
 This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 }
+\details{
+Point metrics are calculated for every voxel. Points are then removed depending on their voxel's metrics
+metrics parameters and clustered to represent individual tree regions.
+Clusters are defined as a function of the expected maximum diameter. Any fields added to the
+point cloud are described in \code{\link{fastPointMetrics}}.
+}
+\section{Eigen Decomposition of Point Neighborhoods}{
+
+
+Point filtering/classification methods that rely on eigen
+decomposition rely on shape indices calculated for point 
+neighborhoods (knn or voxel). To derive these shape indices, eigen 
+decomposition is performed on the XYZ columns of a point cloud patch. 
+Metrics related to object curvature are calculated upon ratios of the resulting 
+eigen values, and metrics related to object orientation are caltulated from 
+approximate normals obtained from the eigen vectors.
+
+For instance, a point neighborhood that belongs to a perfect flat
+surface will have all of its variance explained by the first two eigen values, 
+and none explained by the third eigen value. The 'normal' of such surface,
+i.e. the vector oriented in the direction orthogonal to the surface, 
+is therefore represented by the third eigenvector.
+
+Methods for both tree mapping and stem segmentation use those metrics, so in order 
+to speed up the workflow one might apply \code{\link{fastPointMetrics}} to the point
+cloud before other methods. The advantages of this approach are that users
+can parameterize the point neighborhoods themselves when calculating their metrics. 
+Those calculations won't be performed again internally in the tree mapping or stem 
+denoising methods, reducing the overall processing time.
+}
+
