@@ -1,6 +1,7 @@
 #' Tree points algorithm: voronoi polygons.
 #' @description This function is meant to be used inside \code{\link{treePoints}}. Assign **all** points to a \code{TreeID} based on their closest \code{\link{treeMap}} coordinate.
 #' @importFrom dismo voronoi
+#' @importFrom sp over SpatialPoints
 #' @export
 trp.voronoi = function(){
 

@@ -24,12 +24,12 @@ tlsCrop(las, x, y, len, circle = TRUE, negative = FALSE)
 Returns a cropped point cloud of all points inside or outside specified boundaries of circle or square shapes.
 }
 \examples{
-file = system.file("extdata", "model_boles.laz", package="TreeLS")
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
 
 tls = tlsCrop(tls, 2, 3, 1.5, TRUE, TRUE)
 plot(tls)
 
-tls = tlsCrop(tls, 15, 10, 3, FALSE, FALSE)
+tls = tlsCrop(tls, 5, 5, 5, FALSE, FALSE)
 plot(tls)
 }

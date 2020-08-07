@@ -41,24 +41,24 @@ error_reporting(arma::vec& out_vals, const arma::vec& x_p, std::function<double 
         if (err <= err_tol && iter <= iter_max) {
             success = true;
         } else {
-            printf("optim failure: iter_max reached before convergence could be achieved.\n");
-            printf("optim failure: returned best guess.\n");
+            Rprintf("optim failure: iter_max reached before convergence could be achieved.\n");
+            Rprintf("optim failure: returned best guess.\n");
             
-            std::cout << "iterations: " << iter << ". error: " << err << std::endl;
+            Rcpp::Rcout << "iterations: " << iter << ". error: " << err << std::endl;
         }
     } else if (conv_failure_switch == 2) {
         if (err <= err_tol && iter <= iter_max) {
             out_vals = x_p;
             success = true;
         } else {
-            printf("optim failure: iter_max reached before convergence could be achieved.\n");
-            printf("optim failure: best guess:\n");
+            Rprintf("optim failure: iter_max reached before convergence could be achieved.\n");
+            Rprintf("optim failure: best guess:\n");
 
-            arma::cout << x_p.t() << arma::endl;
-            std::cout << "iterations: " << iter << ". error: " << err << std::endl;
+            // arma::cout << x_p.t() << arma::endl;
+            Rcpp::Rcout << "iterations: " << iter << ". error: " << err << std::endl;
         }
     } else {
-        printf("optim failure: unrecognized conv_failure_switch value.\n");
+        Rprintf("optim failure: unrecognized conv_failure_switch value.\n");
         success = false;
     }
     //
@@ -81,7 +81,7 @@ error_reporting(arma::vec& out_vals, const arma::vec& x_p, std::function<double 
             out_vals = x_p;
         }
     } else {
-        printf("optim failure: unrecognized conv_failure_switch value.\n");
+        Rprintf("optim failure: unrecognized conv_failure_switch value.\n");
         success = false;
     }
     //
@@ -109,24 +109,24 @@ error_reporting(arma::vec& out_vals, const arma::vec& x_p, std::function<arma::v
         if (err <= err_tol && iter <= iter_max) {
             success = true;
         } else {
-            printf("optim failure: iter_max reached before convergence could be achieved.\n");
-            printf("optim failure: returned best guess.\n");
+            Rprintf("optim failure: iter_max reached before convergence could be achieved.\n");
+            Rprintf("optim failure: returned best guess.\n");
             
-            std::cout << "error: " << err << std::endl;
+            Rcpp::Rcout << "error: " << err << std::endl;
         }
     } else if (conv_failure_switch == 2) {
         if (err <= err_tol && iter <= iter_max) {
             out_vals = x_p;
             success = true;
         } else {
-            printf("optim failure: iter_max reached before convergence could be achieved.\n");
-            printf("optim failure: best guess:\n");
+            Rprintf("optim failure: iter_max reached before convergence could be achieved.\n");
+            Rprintf("optim failure: best guess:\n");
 
-            arma::cout << x_p.t() << arma::endl;
-            std::cout << "error: " << err << std::endl;
+            // arma::cout << x_p.t() << arma::endl;
+            Rcpp::Rcout << "error: " << err << std::endl;
         }
     } else {
-        printf("optim failure: unrecognized conv_failure_switch value.\n");
+        Rprintf("optim failure: unrecognized conv_failure_switch value.\n");
         success = false;
     }
     //

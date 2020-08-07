@@ -4,7 +4,7 @@
 \alias{circleFit}
 \title{Point cloud circle fit}
 \usage{
-circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99, n_best = 0)
+circleFit(las, method = "irls", n = 5, inliers = 0.8, conf = 0.99, n_best = 0)
 }
 \arguments{
 \item{las}{\code{\link[lidR:LAS]{LAS}} object.}
@@ -15,9 +15,9 @@ circleFit(las, method = "irls", n = 5, inliers = 0.8, p = 0.99, n_best = 0)
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
 
-\item{n_best}{\code{integer} - estimate optimal RANSAC parameters as the median of the \code{n_best} estimations with lowest error.}
-
 \item{conf}{\code{numeric} - confidence level.}
+
+\item{n_best}{\code{integer} - estimate optimal RANSAC parameters as the median of the \code{n_best} estimations with lowest error.}
 }
 \value{
 vector of parameters

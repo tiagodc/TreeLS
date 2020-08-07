@@ -130,7 +130,7 @@ ptm.voxel = function(d = .1, exact=FALSE){
     colnames(vtm) = pick_metrics$names
 
     keep_names = colnames(las@data)[ !( colnames(las@data) %in% colnames(vtm) ) ]
-    las@data = las@data[, ..keep_names]
+    las@data = las@data[, keep_names, with=F]
     vtm$VoxelID = names(idx) %>% as.double
     las@data$VoxelID = vx
     las@data = merge(las@data, vtm, by='VoxelID', sort=F)
@@ -179,4 +179,75 @@ ptm.knn = function(k = 20, r = 0){
 
   func %<>% setAttribute('ptm_mtd')
   return(func)
+}
+
+
+#' Calculate point neighborhood metrics
+#' @description Get statistics for every point in a \code{LAS} object. Neighborhood search methods are prefixed by \code{ptm}.
+#' @template param-las
+#' @param method neighborhood search algorithm. Currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.
+#' @param which_metrics optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} for a list of all metrics.
+#' @template return-las
+#' @details
+#'
+#' Individual or voxel-wise point metrics build up the basis for many studies involving TLS in forestry. This
+#' function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may
+#' be useful to users interested in developing their own custom methods for point cloud classification/filtering of
+#' vegetation features or build up input datasets for machine learning classifiers.
+#'
+#' \code{fastPointMetrics} provides a way to calculate several geometry related metrics (listed below) in an optimized way.
+#' All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}.
+#' This function is provided for convenience, as it allows very fast calculations of several complex variables
+#' on a single line of code, speeding up heavy work loads. For a more flexible approach that allows user defined
+#' metrics check out \code{\link[lidR:point_metrics]{point_metrics}} from the \emph{lidR} package.
+#'
+#' In order to avoid excessive memory use, not all available metrics are calculated by default.
+#' The calculated metrics can be specified every time \code{fastPointMetrics} is run by naming the desired metrics
+#' into the \code{which_metrics} argument, or changed globally for the active R session by setting new default
+#' metrics using \code{\link{fastPointMetrics.available}}.
+#'
+#' @template section-point-metrics
+#' @template reference-wang
+#' @template reference-zhou
+#' @examples
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file, select='xyz')
+#'
+#' all_metrics = fastPointMetrics.available()
+#' my_metrics = all_metrics[c(1,4,6)]
+#'
+#' tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
+#' head(tls@data)
+#' plot(tls, color='Linearity')
+#' @export
+fastPointMetrics = function(las, method = ptm.voxel(), which_metrics = ENABLED_POINT_METRICS$names){
+
+  isLAS(las)
+
+  if(!hasAttribute(method, 'ptm_mtd'))
+    stop('invalid method: check ?fastPointMetrics')
+
+  return(method(las, which_metrics))
+}
+
+
+#' Print available point metrics
+#' @description Print the list of available metrics for \code{\link{fastPointMetrics}}.
+#' @param enable optional \code{integer} or \code{character} vector containing indices or names of the metrics you want to
+#' enable globally. Enabled metrics are calculated every time you run \code{\link{fastPointMetrics}} by default.
+#' Only metrics used internally in other \emph{TreeLS} methods are enabled out-of-the-box.
+#' @return \code{character} vector of all metrics.
+#' @template section-point-metrics
+#' @examples
+#' m = fastPointMetrics.available()
+#' length(m)
+#' @export
+fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
+  if(typeof(enable) != 'character') enable = POINT_METRICS_NAMES[enable]
+  enable_metrics = ptmMetricsLog(enable)
+  ENABLED_POINT_METRICS$names <- enable_metrics$names
+  temp = data.frame(INDEX = 1:length(POINT_METRICS_NAMES), METRIC = POINT_METRICS_NAMES, ENABLED = enable_metrics$log)
+  print(temp)
+  cat('\n')
+  return(invisible(POINT_METRICS_NAMES))
 }

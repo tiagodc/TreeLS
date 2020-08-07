@@ -65,8 +65,6 @@ sgt.ransac.circle = function(tol=0.1, n = 10, conf = 0.99, inliers = 0.8){
 
   func = function(las){
 
-    . = NULL
-
     if(!hasField(las, 'TreeID')){
 
       message('performing single stem segmentation')
@@ -160,8 +158,6 @@ sgt.ransac.cylinder = function(tol=0.1, n = 10, conf = 0.95, inliers = 0.9){
 
   func = function(las){
 
-    . = NULL
-
     if(!hasField(las, 'TreeID')){
 
       message('performing single stem segmentation')
@@ -249,8 +245,6 @@ sgt.irls.circle = function(tol=0.1, n = 500){
 
   func = function(las){
 
-    . = NULL
-
     if(!hasField(las, 'TreeID')){
 
       message('performing single stem segmentation')
@@ -336,8 +330,6 @@ sgt.irls.cylinder = function(tol=0.1, n = 100){
     stop('tol must be larger than 0')
 
   func = function(las){
-
-    . = NULL
 
     if(!hasField(las, 'TreeID')){
 
@@ -431,8 +423,6 @@ sgt.bf.cylinder = function(tol=0.1, n = 10, conf = 0.95, inliers = 0.9, z_dev = 
     message('beware that a large n value increases processing time exponentially')
 
   func = function(las){
-
-    . = NULL
 
     if(!hasField(las, 'TreeID')){
 

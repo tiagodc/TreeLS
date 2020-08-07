@@ -159,7 +159,7 @@ gd_update(const arma::vec& vals_inp, const arma::vec& grad, const arma::vec& gra
 
         default:
         {
-            printf("error: unknown value for gd_method");
+            Rprintf("error: unknown value for gd_method");
             break;
         }
     }
@@ -244,7 +244,7 @@ gd_basic_int(arma::vec& init_out_vals, std::function<double (const arma::vec& va
 
     if (!x.is_finite())
     {
-        printf("gd error: non-finite initial value(s).\n");
+        Rprintf("gd error: non-finite initial value(s).\n");
         return false;
     }
 

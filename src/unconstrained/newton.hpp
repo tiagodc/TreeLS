@@ -63,7 +63,7 @@ newton_int(arma::vec& init_out_vals, std::function<double (const arma::vec& vals
 
     if (!x.is_finite())
     {
-        printf("newton error: non-finite initial value(s).\n");
+        Rprintf("newton error: non-finite initial value(s).\n");
         return false;
     }
 

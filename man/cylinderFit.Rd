@@ -9,7 +9,7 @@ cylinderFit(
   method = "ransac",
   n = 5,
   inliers = 0.9,
-  p = 0.95,
+  conf = 0.95,
   max_angle = 30,
   n_best = 20
 )
@@ -23,11 +23,11 @@ cylinderFit(
 
 \item{inliers}{\code{numeric} - expected proportion of inliers among stem segments' point cloud chunks.}
 
+\item{conf}{\code{numeric} - confidence level.}
+
 \item{max_angle}{\code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).}
 
 \item{n_best}{\code{integer} - estimate optimal RANSAC parameters as the median of the \code{n_best} estimations with lowest error.}
-
-\item{conf}{\code{numeric} - confidence level.}
 }
 \value{
 vector of parameters

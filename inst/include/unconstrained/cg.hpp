@@ -114,7 +114,7 @@ cg_int(arma::vec& init_out_vals, std::function<double (const arma::vec& vals_inp
 
     if (!x.is_finite())
     {
-        printf("cg error: non-finite initial value(s).\n");
+        Rprintf("cg error: non-finite initial value(s).\n");
         return false;
     }
 
@@ -280,7 +280,7 @@ cg_update(const arma::vec& grad, const arma::vec& grad_p, const arma::vec& direc
             
             default:
             {
-                printf("error: unknown value for cg_method");
+                Rprintf("error: unknown value for cg_method");
                 break;
             }
         }

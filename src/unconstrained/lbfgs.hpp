@@ -113,7 +113,7 @@ lbfgs_int(arma::vec& init_out_vals, std::function<double (const arma::vec& vals_
 
     if (!x.is_finite())
     {
-        printf("lbfgs error: non-finite initial value(s).\n");
+        Rprintf("lbfgs error: non-finite initial value(s).\n");
         return false;
     }
 

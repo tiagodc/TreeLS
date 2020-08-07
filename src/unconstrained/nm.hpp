@@ -123,13 +123,13 @@ nm_int(arma::vec& init_out_vals, std::function<double (const arma::vec& vals_inp
 
     if (verbose_print_level > 0)
     {
-        std::cout << "\nNelder-Mead: beginning search...\n";
+        Rcpp::Rcout << "\nNelder-Mead: beginning search...\n";
 
         if (verbose_print_level == 2)
         {
-            std::cout << "  - Initialization Phase:\n";
-            arma::cout << "    Objective function value at each vertex:\n" << simplex_fn_vals.t() << "\n";
-            arma::cout << "    Simplex matrix:\n" << simplex_points << "\n";
+            Rcpp::Rcout << "  - Initialization Phase:\n";
+            // arma::cout << "    Objective function value at each vertex:\n" << simplex_fn_vals.t() << "\n";
+            // arma::cout << "    Simplex matrix:\n" << simplex_points << "\n";
         }
     }
 
@@ -240,28 +240,28 @@ nm_int(arma::vec& init_out_vals, std::function<double (const arma::vec& vals_inp
 
         if (verbose_print_level > 0)
         {
-            std::cout << "  - Iteration: " << iter << "\n";
-            std::cout << "    min_val:   " << min_val << "\n";
+            Rcpp::Rcout << "  - Iteration: " << iter << "\n";
+            Rcpp::Rcout << "    min_val:   " << min_val << "\n";
 
             if (verbose_print_level == 1)
             {
-                printf("\n");
-                arma::cout << "    Current optimal input values:\n";
-                arma::cout << simplex_points.row(index_min(simplex_fn_vals)) << "\n";
+                Rprintf("\n");
+                // arma::cout << "    Current optimal input values:\n";
+                // arma::cout << simplex_points.row(index_min(simplex_fn_vals)) << "\n";
             }
 
             if (verbose_print_level == 2)
             {
-                printf("\n");
-                arma::cout << "    Objective function value at each vertex:\n" << simplex_fn_vals.t() << "\n";
-                arma::cout << "    Simplex matrix:\n" << simplex_points << "\n";
+                Rprintf("\n");
+                // arma::cout << "    Objective function value at each vertex:\n" << simplex_fn_vals.t() << "\n";
+                // arma::cout << "    Simplex matrix:\n" << simplex_points << "\n";
             }
         }
 
     }
 
     if (verbose_print_level > 0) {
-        std::cout << "Nelder-Mead: search completed.\n";
+        Rcpp::Rcout << "Nelder-Mead: search completed.\n";
     }
 
     //

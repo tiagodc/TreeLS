@@ -23,9 +23,9 @@ rm(list = c('.', 'X', 'Y', 'Z', 'Classification', 'TreePosition', 'TreeID', 'Ste
 ###################
 require(TreeLS)
 
-file = system.file("extdata", "spruce.laz", package="TreeLS")
-tls = readTLS(file) %>%
-  tlsNormalize %>%
-  stemPoints(stm.hough(h_base = c(.5,2)))
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file) %>% fastPointMetrics#'
+writeTLS(tls, 'my_updated_file.laz')
 
-plot(tls, color='Stem')
+up_tls = readTLS('my_updated_file.laz')
+summary(up_tls)

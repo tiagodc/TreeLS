@@ -26,7 +26,7 @@ tfBruteForceCoordinates = function(dt, ax, ay){
   for(i in 1:nrow(dt)){
     rmat = rotationMatrix(-ax[i]*pi/180, 0, 0) %*% rotationMatrix(0, -ay[i]*pi/180, 0)
     vals = as.matrix(dt[i,]) %*% rmat %>% as.double
-    for(j in 1:ncol(dt)) dt[i,j] = vals[j]
+    for(j in 1:2) dt[i,j] = vals[j]
   }
   names(dt) = nm
   return(dt)
@@ -53,6 +53,35 @@ pan3d = function(button=2){
   rgl.setMouseCallbacks(button, begin, update)
   # cat("Pan set on button", button, "of rgl device",rgl.cur(),"\n")
 }
+
+set.colors = function (x, palette, trim = Inf, value_index = FALSE){
+  if (all(is.na(x)))
+    return()
+  if (value_index) {
+    x[x >= length(palette)] <- length(palette) - 1
+    return(palette[x + 1])
+  }
+  ncolors <- length(palette)
+  if (!is.infinite(trim))
+    x[x > trim] <- trim
+  minx <- min(x, na.rm = T)
+  maxx <- max(x, na.rm = T)
+  if (maxx - minx == 0) {
+    if (!anyNA(x)) {
+      colors <- palette[1]
+    }
+    else {
+      colors <- rep(NA_character_, length(x))
+      colors[!is.na(x)] <- palette[1]
+    }
+  }
+  else {
+    idx <- findInterval(x, seq(minx, maxx, length.out = ncolors))
+    colors <- palette[idx]
+  }
+  return(colors)
+}
+
 
 tlsPlot.dh = function(las, pars, clear=T, wired=T, col='white'){
   if('ax' %in% names(pars)){
@@ -114,7 +143,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   tlsPlot.dh.3d(las, cbind(meds-a*height, meds+a*height), cbind(meds, meds+n*r), r, clear, wired, col)
   if(!is_las) return(NULL)
 
-  # cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
+  # cols = if(hasField(las, 'gpstime')) set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
   # if(clear) clear3d() # else rgl.open()
   # bg3d('black') ; axes3d(col='white')
   # lines3d(data.frame(meds+q-a*height, meds+q+a*height) %>% t, color='darkred', lwd=3)
@@ -167,7 +196,7 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F, wired=T, col='white'){
   tlsPlot.dh.3d(las, cbind(cbase, ctop), cbind(ccen, crad), r, clear, wired, col)
   if(!is_las) return(NULL)
 
-  # cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
+  # cols = if(hasField(las, 'gpstime')) set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
   # if(clear) clear3d() # else rgl.open()
   # bg3d('black') ; axes3d(col='white')
   # lines3d(data.frame(cbase, ctop) %>% t, color='darkred', lwd=3)
@@ -200,7 +229,7 @@ tlsPlot.dh.3d = function(las, rings, rVec, r, clear=T, wired=T, col='white'){
   lines3d(t(rVec), color='blue', lwd=3)
 
   if(is_las){
-    cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
+    cols = if(hasField(las, 'gpstime')) set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
     rgl.points(las %>% las2xyz, color=cols)
   }
 
@@ -209,8 +238,9 @@ tlsPlot.dh.3d = function(las, rings, rVec, r, clear=T, wired=T, col='white'){
   # pan3d(2)
 }
 
+#' @importFrom graphics abline lines
 tlsPlot.dh.2d = function(las, ring, r, col='darkred'){
-  cols = if(hasField(las, 'gpstime')) lidR:::set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
+  cols = if(hasField(las, 'gpstime')) set.colors(las$gpstime, las$gpstime %>% unique %>% length %>% height.colors) else 'darkgrey'
 
   tid = if(hasField(las, 'TreeID')) paste('tree', las$TreeID[1], '-') else ''
   las@data[,.(X,Y)] %>% plot(pch=20, cex=1, asp=1, main=paste(tid, 'd =',round(r*200,2),'cm'), col=cols)
@@ -288,7 +318,7 @@ add_treePoints = function(x, las, color_func=pastel.colors, ...){
   las = filter_poi(las, TreeID > 0)
   las = bringToOrigin(las, x)
   colors = las$TreeID %>% unique %>% length %>% color_func
-  colors = lidR:::set.colors(las$TreeID, colors)
+  colors = set.colors(las$TreeID, colors)
   las@data %$% rgl.points(X,Y,Z,color=colors,...)
 }
 
@@ -305,6 +335,7 @@ add_stemPoints = function(x, las, ...){
 }
 
 #' @rdname tlsPlot
+#' @importFrom stats median
 #' @export
 add_stemSegments = function(x, stems_data_table, color='white', fast=FALSE){
 

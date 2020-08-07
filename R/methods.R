@@ -28,9 +28,37 @@
 #' @import glue
 #' @useDynLib TreeLS, .registration = TRUE
 
-. = X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = NULL
+utils::globalVariables(c("."))
+
+X = Y = Z = Classification = TreePosition = TreeID = Stem = Segment = gpstime = AvgHeight = Radius = N = Curvature = Verticality = MeanDist = PX = PY = PZ = h_radius = PointID = VoxelID = StemID = EigenVector13 = EigenVector23 = EigenVector33 = Votes = absRatio = clt = r = v = x = y = NULL
 
 TLS_MARKER = 'TLS_MARKER'
+
+DEFAULT_LASATTRIBUTES = c(
+  "X",
+  "Y",
+  "Z",
+  "Intensity",
+  "ReturnNumber",
+  "NumberOfReturns",
+  "ScanDirectionFlag",
+  "EdgeOfFlightline",
+  "Classification",
+  "Synthetic_flag",
+  "Keypoint_flag",
+  "Withheld_flag",
+  "Overlap_flag",
+  "ScanAngle",
+  "ScanAngleRank",
+  "ScannerChannel",
+  "NIR",
+  "UserData",
+  "gpstime",
+  "PointSourceID",
+  "R",
+  "G",
+  "B"
+)
 
 isLAS = function(las){
   if(class(las)[1] != 'LAS')
@@ -62,6 +90,7 @@ plot.cylinder = function(x_center = 0, y_center = 0, h_bottom = 0, h_top = 1, ra
   # mesh = shade3d(cyl, col=col)
 }
 
+#' @importFrom utils head
 preCheck = function(las){
 
   isLAS(las)
@@ -153,7 +182,7 @@ hasField = function(las, field_name){
 cleanFields = function(las, field_names){
   is_las = class(las)[1] == 'LAS'
   for(i in field_names){
-    temp = if(is_las) las@data[,..i] else las[,..i]
+    temp = if(is_las) las@data[,i,with=F] else las[,i,with=F]
     temp = unlist(temp)
     temp[is.na(temp) | is.nan(temp) | is.infinite(temp) | is.null(temp)] = ifelse(is.logical(temp), F, 0)
     if(is_las) las@data[,i] = temp else las[,i] = temp
@@ -278,11 +307,13 @@ setTLS = function(cloud, col_names=NULL){
 #' @param ... further arguments passed down to \code{readLAS}, \code{read.las} or \code{fread}.
 #' @template return-las
 #' @examples
+#' \dontrun{
 #' cloud = matrix(runif(300), ncol=3)
 #' file = 'random_points.txt'
 #' fwrite(cloud, file)
 #' tls = readTLS(file)
 #' summary(tls)
+#' }
 #' @importFrom rlas read.las
 #' @importFrom data.table fread
 #' @export
@@ -305,6 +336,46 @@ readTLS = function(file, col_names=NULL, ...){
   }
 
   return(las)
+}
+
+
+#' Export \emph{TreeLS} point clouds to las/laz files
+#' @description Wrapper to \code{\link[lidR:writeLAS]{writeLAS}}. This function automatically adds new data columns as extra bytes
+#' to the written las/laz file using \code{\link[lidR:add_lasattribute]{add_lasattribute}} internally.
+#' @template param-las
+#' @param file file path.
+#' @param col_names column names from \emph{las} that you wish to export. If left empty, all columns not listed among
+#' \code{\link[lidR:LAS]{the standard LAS attributes}} are added to the file.
+#' @param index \code{logical} - write lax file also.
+#' @examples
+#' \dontrun{
+#' file = system.file("extdata", "pine.laz", package="TreeLS")
+#' tls = readTLS(file) %>% fastPointMetrics#'
+#' writeTLS(tls, 'my_updated_file.laz')
+#'
+#' up_tls = readTLS('my_updated_file.laz')
+#' summary(up_tls)
+#' }
+#' @export
+writeTLS = function(las, file, col_names=NULL, index=FALSE){
+
+  isLAS(las)
+
+  fields = names(las@data)
+  fields = fields[!(fields %in% DEFAULT_LASATTRIBUTES)]
+
+  if(!is.null(col_names)){
+    if(!all(col_names %in% names(las@data))){
+      stop("col_names must have only names that exist in las")
+    }
+    fields = col_names
+  }
+
+  for(f in fields){
+    las = add_lasattribute(las, las@data[,f,with=F] %>% unlist %>% as.double, f, f)
+  }
+
+  writeLAS(las, file, index)
 }
 
 
@@ -344,77 +415,6 @@ nnFilter = function(las, d = 0.05, n = 2){
 
   las = filter_poi(las, keep)
   return(las)
-}
-
-
-#' Calculate point neighborhood metrics
-#' @description Get statistics for every point in a \code{LAS} object. Neighborhood search methods are prefixed by \code{ptm}.
-#' @template param-las
-#' @param method neighborhood search algorithm. Currently available: \code{\link{ptm.voxel}} and \code{\link{ptm.knn}}.
-#' @param which_metrics optional \code{character} vector - list of metrics (by name) to be calculated. Check out \code{\link{fastPointMetrics.available}} for a list of all metrics.
-#' @template return-las
-#' @details
-#'
-#' Individual or voxel-wise point metrics build up the basis for many studies involving TLS in forestry. This
-#' function is used internally in other \emph{TreeLS} methods for tree mapping and stem denoising, but also may
-#' be useful to users interested in developing their own custom methods for point cloud classification/filtering of
-#' vegetation features or build up input datasets for machine learning classifiers.
-#'
-#' \code{fastPointMetrics} provides a way to calculate several geometry related metrics (listed below) in an optimized way.
-#' All metrics are calculated internally by C++ functions in a single pass (\emph{O(n)} time), hence \emph{fast}.
-#' This function is provided for convenience, as it allows very fast calculations of several complex variables
-#' on a single line of code, speeding up heavy work loads. For a more flexible approach that allows user defined
-#' metrics check out \code{\link[lidR:point_metrics]{point_metrics}} from the \emph{lidR} package.
-#'
-#' In order to avoid excessive memory use, not all available metrics are calculated by default.
-#' The calculated metrics can be specified every time \code{fastPointMetrics} is run by naming the desired metrics
-#' into the \code{which_metrics} argument, or changed globally for the active R session by setting new default
-#' metrics using \code{\link{fastPointMetrics.available}}.
-#'
-#' @template section-point-metrics
-#' @template reference-wang
-#' @template reference-zhou
-#' @examples
-#' file = system.file("extdata", "pine.laz", package="TreeLS")
-#' tls = readTLS(file, select='xyz')
-#'
-#' all_metrics = fastPointMetrics.available()
-#' my_metrics = all_metrics[c(1,4,6)]
-#'
-#' tls = fastPointMetrics(tls, ptm.knn(10), my_metrics)
-#' head(tls@data)
-#' plot(tls, color='Linearity')
-#' @export
-fastPointMetrics = function(las, method = ptm.voxels(), which_metrics = ENABLED_POINT_METRICS$names){
-
-  isLAS(las)
-
-  if(!hasAttribute(method, 'ptm_mtd'))
-    stop('invalid method: check ?fastPointMetrics')
-
-  return(method(las, which_metrics))
-}
-
-
-#' Print available point metrics
-#' @description Print the list of available metrics for \code{\link{fastPointMetrics}}.
-#' @param enable optional \code{integer} or \code{character} vector containing indices or names of the metrics you want to
-#' enable globally. Enabled metrics are calculated every time you run \code{\link{fastPointMetrics}} by default.
-#' Only metrics used internally in other \emph{TreeLS} methods are enabled out-of-the-box.
-#' @return \code{character} vector of all metrics.
-#' @template section-point-metrics
-#' @examples
-#' m = fastPointMetrics.available()
-#' length(m)
-#' @export
-fastPointMetrics.available = function(enable = ENABLED_POINT_METRICS$names){
-  if(typeof(enable) != 'character') enable = POINT_METRICS_NAMES[enable]
-  enable_metrics = ptmMetricsLog(enable)
-  ENABLED_POINT_METRICS$names <- enable_metrics$names
-  temp = data.frame(INDEX = 1:length(POINT_METRICS_NAMES), METRIC = POINT_METRICS_NAMES, ENABLED = enable_metrics$log)
-  print(temp)
-  cat('\n')
-  return(invisible(POINT_METRICS_NAMES))
 }
 
 
@@ -459,13 +459,13 @@ tlsSample = function(las, method = smp.voxelize()){
 #' @param negative \code{logical} - if \code{TRUE}, returns all points **outside** the specified circle/square perimeter.
 #' @template return-las
 #' @examples
-#' file = system.file("extdata", "model_boles.laz", package="TreeLS")
+#' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file)
 #'
 #' tls = tlsCrop(tls, 2, 3, 1.5, TRUE, TRUE)
 #' plot(tls)
 #'
-#' tls = tlsCrop(tls, 15, 10, 3, FALSE, FALSE)
+#' tls = tlsCrop(tls, 5, 5, 5, FALSE, FALSE)
 #' plot(tls)
 #' @export
 tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
@@ -600,19 +600,19 @@ treeMap = function(las, method = map.hough(), merge=0.2, positions_only=FALSE){
 #' @return signed \code{data.table} of tree IDs and XY coordinates.
 #' @template example-tree-map
 #' @export
-treeMap.positions = function(las, plot=TRUE){
+treeMap.positions = function(map, plot=TRUE){
 
-  if(!hasAttribute(las, 'tree_map') && !hasAttribute(las, 'tree_map_dt'))
-    stop('las is not a tree_map object: check ?treeMap')
+  if(!hasAttribute(map, 'tree_map') && !hasAttribute(map, 'tree_map_dt'))
+    stop('map is not a tree_map object: check ?treeMap')
 
-  if(hasAttribute(las, 'tree_map_dt')){
-    pos = las
+  if(hasAttribute(map, 'tree_map_dt')){
+    pos = map
   }else{
-    if(hasField(las, 'TreePosition')){
-      las %<>% filter_poi(TreePosition)
+    if(hasField(map, 'TreePosition')){
+      map %<>% filter_poi(TreePosition)
     }
 
-    pos = las@data[,.(X=median(X), Y=median(Y)),by=TreeID]
+    pos = map@data[,.(X=median(X), Y=median(Y)),by=TreeID]
     pos = pos[order(TreeID)]
 
     pos %<>% setAttribute('tree_map_dt')
@@ -637,41 +637,41 @@ treeMap.positions = function(las, plot=TRUE){
 #' from forest stands with regularly spaced trees.
 #' @importFrom nabor knn
 #' @export
-treeMap.merge = function(las, d=.2){
+treeMap.merge = function(map, d=.2){
 
-  if( !(hasAttribute(las, 'tree_map') || hasAttribute(las, 'tree_map_dt')) )
-    stop('las is not a tree_map object: check ?treeMap')
+  if( !(hasAttribute(map, 'tree_map') || hasAttribute(map, 'tree_map_dt')) )
+    stop('map is not a tree_map object: check ?treeMap')
 
   if(d < 0)
     stop('d must be a positive number')
 
-  is_data_table = hasAttribute(las, 'tree_map_dt')
-  nxy = if(is_data_table) las else treeMap.positions(las, plot = F)
+  is_data_table = hasAttribute(map, 'tree_map_dt')
+  nxy = if(is_data_table) map else treeMap.positions(map, plot = F)
   nn = knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
   lg_step = which(step > d)
   lg_step = lg_step[ lg_step/length(step) < .5 ]
 
-  if(length(lg_step) == 0) return(las)
+  if(length(lg_step) == 0) return(map)
 
   lg_step = 1:max(lg_step)
 
   id_step = which(nn$nn.dists[,2] %in% dst[lg_step])
   id_mat = nn$nn.idx[id_step,]
 
-  if(nrow(id_mat) == 0) return(las)
+  if(nrow(id_mat) == 0) return(map)
 
   for(rid in 1:nrow(id_mat)){
     idx = id_mat[rid,]
     if(is_data_table){
-      las[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
+      map[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
     }else{
-      las@data[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
+      map@data[TreeID == nxy$TreeID[idx[2]],]$TreeID = nxy$TreeID[idx[1]]
     }
   }
 
-  return(las)
+  return(map)
 }
 
 
@@ -857,8 +857,6 @@ tlsRotate = function(las){
 
   isLAS(las)
 
-  . = NULL
-
   ground = las@data[,c('X','Y','Z')] %>%
     toLAS %>%
     classify_ground(csf(class_threshold = .2), F) %>%
@@ -926,7 +924,7 @@ tlsRotate = function(las){
 #' plot(zy)
 #'
 #' ### mirror all axes, then set the point cloud's starting point as the origin
-#' rv = tlsAlter(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
+#' rv = tlsTransform(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
 #' bbox(rv)
 #' range(rv$Z)
 #' @export
@@ -969,8 +967,6 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
     return(temp)
   }) %>% do.call(what = cbind) %>% as.data.table
 
-  . = NULL
-
   las@data[,1:3] = XYZ
 
   if(rotate){
@@ -1001,10 +997,10 @@ tlsTransform = function(las, xyz = c('X', 'Y', 'Z'), bring_to_origin = FALSE, ro
 #' @template param-conf
 #' @template param-n-best
 #' @return vector of parameters
-circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
+circleFit = function(las, method = 'irls', n=5, inliers=.8, conf=.99, n_best = 0){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'qr'
-  pars = cppCircleFit(las %>% las2xyz, method, n, p, inliers, n_best)
+  pars = cppCircleFit(las %>% las2xyz, method, n, conf, inliers, n_best)
   pars[3] = pars[3]
   names(pars)[1:4] = c('X','Y','radius', 'err')
   if(length(pars) == 5) names(pars)[5] = 'err2'
@@ -1023,10 +1019,10 @@ circleFit = function(las, method = 'irls', n=5, inliers=.8, p=.99, n_best = 0){
 #' @param max_angle \code{numeric} - used when \code{method == "bf"}. The maximum tolerated deviation, in degrees, from an absolute vertical line (Z = c(0,0,1)).
 #' @template param-n-best
 #' @return vector of parameters
-cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, p=.95, max_angle=30, n_best=20){
+cylinderFit = function(las, method = 'ransac', n=5, inliers=.9, conf=.95, max_angle=30, n_best=20){
   if(nrow(las@data) < 3) return(NULL)
   if(method == 'ransac' & nrow(las@data) <= n) method = 'nm'
-  pars = cppCylinderFit(las %>% las2xyz, method, n, p, inliers, max_angle, n_best)
+  pars = cppCylinderFit(las %>% las2xyz, method, n, conf, inliers, max_angle, n_best)
   if(method == 'bf'){
     pars[3] = pars[3]
     names(pars) = c('x','y','radius', 'err', 'ax', 'ay')
@@ -1221,9 +1217,11 @@ tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(sha
 #' @param fast \code{logical}, use \code{TRUE} to plot spheres representing tree diameters or \code{FALSE} to plot detailed 3D cylinders.
 #' @param tree_id \code{numeric} - plot only the tree matching this tree id.
 #' @param segment \code{numeric} - plot only stem segments matching this segment id.
+#' @param x output from \code{\link[lidR:plot]{plot}} or \code{tlsPlot}
 #' @template param-las
 #' @param color_func color palette function used in \code{add_treePoints}.
 #' @param stems_data_table,inventory_data_table \code{data.table} objects generated by \code{stemSegmentation} and \code{tlsInventory}.
+#' @param color color of 3D objects.
 #' @examples
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file) %>%
@@ -1273,7 +1271,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
   }
 
   h_plot = function(las){
-    colors = lidR:::set.colors(las$Z, lidR::height.colors(50))
+    colors = set.colors(las$Z, lidR::height.colors(50))
     rgl.points(las %>% las2xyz, color=colors, size=pt_cex)
   }
 
@@ -1346,6 +1344,9 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 #' @param votes_percentile \code{numeric} - use only estimates with more votes than \code{votes_percentile}.
 #' @template param-min-density
 #' @param plot \code{logical} - plot the results?
+#' @importFrom stats kmeans dist
+#' @importFrom utils combn
+#' @importFrom graphics legend
 #' @export
 shapeFit.forks = function(dlas, pixel_size = .02, max_d = .4, votes_percentile = .7, min_density = .25, plot=FALSE){
 
@@ -1403,8 +1404,8 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_d = .4, votes_percentile =
 
   if(plot){
     plot(dlas$Y ~ dlas$X, cex=.5, asp=1, pch=20, ylab='Y', xlab='X')#, ...)
-    vcols = lidR:::set.colors(hough_clusters$v, height.colors(hough_clusters$v %>% unique %>% length))
-    vcols = lidR:::set.colors(hough_clusters$clt, height.colors(hough_clusters$clt %>% unique %>% length))
+    vcols = set.colors(hough_clusters$v, height.colors(hough_clusters$v %>% unique %>% length))
+    vcols = set.colors(hough_clusters$clt, height.colors(hough_clusters$clt %>% unique %>% length))
     points(hough_clusters$x, hough_clusters$y, col=vcols, pch=20, cex=1)
   }
 

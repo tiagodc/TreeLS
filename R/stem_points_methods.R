@@ -216,7 +216,7 @@ stm.eigen.knn = function(h_step = .5, max_curvature = .1, max_verticality = 10, 
 
     keepcols = !(colnames(las@data) %in% c('Votes', 'Radius', 'MaxVotes'))
     keepcols = colnames(las@data)[keepcols]
-    las@data = las@data[,..keepcols]
+    las@data = las@data[,keepcols,with=F]
     las@data = merge(las@data, votes[,.(PointID, Votes, Radius)], by='PointID', sort=F, all.x=T)
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 
@@ -331,7 +331,7 @@ stm.eigen.voxel = function(h_step = .5, max_curvature = .1, max_verticality = 10
 
     keepcols = !(colnames(las@data) %in% c('Votes', 'Radius', 'MaxVotes'))
     keepcols = colnames(las@data)[keepcols]
-    las@data = las@data[,..keepcols]
+    las@data = las@data[,keepcols,with=F]
     las@data = merge(las@data, votes[,.(VoxelID, Votes, Radius)], by='VoxelID', sort=F, all.x=T)
     las@data[!las@data$Stem, c('Votes', 'Radius')] = 0
 

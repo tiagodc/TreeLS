@@ -22,7 +22,10 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <Eigen/Dense>
 
-#define USE_RCPP_ARMADILLO
+#ifndef USE_RCPP_ARMADILLO
+  #define USE_RCPP_ARMADILLO
+#endif
+
 #include "optim.hpp"
 
 #include "algorithms.hpp"

@@ -54,7 +54,7 @@ range(ud$Z)
 plot(zy)
 
 ### mirror all axes, then set the point cloud's starting point as the origin
-rv = tlsAlter(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
+rv = tlsTransform(tls, c('-x', '-y', '-z'), bring_to_origin=TRUE)
 bbox(rv)
 range(rv$Z)
 }

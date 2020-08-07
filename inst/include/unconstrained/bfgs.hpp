@@ -108,7 +108,7 @@ bfgs_int(arma::vec& init_out_vals, std::function<double (const arma::vec& vals_i
 
     if (!x.is_finite()) 
     {
-        printf("bfgs error: non-finite initial value(s).\n");
+        Rprintf("bfgs error: non-finite initial value(s).\n");
         return false;
     }
 
