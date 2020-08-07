@@ -1329,7 +1329,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
   }
 
   pan3d(2)
-  return(0)
+  return(invisible(0))
 }
 
 
