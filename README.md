@@ -32,8 +32,8 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 
 - Tree detection at plot level
 - Tree region assignment
-- Stem points detection at single tree and plot levels
-- Stem segmentation at single tree and plot levels
+- Stem detection and denoising
+- Stem segmentation
 - Forest inventory
 - Research and other applications
 
