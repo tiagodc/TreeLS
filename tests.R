@@ -32,19 +32,20 @@ tls = readTLS(file) %>% tlsNormalize()
 
 # calculate some point metrics
 tls = fastPointMetrics(tls, ptm.knn())
-plot(tls, color='Verticality')
+x = plot(tls, color='Verticality')
 
 # get its stem points
 tls = stemPoints(tls, stm.eigen.knn(voxel_spacing = .02))
-x = plot(tls, color='Stem')
+add_stemPoints(x, tls, size=3, color='red')
 
 # get dbh and height
-inv = tlsInventory(tls)
+dbh_algo = shapeFit(shape='cylinder', algorithm = 'bf', n=15, inliers=.95, z_dev=10)
+inv = tlsInventory(tls, hp = .95, d_method = dbh_algo)
 add_tlsInventory(x, inv)
 
 # segment the stem usind 3D cylinders and getting their directions
 seg = stemSegmentation(tls, sgt.irls.cylinder(n=300))
-add_stemSegments(x, seg, color='yellow')
+add_stemSegments(x, seg, color='blue')
 
 # check out a specific tree segment
 tlsPlot(seg, tls, segment = 3)
