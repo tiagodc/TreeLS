@@ -10,19 +10,19 @@ High performance R functions for forest data processing based on **T**errestrial
 
 ## Description
 
-This package is a refactor of the methods described in [this paper](https://doi.org/10.1016/j.compag.2017.10.019).
+This package is a refactor of the methods described in [this paper](https://doi.org/10.1016/j.compag.2017.10.019), among many other features for 3D point cloud processing of forest environments.
 
-Most algorithms are written in C++ and wrapped in R functions through `Rcpp`. *TreeLS* is build on top of [lidR](https://github.com/tiagodc/TreeLS), using its LAS infrastructure internally for most methods.
+Most algorithms are written in C++ and wrapped in R functions through `Rcpp`. *TreeLS* is built on top of [lidR](https://github.com/tiagodc/TreeLS), using its `LAS` infrastructure internally for most methods.
 
 For any questions, comments or bug reports please submit an [issue](https://github.com/tiagodc/TreeLShttps://github.com/tiagodc/TreeLS/issues) here on GitHub. Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
 
 `TreeLS` is currently on v2.0. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the *Installation from source* section below.
 
-*TreeLS is not on CRAN at the moment (August/2020), the up-to-date version is submitted and should be updated shortly. Meanwhile you can still install it from source.
+*TreeLS is not on CRAN at the moment (August/2020), the up-to-date version is submitted and should be available shortly. Meanwhile you can install it from source using devtools.
 
 ## News
 
-- August/2020: Version 2.0 is finally available! It's a major release, introducing several new functionalities, bug fixes, more robust estimators for noisy clouds and more flexible plotting. All functionalities from older versions are now available and optimized, so there should be no need to use legacy code anymore. The scope of application of TreeLS has become much wider in this version, specially due to the introduction of functions like `fastPointMetrics` and `shapeFit`, making it much easier for researchers to assess point cloud data in many contexts and develop their own methods on top of those functions. For a comprehensive list of the updates check out the [CHANGELOG](CHANGELOG.md)
+- August/2020: Version 2.0 is finally available! It's a major release, introducing several new functionalities, bug fixes, more robust estimators for noisy clouds and more flexible plotting. All functionalities from older versions are now available and optimized, so there should be no need to use legacy code anymore. The scope of application of TreeLS has become much wider in this version, specially due to the introduction of functions like `fastPointMetrics` and `shapeFit`, making it much easier for researchers to assess point cloud data in many contexts and develop their own methods on top of those functions. For a comprehensive list of the updates check out the [CHANGELOG](CHANGELOG.md).
 
 - March/2019: `TreeLS` is finally available on CRAN and is now an [official R package](https://cran.r-project.org/web/packages/TreeLS/TreeLS.pdf) !!
 
@@ -34,8 +34,8 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 - Tree region assignment
 - Stem points detection at single tree and plot levels
 - Stem segmentation at single tree and plot levels
-- Forest inventory (diameter + height)
-- Methods for aiding research and applications involving point clouds and forests
+- Forest inventory
+- Research and other applications
 
 ## Installation from source
 
@@ -59,7 +59,7 @@ Example of full processing workflow from reading a point cloud file until stem s
 ```
 library(TreeLS)
 
-# open artificial sample file
+# open sample plot file
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file)
 
@@ -85,7 +85,7 @@ add_stemPoints(x, tls, color='red', size=8)
 inv = tlsInventory(tls, d_method=shapeFit(shape='circle', algorithm = 'irls'))
 add_tlsInventory(x, inv)
 
-# extract measures
+# extract stem measures
 seg = stemSegmentation(tls, sgt.ransac.circle(n = 20))
 add_stemSegments(x, seg, color='white', fast=T)
 
