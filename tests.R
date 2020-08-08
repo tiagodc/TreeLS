@@ -24,31 +24,27 @@ rm(list = c('X','Y','Z','Classification','TreePosition','TreeID','Stem','Segment
 # require(TreeLS)
 # require(glue)
 
-file = 'test_data/Nelder Faz_Jugui 13-09-19.las'
-hd = readLASheader(file)
+library(TreeLS)
 
-xs = seq(hd@PHB$`Min X`, hd@PHB$`Max X`, length.out = 4)
-ys = seq(hd@PHB$`Min Y`, hd@PHB$`Max Y`, length.out = 4)
+### overview of some new methods on v2.0
+file = system.file("extdata", "pine.laz", package="TreeLS")
+tls = readTLS(file) %>% tlsNormalize()
 
-j = i = 1
-for(i in 1:3){
-  for(j in 1:3){
-    filt = glue('-keep_x {xs[i]} {xs[i+1]} -keep_y {ys[j]} {ys[j+1]}')
-  }
-}
+# calculate some point metrics
+tls = fastPointMetrics(tls, ptm.knn())
+plot(tls, color='Verticality')
 
-tls = readTLS(file, filter=filt, select='xyz')
-tls = tlsNormalize(tls, min_res = .5, keep_ground = F)
-thin = tlsSample(tls, smp.voxelize(0.025))
-map = treeMap(thin, map.hough(min_density = .2, max_d = .4))
-tls = treePoints(tls, map, trp.crop(.75))
-tls = stemPoints(tls, stm.hough(max_d=.4))
+# get its stem points
+tls = stemPoints(tls, stm.eigen.knn(voxel_spacing = .02))
+x = plot(tls, color='Stem')
+
+# get dbh and height
 inv = tlsInventory(tls)
+add_tlsInventory(x, inv)
 
-tiny = tlsSample(tls, smp.randomize(.1))
-tlsPlot(tiny, inv, tree_id = 31)
+# segment the stem usind 3D cylinders and getting their directions
+seg = stemSegmentation(tls, sgt.irls.cylinder(n=300))
+add_stemSegments(x, seg, color='yellow')
 
-inv$H %>% hist
-hist(inv$Radius*200)
-
-# .rs.restartR()
+# check out a specific tree segment
+tlsPlot(seg, tls, segment = 3)

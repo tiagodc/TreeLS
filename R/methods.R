@@ -1259,13 +1259,13 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
   tid_plot = function(obj){
     if(tree_ids || !is.null(tree_id)) return(NULL)
-    if(!hasField(obj, 'TreeID')) return(NULL)
+    if(!hasField(obj, 'TreeID') || !hasField(obj, 'X')) return(NULL)
     add_treeIDs(0, obj, color='yellow')
     tree_ids <<- TRUE
   }
 
   sid_plot = function(obj){
-    if(tree_ids || seg_ids) return(NULL)
+    if(tree_ids || seg_ids || !hasField(obj, 'X')) return(NULL)
     add_segmentIDs(0, obj, color='yellow', pos=4)
     seg_ids <<- TRUE
   }
