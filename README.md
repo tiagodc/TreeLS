@@ -26,7 +26,7 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 
 - March/2019: `TreeLS` is finally available on CRAN and is now an [official R package](https://cran.r-project.org/web/packages/TreeLS/TreeLS.pdf) !!
 
-<img align="right" height="450" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
+<img align="right" height="400" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
 
 ## Main functionalities
 
