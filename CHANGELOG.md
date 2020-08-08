@@ -1,4 +1,5 @@
 #### v2.0.0
+- *ply* files are now supported in `readTLS`.
 - naming convention changed for all methods used inside other functions - all start with a 3 letter prefix (`ptm`, `map`, `ptm`, `trp`...).
 - some methods were renamed: `tlsTransform`, `treeMap.positions`.
 - new methods added por tree mapping, stem points and stem segmentation, contemplating several new possible use cases and forest scenarios (complex forests, high accuracy LiDAR sensors, irregular stem shapes and so on).

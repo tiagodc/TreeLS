@@ -35,7 +35,9 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 - Stem detection and denoising
 - Stem segmentation
 - Forest inventory
-- Research and other applications
+- Fast calculation of point features
+- Research basis and other applications
+- 3D plotting and manipulation
 
 ## Installation from source
 
