@@ -790,6 +790,7 @@ stemPoints = function(las, method = stm.hough()){
 #' @template reference-olofsson
 #' @template reference-thesis
 #' @examples
+#' \dontrun{
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file) %>%
 #'   tlsNormalize
@@ -797,6 +798,7 @@ stemPoints = function(las, method = stm.hough()){
 #' tls = stemPoints(tls, stm.hough())
 #' sgt = stemSegmentation(tls, sgt.ransac.circle(n=20))
 #' tlsPlot(tls, sgt)
+#' }
 #' @export
 stemSegmentation = function(las, method=sgt.ransac.circle()){
 
@@ -1146,6 +1148,7 @@ shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10,
 #' @param hp \code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height, i.e. the highest point.
 #' @param d_method parameterized \code{\link{shapeFit}} function, i.e. method to use for diameter estimation.
 #' @examples
+#' \dontrun{
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file) %>%
 #'   tlsNormalize %>%
@@ -1158,6 +1161,7 @@ shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10,
 #' dmt = shapeFit(shape = 'circle', algorithm='ransac', n=20)
 #' inv = tlsInventory(tls, d_method = dmt)
 #' tlsPlot(tls, inv)
+#' }
 #' @export
 tlsInventory = function(las, dh = 1.3, dw = 0.5, hp = 1, d_method = shapeFit(shape = 'circle', algorithm='ransac', n=15, n_best = 20)){
 

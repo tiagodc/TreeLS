@@ -27,6 +27,7 @@ tlsInventory(
 Estimation of diameter and height tree-wise for normalized point clouds with assigned stem points.
 }
 \examples{
+\dontrun{
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file) \%>\%
   tlsNormalize \%>\%
@@ -39,4 +40,5 @@ tls = stemPoints(tls, stm.hough())
 dmt = shapeFit(shape = 'circle', algorithm='ransac', n=20)
 inv = tlsInventory(tls, d_method = dmt)
 tlsPlot(tls, inv)
+}
 }

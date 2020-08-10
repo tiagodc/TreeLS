@@ -137,6 +137,7 @@ The parameters returned by the brute force cylinder fit method are:
 }
 
 \examples{
+\dontrun{
 file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file) \%>\%
   tlsNormalize
@@ -144,6 +145,7 @@ tls = readTLS(file) \%>\%
 tls = stemPoints(tls, stm.hough())
 sgt = stemSegmentation(tls, sgt.ransac.circle(n=20))
 tlsPlot(tls, sgt)
+}
 }
 \references{
 Liang, X. et al., 2012. Automatic stem mapping using single-scan terrestrial laser scanning. IEEE Transactions on Geoscience and Remote Sensing, 50(2), pp.661–670.

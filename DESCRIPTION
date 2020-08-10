@@ -3,7 +3,7 @@ Type: Package
 Title: Terrestrial Point Cloud Processing of Forest Data
 Version: 2.0.0
 Authors@R: c(person("Tiago", "de Conto", email = "tdc.florestal@gmail.com", role = c("aut", "cre")))
-Description: High performance algorithms for manipulation of terrestrial 'LiDAR' (but not only) point clouds for use is research and forest monitoring applications, being fully compatible with the 'LAS' infrastructure provided by 'lidR'. For in depth descriptions of the stem classification and segmentation algorithms check out Conto et al. (2017) <doi:10.1016/j.compag.2017.10.019>.
+Description: High performance algorithms for manipulation of terrestrial 'LiDAR' (but not only) point clouds for use in research and forest monitoring applications, being fully compatible with the 'LAS' infrastructure of 'lidR'.
 URL: https://github.com/tiagodc/TreeLS    
 Depends: R (>= 3.3.0), data.table (>= 1.12.0), magrittr (>= 1.5), lidR (>= 3.0.0)
 Imports: rgl, raster, sp, deldir, dismo, nabor, benchmarkme, rlas, glue, mathjaxr

@@ -2,7 +2,6 @@
 ![CRAN checks](https://cranchecks.info/badges/summary/TreeLS)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tiagodc/TreeLS)
 ![](https://cranlogs.r-pkg.org/badges/grand-total/TreeLS)
-<!-- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/tiagodc/TreeLS) -->
 
 # TreeLS
 
@@ -12,9 +11,9 @@ High performance R functions for forest data processing based on **T**errestrial
 
 This package is a refactor of the methods described in [this paper](https://doi.org/10.1016/j.compag.2017.10.019), among many other features for 3D point cloud processing of forest environments.
 
-Most algorithms are written in C++ and wrapped in R functions through `Rcpp`. *TreeLS* is built on top of [lidR](https://github.com/tiagodc/TreeLS), using its `LAS` infrastructure internally for most methods.
+Most algorithms are written in C++ and wrapped in R functions through `Rcpp`. *TreeLS* is built on top of [lidR](https://github.com/Jean-Romain/lidR/), using its `LAS` infrastructure internally for most methods.
 
-For any questions, comments or bug reports please submit an [issue](https://github.com/tiagodc/TreeLShttps://github.com/tiagodc/TreeLS/issues) here on GitHub. Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
+For any questions, comments or bug reports please submit an [issue](https://github.com/tiagodc/TreeLS/issues) here on GitHub. Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
 
 `TreeLS` is currently on v2.0. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the *Installation from source* section below.
 
@@ -24,7 +23,7 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 
 - August/2020: Version 2.0 is finally available! It's a major release, introducing several new functionalities, bug fixes, more robust estimators for noisy clouds and more flexible plotting. All functionalities from older versions are now available and optimized, so there should be no need to use legacy code anymore. The scope of application of TreeLS has become much wider in this version, specially due to the introduction of functions like `fastPointMetrics` and `shapeFit`, making it much easier for researchers to assess point cloud data in many contexts and develop their own methods on top of those functions. For a comprehensive list of the updates check out the [CHANGELOG](CHANGELOG.md).
 
-- March/2019: `TreeLS` is finally available on CRAN and is now an [official R package](https://cran.r-project.org/web/packages/TreeLS/TreeLS.pdf) !!
+- March/2019: `TreeLS` is finally available on CRAN and is now an official R package.
 
 <img align="right" height="400" src="https://raw.githubusercontent.com/tiagodc/Scripts/master/animations/treedt.gif">
 
