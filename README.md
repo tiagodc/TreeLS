@@ -21,7 +21,7 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 
 ## News
 
-- August/2020: Version 2.0 is finally available! It's a major release, introducing several new functionalities, bug fixes, more robust estimators for noisy clouds and more flexible plotting. All functionalities from older versions are now available and optimized, so there should be no need to use legacy code anymore. The scope of application of TreeLS has become much wider in this version, specially due to the introduction of functions like `fastPointMetrics` and `shapeFit`, making it much easier for researchers to assess point cloud data in many contexts and develop their own methods on top of those functions. For a comprehensive list of the updates check out the [CHANGELOG](CHANGELOG.md).
+- August/2020: Version 2.0 is finally available! It's a major release, introducing several new functionalities, bug fixes, more robust estimators for noisy clouds and more flexible plotting. All functionalities from older versions are now available and optimized, so there should be no need to use legacy code anymore. The scope of application of TreeLS has become much wider in this version, specially due to the introduction of functions like `fastPointMetrics` and `shapeFit`, making it much easier for researchers to assess point cloud data in many contexts and develop their own methods on top of those functions. For a comprehensive list of the updates check out the [CHANGELOG](https://github.com/tiagodc/TreeLS/blob/master/CHANGELOG.md).
 
 - March/2019: `TreeLS` is finally available on CRAN and is now an official R package.
 
