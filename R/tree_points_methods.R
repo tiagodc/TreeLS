@@ -12,7 +12,10 @@ trp.voronoi = function(){
     names(v_poly) = 'TreeID'
     crs(v_poly) = crs(las)
 
-    xysp = las@data[,.(X,Y)] %>% SpatialPoints %>% over(y = v_poly)
+    xysp = las@data[,.(X,Y)] %>% SpatialPoints
+    crs(xysp) = crs(las)
+    xysp %<>% over(y = v_poly)
+
     xysp = xysp[,1] %>% as.double
     xysp[is.na(xysp)] = 0
 

@@ -27,25 +27,13 @@ rm(list = c('X','Y','Z','Classification','TreePosition','TreeID','Stem','Segment
 library(TreeLS)
 
 ### overview of some new methods on v2.0
-file = system.file("extdata", "pine.laz", package="TreeLS")
-tls = readTLS(file) %>% tlsNormalize()
+file = system.file("extdata", "pine_plot.laz", package="TreeLS")
+tls = readTLS(file)
 
-# calculate some point metrics
-tls = fastPointMetrics(tls, ptm.knn())
-x = plot(tls, color='Verticality')
+crs(tls) = '+proj=utm +zone=23 +datum=WGS84 +units=m +no_defs'
+plot(tls)
+tls = tlsNormalize(tls)
+map = treeMap(tls)
 
-# get its stem points
-tls = stemPoints(tls, stm.eigen.knn(voxel_spacing = .02))
-add_stemPoints(x, tls, size=3, color='red')
-
-# get dbh and height
-dbh_algo = shapeFit(shape='cylinder', algorithm = 'bf', n=15, inliers=.95, z_dev=10)
-inv = tlsInventory(tls, hp = .95, d_method = dbh_algo)
-add_tlsInventory(x, inv)
-
-# segment the stem usind 3D cylinders and getting their directions
-seg = stemSegmentation(tls, sgt.irls.cylinder(n=300))
-add_stemSegments(x, seg, color='blue')
-
-# check out a specific tree segment
-tlsPlot(seg, tls, segment = 3)
+tls = treePoints(las, map)
+plot(tls, color='TreeID')
