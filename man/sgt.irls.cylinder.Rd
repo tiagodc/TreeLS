@@ -38,7 +38,7 @@ to optimize the cylinder parameters is the
 which takes as objective function the model describing the distance from any point
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 
-\mjdeqn{D_{p} = |(p - q) \times a| - r}{}
+\mjdeqn{D_{p} = |(p - q) \times a| - r}{Dp = abs((p - q) x a) - r}
 
 where:
 

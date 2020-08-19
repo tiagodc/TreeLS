@@ -71,7 +71,7 @@ to optimize the cylinder parameters is the
 which takes as objective function the model describing the distance from any point
 to a modelled cylinder`s surface on a regular 3D cylinder point cloud:
 
-\mjdeqn{D_{p} = |(p - q) \times a| - r}{}
+\mjdeqn{D_{p} = |(p - q) \times a| - r}{Dp = abs((p - q) x a) - r}
 
 where:
 
@@ -106,7 +106,7 @@ The \strong{RAN}dom \strong{SA}mple \strong{C}onsensus algorithm is a method tha
 a data set as many times as necessary to find a subset comprised of only inliers - e.g. observations
 belonging to a desired model. The RANSAC algorithm provides a way of estimating the necessary number of
 iterations necessary to fit a model using inliers only, at least once, as shown in the equation:
-\mjdeqn{k = log(1 - p) / log(1 - w^{n})}{}
+\mjdeqn{k = log(1 - p) / log(1 - w^{n})}{k = log(1 - p) / log(1 - w^n)}
 where:
 \itemize{
 \item \emph{k}: number of iterations

@@ -21,12 +21,11 @@ Wrapper to \code{\link[lidR:writeLAS]{writeLAS}}. This function automatically ad
 to the written las/laz file using \code{\link[lidR:add_lasattribute]{add_lasattribute}} internally.
 }
 \examples{
-\dontrun{
 file = system.file("extdata", "pine.laz", package="TreeLS")
 tls = readTLS(file) \%>\% fastPointMetrics#'
-writeTLS(tls, 'my_updated_file.laz')
+tls_file = tempfile(fileext = '.laz')
+writeTLS(tls, tls_file)
 
-up_tls = readTLS('my_updated_file.laz')
+up_tls = readTLS(tls_file)
 summary(up_tls)
-}
 }

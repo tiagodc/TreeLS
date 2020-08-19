@@ -24,16 +24,6 @@ rm(list = c('X','Y','Z','Classification','TreePosition','TreeID','Stem','Segment
 # require(TreeLS)
 # require(glue)
 
-library(TreeLS)
-
-### overview of some new methods on v2.0
-file = system.file("extdata", "pine_plot.laz", package="TreeLS")
-tls = readTLS(file)
-
-crs(tls) = '+proj=utm +zone=23 +datum=WGS84 +units=m +no_defs'
-plot(tls)
-tls = tlsNormalize(tls)
-map = treeMap(tls)
-
-tls = treePoints(las, map)
-plot(tls, color='TreeID')
+pine = readTLS('inst/extdata/pine.laz')
+plot3d(pine@data)
+.pan3d()

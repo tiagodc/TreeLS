@@ -32,7 +32,7 @@ tfBruteForceCoordinates = function(dt, ax, ay){
   return(dt)
 }
 
-pan3d = function(button=2){
+.pan3d = function(button=2){
   start <- list()
 
   begin <- function(x, y) {
@@ -54,6 +54,42 @@ pan3d = function(button=2){
   # cat("Pan set on button", button, "of rgl device",rgl.cur(),"\n")
 }
 
+# --- Hidden function copied from lidR's source code (reference: https://github.com/Jean-Romain/lidR):
+# From rgl.setMouseCallbacks man page
+# nocov start
+.pan3d <- function(button=2, dev = rgl::rgl.cur(), subscene = rgl::currentSubscene3d(dev))
+{
+  start <- list()
+
+  begin <- function(x, y)
+  {
+    activeSubscene <- rgl::par3d("activeSubscene", dev = dev)
+    start$listeners <<- rgl::par3d("listeners", dev = dev, subscene = activeSubscene)
+
+    for (sub in start$listeners)
+    {
+      init <- rgl::par3d(c("userProjection","viewport"), dev = dev, subscene = sub)
+      init$pos <- c(x/init$viewport[3], 1 - y/init$viewport[4], 0.5)
+      start[[as.character(sub)]] <<- init
+    }
+  }
+
+  update <- function(x, y)
+  {
+    for (sub in start$listeners)
+    {
+      init <- start[[as.character(sub)]]
+      xlat <- 2*(c(x/init$viewport[3], 1 - y/init$viewport[4], 0.5) - init$pos)
+      mouseMatrix <- rgl::translationMatrix(xlat[1], xlat[2], xlat[3])
+      rgl::par3d(userProjection = mouseMatrix %*% init$userProjection, dev = dev, subscene = sub )
+    }
+  }
+  rgl::rgl.setMouseCallbacks(button, begin, update, dev = dev, subscene = subscene)
+}
+# nocov end
+
+
+# --- Hidden function copied from lidR's source code (reference: https://github.com/Jean-Romain/lidR):
 set.colors = function (x, palette, trim = Inf, value_index = FALSE){
   if (all(is.na(x)))
     return()
@@ -152,7 +188,7 @@ tlsPlot.dh.cylinder = function(las, rho, theta, phi, alpha, r, clear=F, wired=T,
   #
   # cyl = cylinder3d(rbind(meds+q-a*height, meds+q+a*height), radius=r, sides=36)
   # wire3d(cyl, color='white', lwd=3)
-  # pan3d(2)
+  # .pan3d(2)
 
   # ptsx = cos(seq(0,2*pi,length.out = 36)) * r
   # ptsy = sin(seq(0,2*pi,length.out = 36)) * r
@@ -205,7 +241,7 @@ tlsPlot.dh.circle = function(las, x, y, r, clear=F, wired=T, col='white'){
   #
   # cyl = cylinder3d(rbind(cbase, ctop), radius=r, sides=36)
   # wire3d(cyl, color='white', lwd=3)
-  # pan3d(2)
+  # .pan3d(2)
 
   ptring = data.frame(x + cos(seq(0,2*pi,length.out = 36)) * r,
                       y + sin(seq(0,2*pi,length.out = 36)) * r)
@@ -235,7 +271,7 @@ tlsPlot.dh.3d = function(las, rings, rVec, r, clear=T, wired=T, col='white'){
 
   cyl = cylinder3d(t(rings), radius=r, sides=36)
   if(wired) wire3d(cyl, color=col, lwd=3) else shade3d(cyl, color=col)
-  # pan3d(2)
+  # .pan3d(2)
 }
 
 #' @importFrom graphics abline lines

@@ -307,13 +307,11 @@ setTLS = function(cloud, col_names=NULL){
 #' @param ... further arguments passed down to \code{readLAS}, \code{read.las} or \code{fread}.
 #' @template return-las
 #' @examples
-#' \dontrun{
 #' cloud = matrix(runif(300), ncol=3)
-#' file = 'random_points.txt'
+#' file = tempfile(fileext = '.txt')
 #' fwrite(cloud, file)
 #' tls = readTLS(file)
 #' summary(tls)
-#' }
 #' @importFrom rlas read.las
 #' @importFrom data.table fread
 #' @export
@@ -348,14 +346,13 @@ readTLS = function(file, col_names=NULL, ...){
 #' \code{\link[lidR:LAS]{the standard LAS attributes}} are added to the file.
 #' @param index \code{logical} - write lax file also.
 #' @examples
-#' \dontrun{
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file) %>% fastPointMetrics#'
-#' writeTLS(tls, 'my_updated_file.laz')
+#' tls_file = tempfile(fileext = '.laz')
+#' writeTLS(tls, tls_file)
 #'
-#' up_tls = readTLS('my_updated_file.laz')
+#' up_tls = readTLS(tls_file)
 #' summary(up_tls)
-#' }
 #' @export
 writeTLS = function(las, file, col_names=NULL, index=FALSE){
 
@@ -790,7 +787,7 @@ stemPoints = function(las, method = stm.hough()){
 #' @template reference-olofsson
 #' @template reference-thesis
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' file = system.file("extdata", "pine.laz", package="TreeLS")
 #' tls = readTLS(file) %>%
 #'   tlsNormalize
@@ -1148,7 +1145,7 @@ shapeFit = function(stem_segment=NULL, shape='circle', algorithm='ransac', n=10,
 #' @param hp \code{numeric} - height percentile to extract per tree (0-1). Use 1 for top height, i.e. the highest point.
 #' @param d_method parameterized \code{\link{shapeFit}} function, i.e. method to use for diameter estimation.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 #' tls = readTLS(file) %>%
 #'   tlsNormalize %>%
@@ -1262,16 +1259,16 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
   pt_cex = 1.5
 
   tid_plot = function(obj){
-    if(tree_ids || !is.null(tree_id)) return(NULL)
-    if(!hasField(obj, 'TreeID') || !hasField(obj, 'X')) return(NULL)
+    if(tree_ids || !is.null(tree_id)) return(tree_ids)
+    if(!hasField(obj, 'TreeID') || !hasField(obj, 'X')) return(tree_ids)
     add_treeIDs(0, obj, color='yellow')
-    tree_ids <<- TRUE
+    return(TRUE)
   }
 
   sid_plot = function(obj){
-    if(tree_ids || seg_ids || !hasField(obj, 'X')) return(NULL)
+    if(tree_ids || seg_ids || !hasField(obj, 'X')) return(seg_ids)
     add_segmentIDs(0, obj, color='yellow', pos=4)
-    seg_ids <<- TRUE
+    return(TRUE)
   }
 
   h_plot = function(las){
@@ -1296,14 +1293,14 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
       if(hasField(las, 'Stem')){
         add_stemPoints(0, las, color='white', size=pt_cex)
         if(hasField(las, 'TreeID')) add_treePoints(0, las, size=pt_cex) else h_plot(las)
-        tid_plot(las)
-        sid_plot(las)
+        tree_ids = tid_plot(las)
+        seg_ids = sid_plot(las)
       }else if(hasAttribute(las, 'tree_map')){
         add_treeMap(0, las, color='yellow')
-        tid_plot(las)
+        tree_ids = tid_plot(las)
       }else if(hasField(las, 'TreeID')){
         add_treePoints(0, las, size=pt_cex)
-        tid_plot(las)
+        tree_ids = tid_plot(las)
       }else{
         h_plot(las)
       }
@@ -1320,19 +1317,19 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
       if(hasAttribute(las, 'tls_inventory_dt')){
         add_tlsInventory(0, las, fast=fast)
-        tid_plot(las)
+        tree_ids = tid_plot(las)
       }else if(hasAttribute(las, 'single_stem_dt') || hasAttribute(las, 'multiple_stems_dt')){
         add_stemSegments(0, las, fast=fast)
-        tid_plot(las)
-        sid_plot(las)
+        tree_ids = tid_plot(las)
+        seg_ids = sid_plot(las)
       }else if(hasAttribute(las, 'tree_map_dt')){
         add_treeMap(0, las, color='yellow')
-        tid_plot(las)
+        tree_ids = tid_plot(las)
       }
     }
   }
 
-  pan3d(2)
+  .pan3d(2)
   return(invisible(0))
 }
 

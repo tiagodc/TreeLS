@@ -27,7 +27,7 @@ tlsInventory(
 Estimation of diameter and height tree-wise for normalized point clouds with assigned stem points.
 }
 \examples{
-\dontrun{
+\donttest{
 file = system.file("extdata", "pine_plot.laz", package="TreeLS")
 tls = readTLS(file) \%>\%
   tlsNormalize \%>\%
