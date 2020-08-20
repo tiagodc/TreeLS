@@ -341,6 +341,8 @@ map.pick = function(map = NULL, min_h=1, max_h=5){
     axes3d(col='white')
     pts = las@data %$% identify3d(X, Y, Z, tolerance = 50)
 
+    if(length(pts) == 0) return(map)
+
     ids = 1:length(pts)
     if(!is.null(map)){
       ids = ids + max(map$TreeID)
