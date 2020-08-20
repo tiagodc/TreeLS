@@ -103,7 +103,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
     map$Keypoint_flag %<>% as.logical
     map$PointSourceID %<>% as.integer
     map$TreePosition %<>% as.logical
-    map = suppressMessages(map %>% LAS %>% setHeaderTLS)
+    map = suppressMessages(map %>% LAS %>% setHeaderTLS %>% setAttribute('tree_map'))
 
     return(map)
   }
@@ -192,7 +192,7 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
     las = filter_poi(las, hn$N[TreeID] > min_n)
 
-    las %<>% setAttribute('map_eigen')
+    las %<>% setAttribute('tree_map')
     return(las)
   }
 
@@ -279,7 +279,7 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
     las = filter_poi(las, hn$N[TreeID] > min_n)
 
-    las %<>% setAttribute('map_eigen')
+    las %<>% setAttribute('tree_map')
     return(las)
   }
 
@@ -331,7 +331,7 @@ map.pick = function(map = NULL, min_h=1, max_h=5){
       stop('no points found in the specified min_h/max_h range')
     }
 
-    plot(las, size = .5, clear_artifacts=F)
+    plot(las, size = 1.5, clear_artifacts=F)
 
     if(!is.null(map)){
       spheres3d(map$X, map$Y, median(las$Z), .33, color='white')

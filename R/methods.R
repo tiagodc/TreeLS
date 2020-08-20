@@ -576,7 +576,7 @@ treeMap = function(las, method = map.hough(), merge=0.2, positions_only=FALSE){
   if(hasField(las, 'Classification'))
     las %<>% filter_poi(Classification != 2)
 
-  map = method(las) %>% setAttribute('tree_map')
+  map = method(las)
 
   if(merge > 0){
     map = treeMap.merge(map, merge)
