@@ -117,10 +117,8 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 #' @template param-max-curvature
 #' @template param-max-verticality
-#' @param max_mean_dist \code{numeric} - maximum mean distance tolerated from a point to its nearest neighbors.
 #' @template param-max-d
 #' @template param-min_h-max_h
-#' @template param-min-n
 #' @details
 #' Point metrics are calculated for every point. Points are then removed depending on their point
 #' metrics parameters and clustered to represent individual tree regions.
@@ -128,16 +126,14 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' point cloud are described in \code{\link{fastPointMetrics}}.
 #' @template section-eigen-decomposition
 #' @export
-map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
+map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_d = .5, min_h = 1.5, max_h = 3){
 
   params = list(
     max_curvature = max_curvature,
     max_verticality = max_verticality,
-    max_mean_dist = max_mean_dist,
     max_d = max_d,
     min_h = min_h,
-    max_h = max_h,
-    min_n = min_n
+    max_h = max_h
   )
 
   for(i in names(params)){
@@ -168,7 +164,7 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
       stop('no points found in the specified min_h/max_h range')
     }
 
-    mtrlst = c('N', 'Curvature', 'Verticality', 'MeanDist')
+    mtrlst = c('Curvature', 'Verticality', 'MeanDist')
 
     check_pt_metrics = mtrlst %>% sapply(function(x) hasField(las, x)) %>% as.logical %>% all
     if(!check_pt_metrics){
@@ -176,8 +172,16 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
       las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    las = filter_poi(las, N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < max_mean_dist) %>%
-      nnFilter(.1, 10)  %>% nnFilter(.25, 100)
+    f3d = nrow(las@data) / (area(las) * abs(diff(range(las$Z))))
+    n1 = ceiling(f3d * (.1^3) * 3) + 1
+    n2 = ceiling(f3d * (.25^3) * 3) + 1
+
+    las = filter_poi(las, Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < (20/f3d))
+    if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
+    las %<>% nnFilter(.1, n1)
+    if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
+    las %<>% nnFilter(.25, n2)
+    if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
 
     las@data$TreeID = 0
     maxdst = max_d*2
@@ -190,7 +194,9 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = filter_poi(las, hn$N[TreeID] > min_n)
+    las = filter_poi(las, hn$N[TreeID] > n2)
+
+    if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
 
     las %<>% setAttribute('tree_map')
     return(las)
@@ -208,7 +214,6 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
 #' @param voxel_spacing \code{numeric} - voxel side length, in point cloud units.
 #' @template param-max-d
 #' @template param-min_h-max_h
-#' @template param-min-n
 #' @details
 #' Point metrics are calculated for every voxel. Points are then removed depending on their voxel's metrics
 #' metrics parameters and clustered to represent individual tree regions.
@@ -216,7 +221,7 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
 #' point cloud are described in \code{\link{fastPointMetrics}}.
 #' @template section-eigen-decomposition
 #' @export
-map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 1.5, max_h = 3, min_n = 100){
+map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spacing = .1, max_d = .5, min_h = 1.5, max_h = 3){
 
   params = list(
     max_curvature = max_curvature,
@@ -224,8 +229,7 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
     voxel_spacing = voxel_spacing,
     max_d = max_d,
     min_h = min_h,
-    max_h = max_h,
-    min_n = min_n
+    max_h = max_h
   )
 
   for(i in names(params)){
@@ -263,8 +267,16 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
       las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
-    las = filter_poi(las, N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality) %>%
-      nnFilter(.1, 10)  %>% nnFilter(.25, 100)
+    f3d = nrow(las@data) / (area(las) * abs(diff(range(las$Z))))
+    n1 = ceiling(f3d * (.1^3) * 3) + 1
+    n2 = ceiling(f3d * (.25^3) * 3) + 1
+
+    las = filter_poi(las, N > 3 & Curvature < max_curvature & abs(Verticality - 90) < max_verticality)
+    if(is.empty(las)) stop('map.eigen.voxel parameters too restrictive, try increasing some of them.')
+    las %<>% nnFilter(.1, n1)
+    if(is.empty(las)) stop('map.eigen.voxel parameters too restrictive, try increasing some of them.')
+    las %<>% nnFilter(.25, n2)
+    if(is.empty(las)) stop('map.eigen.voxel parameters too restrictive, try increasing some of them.')
 
     las@data$TreeID = 0
     maxdst = max_d*2
@@ -277,7 +289,9 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = filter_poi(las, hn$N[TreeID] > min_n)
+    las = filter_poi(las, hn$N[TreeID] > n2)
+
+    if(is.empty(las)) stop('map.eigen.voxel parameters too restrictive, try increasing some of them.')
 
     las %<>% setAttribute('tree_map')
     return(las)

@@ -110,8 +110,8 @@ preCheck = function(las){
         message("point cloud apparently not normalized")
     } else {
       n = ifelse(nrow(las@data) > 1000, 1000, nrow(las@data))
-      mean_ground = las$Z %>% sort %>% head(n) %>% mean %>% abs
-      if(mean_ground > 0.2)
+      mean_ground = las$Z %>% sort %>% head(n) %>% median %>% abs
+      if(mean_ground > 1)
         message("point cloud apparently not normalized")
     }
   }

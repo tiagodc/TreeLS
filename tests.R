@@ -23,7 +23,3 @@ rm(list = c('X','Y','Z','Classification','TreePosition','TreeID','Stem','Segment
 ###################
 # require(TreeLS)
 # require(glue)
-
-pine = readTLS('inst/extdata/pine.laz')
-plot3d(pine@data)
-.pan3d()

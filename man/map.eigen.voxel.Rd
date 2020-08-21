@@ -10,8 +10,7 @@ map.eigen.voxel(
   voxel_spacing = 0.1,
   max_d = 0.5,
   min_h = 1.5,
-  max_h = 3,
-  min_n = 100
+  max_h = 3
 )
 }
 \arguments{
@@ -24,8 +23,6 @@ map.eigen.voxel(
 \item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
 \item{min_h, max_h}{\code{numeric} - height thresholds applied to filter a point cloud before processing.}
-
-\item{min_n}{\code{numeric} - lowest point count accepted in a tree's point cluster.}
 }
 \description{
 This function is meant to be used inside \code{\link{treeMap}}. It applies a filter to select points belonging to voxels with specific features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.

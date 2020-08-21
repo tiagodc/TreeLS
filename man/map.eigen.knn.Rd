@@ -7,11 +7,9 @@
 map.eigen.knn(
   max_curvature = 0.1,
   max_verticality = 10,
-  max_mean_dist = 0.1,
   max_d = 0.5,
   min_h = 1.5,
-  max_h = 3,
-  min_n = 100
+  max_h = 3
 )
 }
 \arguments{
@@ -19,13 +17,9 @@ map.eigen.knn(
 
 \item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees} (from 0 to 90).}
 
-\item{max_mean_dist}{\code{numeric} - maximum mean distance tolerated from a point to its nearest neighbors.}
-
 \item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
 \item{min_h, max_h}{\code{numeric} - height thresholds applied to filter a point cloud before processing.}
-
-\item{min_n}{\code{numeric} - lowest point count accepted in a tree's point cluster.}
 }
 \description{
 This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
