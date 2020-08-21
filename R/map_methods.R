@@ -117,6 +117,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It applies a KNN filter to select points with specific neighborhood features. For more details on geometry features, check out \code{\link{fastPointMetrics}}.
 #' @template param-max-curvature
 #' @template param-max-verticality
+#' @param max_mean_dist \code{numeric} - maximum mean distance tolerated from a point to its nearest neighbors.
 #' @template param-max-d
 #' @template param-min_h-max_h
 #' @details
@@ -126,7 +127,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
 #' point cloud are described in \code{\link{fastPointMetrics}}.
 #' @template section-eigen-decomposition
 #' @export
-map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_d = .5, min_h = 1.5, max_h = 3){
+map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist = .1, max_d = .5, min_h = 1.5, max_h = 3){
 
   params = list(
     max_curvature = max_curvature,
@@ -176,7 +177,10 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_d = .5, m
     n1 = ceiling(f3d * (.1^3) * 3) + 1
     n2 = ceiling(f3d * (.25^3) * 3) + 1
 
-    las = filter_poi(las, Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < (20/f3d))
+    md = 20/f3d
+    if(md > max_mean_dist) max_mean_dist = md
+
+    las = filter_poi(las, Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < max_mean_dist)
     if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
     las %<>% nnFilter(.1, n1)
     if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
@@ -194,9 +198,9 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_d = .5, m
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = filter_poi(las, hn$N[TreeID] > n2)
-
-    if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
+    if(any(hn$N > f3d)){
+      las = filter_poi(las, hn$N[TreeID] > f3d)
+    }
 
     las %<>% setAttribute('tree_map')
     return(las)
@@ -289,9 +293,10 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
     }
 
     hn = las@data[,.(H=max(Z) - min(Z), .N), by=TreeID]
-    las = filter_poi(las, hn$N[TreeID] > n2)
 
-    if(is.empty(las)) stop('map.eigen.voxel parameters too restrictive, try increasing some of them.')
+    if(any(hn$N > f3d)){
+      las = filter_poi(las, hn$N[TreeID] > f3d)
+    }
 
     las %<>% setAttribute('tree_map')
     return(las)

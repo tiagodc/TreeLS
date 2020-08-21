@@ -7,6 +7,7 @@
 map.eigen.knn(
   max_curvature = 0.1,
   max_verticality = 10,
+  max_mean_dist = 0.1,
   max_d = 0.5,
   min_h = 1.5,
   max_h = 3
@@ -16,6 +17,8 @@ map.eigen.knn(
 \item{max_curvature}{\code{numeric} - maximum curvature (from 0 to 1) accepted when filtering a point neighborhood.}
 
 \item{max_verticality}{\code{numeric} - maximum deviation of a point neighborhood's orientation from an absolute vertical axis ( Z = c(0,0,1) ), in \emph{degrees} (from 0 to 90).}
+
+\item{max_mean_dist}{\code{numeric} - maximum mean distance tolerated from a point to its nearest neighbors.}
 
 \item{max_d}{\code{numeric} - largest tree diameter expected in the point cloud.}
 
