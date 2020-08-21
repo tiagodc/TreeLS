@@ -315,7 +315,11 @@ add_treeIDs = function(x, las, ...){
     if(!hasField(las, 'TreeID')) stop('TreeID field not found.')
     las = las@data
   }else{
-    if(!all(c('X','Y','Z','TreeID') %in% colnames(las))) stop('X, Y, Z and TreeID fields must be present.')
+    if(!all(c('X','Y','TreeID') %in% colnames(las))){
+      stop('X, Y and TreeID fields must be present.')
+    }else if(!hasField(las, 'Z')){
+      las$Z = 0
+    }
   }
 
   las = bringToOrigin(las, x)
