@@ -83,6 +83,8 @@ vector<vector<double> > fastApply(vector<vector<double> >& matrix, vector<string
 
 vector<unsigned int> sortIndexes(vector<double>& values);
 
+unsigned int uniqueTotalCounter(vector<unsigned int> input);
+
 void progressPrinter(string units, unsigned int n, unsigned int total);
 
 #endif // UTILS_HPP

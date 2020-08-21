@@ -20,6 +20,7 @@
 //  ===============================================================================
 
 #include "methods.hpp"
+#include <algorithm>
 
 // convert point cloud slice to raster of point count
 Raster getCounts(vector<vector<double> >& slice, double pixel_size){
@@ -602,12 +603,14 @@ vector<vector<vector<double> > > ransacPlotCircles(vector<vector<double> >& clou
 
   vector< vector< vector<double> > > treeEstimates;
 
+  unsigned int progress_counter = 0;
+  unsigned int n_ids = uniqueTotalCounter(treeId);
   for(unsigned int i = 0; i < trees.size(); ++i){
 
-    progressPrinter("trees", i, trees.size());
     vector<unsigned int>& segs = indices[i];
 
     if(segs.empty()) continue;
+    progressPrinter("trees", progress_counter++, n_ids);
 
     vector< vector<double> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];
@@ -635,15 +638,15 @@ vector<vector<vector<double> > > ransacPlotCylinders(vector<vector<double> >& cl
   vector<vector<double> > treeRadii = partitionIndex(treeId, radii);
 
   vector< vector< vector<double> > > treeEstimates;
-
+  
+  unsigned int progress_counter = 0;
+  unsigned int n_ids = uniqueTotalCounter(treeId);
   for(unsigned int i = 0; i < trees.size(); ++i){
-
-    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
-    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
     if(segs.empty()) continue;
+    progressPrinter("trees", progress_counter++, n_ids);
 
     vector< vector<double> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];
@@ -672,14 +675,14 @@ vector<vector<vector<double> > > irlsPlotCylinders(vector<vector<double> >& clou
 
   vector< vector< vector<double> > > treeEstimates;
 
+  unsigned int progress_counter = 0;
+  unsigned int n_ids = uniqueTotalCounter(treeId);
   for(unsigned int i = 0; i < trees.size(); ++i){
-
-    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
-    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
     if(segs.empty()) continue;
+    progressPrinter("trees", progress_counter++, n_ids);
 
     vector< vector<double> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];
@@ -708,14 +711,14 @@ vector<vector<vector<double> > > irlsPlotCircles(vector<vector<double> >& cloud,
 
   vector< vector< vector<double> > > treeEstimates;
 
+  unsigned int progress_counter = 0;
+  unsigned int n_ids = uniqueTotalCounter(treeId);
   for(unsigned int i = 0; i < trees.size(); ++i){
-
-    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
-    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
     if(segs.empty()) continue;
+    progressPrinter("trees", progress_counter++, n_ids);
 
     vector< vector<double> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];
@@ -926,14 +929,14 @@ vector<vector<vector<double> > > bfPlotCylinders(vector<vector<double> >& cloud,
 
   vector< vector< vector<double> > > treeEstimates;
 
+  unsigned int progress_counter = 0;
+  unsigned int n_ids = uniqueTotalCounter(treeId);
   for(unsigned int i = 0; i < trees.size(); ++i){
-
-    // cout << "... tree " << i+1 << " of " << trees.size() << endl;
-    progressPrinter("trees", i, trees.size());
 
     vector<unsigned int>& segs = indices[i];
 
     if(segs.empty()) continue;
+    progressPrinter("trees", progress_counter++, n_ids);
 
     vector< vector<double> >& tree = trees[i];
     vector<double>& segsRadii = treeRadii[i];

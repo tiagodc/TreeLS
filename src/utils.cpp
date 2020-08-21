@@ -696,6 +696,11 @@ vector<unsigned int> sortIndexes(vector<double>& values) {
   return idx;
 }
 
+unsigned int uniqueTotalCounter(vector<unsigned int> input){
+  unordered_set<unsigned int> uq(input.begin(), input.end());
+  return uq.size();
+}
+
 void progressPrinter(string units, unsigned int n, unsigned int total){
   double percentage = 100.0 * (double)(++n) / (double)total;
   Rcpp::Rcout << fixed << setprecision(2) << "Progress (" << percentage << " %): " << n << " of " << total << " " << units << "\r" << flush;
