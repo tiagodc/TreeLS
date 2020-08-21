@@ -17,7 +17,7 @@
 #'    \item \code{Scattering}: \mjeqn{EV_{3} / EV_{1}}{EV3 / EV1}
 #'    \item \code{Omnivariance}: \mjeqn{(EV_{2} + EV_{3}) / EV_{1}}{(EV2 + EV3) / EV1}
 #'    \item \code{Anisotropy}: \mjeqn{(EV_{1} - EV_{3}) / EV_{1}}{(EV1 - EV3) / EV1}
-#'    \item \code{Eigentropy}: \mjeqn{\sum_{i=1}^{n=3} EV_{i} * ln(EV_{i})}{sum(EV * ln(EV))}
+#'    \item \code{Eigentropy}: \mjeqn{- \sum_{i=1}^{n=3} EV_{i} * ln(EV_{i})}{-sum(EV * ln(EV))}
 #'    \item \code{EigenSum}: sum of eigenvalues, \mjeqn{\sum_{i=1}^{n=3} EV_{i}}{sum(EV)}
 #'    \item \code{Curvature}: surface variation, \mjeqn{EV_{3} / EigenSum}{EV3 / EigenSum}
 #'    \item \code{KnnRadius}: 3D neighborhood radius
