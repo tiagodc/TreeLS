@@ -15,9 +15,7 @@ Most algorithms are written in C++ and wrapped in R functions through `Rcpp`. *T
 
 For any questions, comments or bug reports please submit an [issue](https://github.com/tiagodc/TreeLS/issues) here on GitHub. Suggestions, ideas and references of new algorithms are always welcome - as long as they fit into TreeLS' scope.
 
-`TreeLS` is currently on v2.0. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the *Installation from source* section below.
-
-*TreeLS is not on CRAN at the moment (August/2020), the up-to-date version is submitted and should be available shortly. Meanwhile you can install it from source using devtools.
+`TreeLS` is currently on v2.0.2. To install it from an official mirror, use: `install.packages("TreeLS")`. To install the most recent version, check out the *Installation from source* section below.
 
 ## News
 
@@ -41,7 +39,6 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 ## Installation from source
 
 ### Requirements
-- `devtools`: run `install.packages('devtools', dependencies = TRUE)` from the R console
 - Rcpp compiler:
     - on Windows: install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for your R version - make sure to add it to your system's *path*
     - on Mac: install Xcode
@@ -51,7 +48,7 @@ For any questions, comments or bug reports please submit an [issue](https://gith
 
 On the R console, run:
 ```
-devtools::install_github('tiagodc/TreeLS')
+remotes::install_github('tiagodc/TreeLS')
 ```
 
 ## Usage
