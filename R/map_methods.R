@@ -99,7 +99,7 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
     map = stackMap(las %>% las2xyz, min_h, max_h, h_step, pixel_size, max_d/2, min_density, min_votes) %>%
       do.call(what=cbind) %>% as.data.table
 
-    if(is.empty(map))
+    if(nrow(map) == 0)
       stop('No points matched the mapping criteria. Try changing the map.hough parameters.')
 
     map$Intensity %<>% as.integer
