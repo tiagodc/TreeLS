@@ -644,7 +644,7 @@ treeMap.merge = function(map, d=.2){
 
   is_data_table = hasAttribute(map, 'tree_map_dt')
   nxy = if(is_data_table) map else treeMap.positions(map, plot = F)
-  if(nrow(nxy) <= 1) return(nxy)
+  if(nrow(nxy) <= 1) return(map)
   nn = knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
