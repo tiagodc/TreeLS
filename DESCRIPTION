@@ -1,7 +1,7 @@
 Package: TreeLS
 Type: Package
 Title: Terrestrial Point Cloud Processing of Forest Data
-Version: 2.0.3
+Version: 2.0.4
 Date: 2020-08-21
 Authors@R: c(person("Tiago", "de Conto", email = "tdc.florestal@gmail.com", role = c("aut", "cre")))
 Description: High performance algorithms for manipulation of terrestrial 'LiDAR' (but not only) point clouds for use in research and forest monitoring applications, being fully compatible with the 'LAS' infrastructure of 'lidR'. For in depth descriptions of stem denoising and segmentation algorithms refer to Conto et al. (2017) <doi:10.1016/j.compag.2017.10.019>.
