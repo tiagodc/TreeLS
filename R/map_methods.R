@@ -314,8 +314,9 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It opens an interactive \code{rgl} plot where the user can specify tree locations by clicking.
 #' @param map optional tree map to be manually updated.
 #' @template param-min_h-max_h
+#' @param bg background color for the rgl plot.
 #' @export
-map.pick = function(map = NULL, min_h=1, max_h=5){
+map.pick = function(map = NULL, min_h=1, max_h=5, bg='gray50'){
 
   if(min_h >= max_h){
     stop('max_h must be larger than min_h')
@@ -354,6 +355,7 @@ map.pick = function(map = NULL, min_h=1, max_h=5){
     }
 
     plot(las, size = 1.5, clear_artifacts=F)
+    bg3d(bg)
 
     if(!is.null(map)){
       spheres3d(map$X, map$Y, median(las$Z), .33, color='white')
