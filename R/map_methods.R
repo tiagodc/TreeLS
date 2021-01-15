@@ -99,6 +99,9 @@ map.hough = function(min_h = 1, max_h = 3, h_step = 0.5, pixel_size = 0.025, max
     map = stackMap(las %>% las2xyz, min_h, max_h, h_step, pixel_size, max_d/2, min_density, min_votes) %>%
       do.call(what=cbind) %>% as.data.table
 
+    if(nrow(map) == 0)
+      stop('No points matched the mapping criteria. Try changing the map.hough parameters.')
+
     map$Intensity %<>% as.integer
     map$Keypoint_flag %<>% as.logical
     map$PointSourceID %<>% as.integer
@@ -311,8 +314,9 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
 #' @description This function is meant to be used inside \code{\link{treeMap}}. It opens an interactive \code{rgl} plot where the user can specify tree locations by clicking.
 #' @param map optional tree map to be manually updated.
 #' @template param-min_h-max_h
+#' @param bg background color for the rgl plot.
 #' @export
-map.pick = function(map = NULL, min_h=1, max_h=5){
+map.pick = function(map = NULL, min_h=1, max_h=5, bg='gray50'){
 
   if(min_h >= max_h){
     stop('max_h must be larger than min_h')
@@ -351,6 +355,7 @@ map.pick = function(map = NULL, min_h=1, max_h=5){
     }
 
     plot(las, size = 1.5, clear_artifacts=F)
+    bg3d(bg)
 
     if(!is.null(map)){
       spheres3d(map$X, map$Y, median(las$Z), .33, color='white')
