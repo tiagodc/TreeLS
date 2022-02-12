@@ -110,11 +110,11 @@ class Raster{
 
     PixelSet rasterCircle(double radius, double cx, double cy){
 
-      int n_points = ceil( (2 * PI * radius) / pixel_size );
-      double angle_dist = 2 * PI / n_points;
+      int n_points = ceil( (2 * M_PI * radius) / pixel_size );
+      double angle_dist = 2 * M_PI / n_points;
       PixelSet pixels;
 
-      for(double i = 0; i < 2*PI; i += angle_dist){
+      for(double i = 0; i < 2*M_PI; i += angle_dist){
         double x = cos(i)*radius + cx;
         double y = sin(i)*radius + cy;
 

@@ -506,7 +506,7 @@ SEXP cppCylinderFit(NumericMatrix& las, std::string method = "nm", unsigned int 
   }
 
   if(method == "irls"){
-    vector<double> initPars = {0, PI/2, 0, 0, 0};
+    vector<double> initPars = {0, M_PI/2, 0, 0, 0};
     pars = irlsCylinder(cloud, initPars);
   }else if(method == "nm"){
     pars = nmCylinderFit(cloud);
