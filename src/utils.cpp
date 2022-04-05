@@ -523,7 +523,7 @@ vector<vector<unsigned int> > splitVector(vector<unsigned int>& to_split, vector
 
   return parts;
 
-};
+}
 
 //// split point cloud into horizontal slices
 vector<vector<vector<double> > > getSlices(NumericMatrix& cloud, double zmin, double zmax, double zstep){
