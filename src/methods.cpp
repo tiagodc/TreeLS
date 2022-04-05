@@ -474,7 +474,7 @@ vector<vector<double> > ransacStemCylinder(vector<vector<double> >& cloud, vecto
     double rdiff = abs(temp[4] - hrad);
     if(rdiff > tolerance){
       temp[0] = 0;
-      temp[1] = PI/2;
+      temp[1] = M_PI/2;
       temp[2] = 0;
       temp[3] = 0;
       temp[4] = hrad;
@@ -505,7 +505,7 @@ vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<
   }
 
   vector< vector<double> > estimates;
-  vector<double> initPars = {0, PI/2, 0, 0, 0};
+  vector<double> initPars = {0, M_PI/2, 0, 0, 0};
 
   for(unsigned int i = 0; i < stemSlices.size(); ++i){
 
@@ -526,7 +526,7 @@ vector<vector<double> > irlsStemCylinder(vector<vector<double> >& cloud, vector<
     double rdiff = abs(temp[4] - hrad);
     if(rdiff > tolerance){
       temp[0] = 0;
-      temp[1] = PI/2;
+      temp[1] = M_PI/2;
       temp[2] = 0;
       temp[3] = 0;
       temp[4] = hrad;

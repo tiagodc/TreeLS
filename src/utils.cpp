@@ -99,12 +99,12 @@ vector<double> nnMetrics(vector<vector<double> >& xyz, vector<bool> which){
       double eigen_sum_3d = eVal3d[0] + eVal3d[1] + eVal3d[2];
       double surface_variation = eVal3d[2] / eigen_sum_3d;
       double radius_knn_3d = *max_element(dists3d.begin(), dists3d.end()) / 2;
-      double density_3d = n_pts / ((4.0/3.0) * PI * pow(radius_knn_3d, 3.0));
+      double density_3d = n_pts / ((4.0/3.0) * M_PI * pow(radius_knn_3d, 3.0));
       double verticality = vecAngle(z, eVec3d[2]);
       double z_range = zmax - zmin;
       double z_sd = sqrt( zsumsq / xyz[2].size() );
       double radius_knn_2d = *max_element(dists2d.begin(), dists2d.end()) / 2;
-      double density_2d = n_pts / (PI * pow(radius_knn_2d, 2.0));
+      double density_2d = n_pts / (M_PI * pow(radius_knn_2d, 2.0));
       double eigen_sum_2d = eVal2d[0] + eVal2d[1];
       double eigen_ratio_2d = eVal2d[1] / eVal2d[0];
 
@@ -197,7 +197,7 @@ double vecAngle(vector<double>& a, vector<double>& b){
   }
 
   double ang  = dotprod / ( sqrt(asqsum) * sqrt(bsqsum) );
-  double cang = acos(ang) * 180/PI;
+  double cang = acos(ang) * 180/M_PI;
   return cang;
 }
 
