@@ -91,7 +91,7 @@ vector<vector<double> > bruteForceRansacCylinder(vector<vector<double> >& cloud,
 
   for(double i = -maxAngle; i <= maxAngle; i += 1){
     for(double j = -maxAngle; j <= maxAngle; j += 1){
-      vector<vector<double> > tempCloud = rotateCloud(cloud, i * PI/180, j * PI/180, 0.0);
+      vector<vector<double> > tempCloud = rotateCloud(cloud, i * M_PI/180, j * M_PI/180, 0.0);
       vector<double> ijPars = ransacCircle(tempCloud, nSamples, pConfidence, pInliers, nBest);
 
       ijPars.push_back(i);
@@ -343,7 +343,7 @@ vector<double> nmCylinderInit(vector<vector<double> >& las){
   // double rho = sqrt(x0*x0 + y0*y0 + z0*z0);
 
   double rho=0;
-  double theta = PI/2;
+  double theta = M_PI/2;
   double phi = 0;
   double alpha = 0;
   double r = 0;
