@@ -369,7 +369,7 @@ writeTLS = function(las, file, col_names=NULL, index=FALSE){
   }
 
   for(f in fields){
-    las = add_lasattribute(las, las@data[,f,with=F] %>% unlist %>% as.double, f, f)
+    las = lidR::add_lasattribute(las, las@data[,f,with=F] %>% unlist %>% as.double, f, f)
   }
 
   writeLAS(las, file, index)
@@ -536,16 +536,16 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
   if(!any(las$Classification == 2)){
     message('no ground points found, performing ground segmentation')
-    las = classify_ground(las, csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
+    las = classify_ground(las, RCSF::csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
   }
 
-  res = area(las) / nrow(las@data[Classification == 2])
+  res = as.numeric(sf::st_area(las)) / nrow(las@data[Classification == 2])
   res = ifelse(res < min_res, min_res, res)
 
-  grid = las %>% extent %>% raster
+  grid = las %>% ext %>% rast
   res(grid) = res
 
-  dtm = grid_terrain(las, res = grid, algorithm = knnidw(), full_raster=TRUE)
+  dtm = rasterize_terrain(las, res = grid, algorithm = knnidw())#, full_raster=TRUE)
   las = normalize_height(las, dtm, na.rm=TRUE, Wdegenerated = TRUE)
 
   if(!keep_ground) las = filter_poi(las, Classification != 2)
@@ -859,7 +859,7 @@ tlsRotate = function(las){
 
   ground = las@data[,c('X','Y','Z')] %>%
     toLAS %>%
-    classify_ground(csf(class_threshold = .2), F) %>%
+    classify_ground( RCSF::csf(class_threshold = .2), F) %>%
     filter_poi(Classification == 2)
 
   center = ground@data[,.(median(X), median(Y))] %>% as.double
@@ -1429,7 +1429,7 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_d = .4, votes_percentile =
     thickness = ifelse(rad/2 > pixel_size, pixel_size,  rad/2)
 
     inner = dst <= thickness
-    area_inner = pi*thickness^2
+    area_inner = pi * thickness^2
     den_inner = (inner %>% which %>% length) / area_inner
 
     strip = dst > (rad - thickness/2) & dst < (rad + thickness/2)
