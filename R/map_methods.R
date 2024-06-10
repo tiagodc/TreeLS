@@ -176,7 +176,7 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
       las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    f3d = nrow(las@data) / (area(las) * abs(diff(range(las$Z))))
+    f3d = nrow(las@data) / (as.numeric(sf::st_area(las)) * abs(diff(range(las$Z))))
     n1 = ceiling(f3d * (.1^3) * 3) + 1
     n2 = ceiling(f3d * (.25^3) * 3) + 1
 
@@ -274,7 +274,7 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
       las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
-    f3d = nrow(las@data) / (area(las) * abs(diff(range(las$Z))))
+    f3d = nrow(las@data) / (as.numeric(sf::st_area(las)) * abs(diff(range(las$Z))))
     n1 = ceiling(f3d * (.1^3) * 3) + 1
     n2 = ceiling(f3d * (.25^3) * 3) + 1
 
