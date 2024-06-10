@@ -7,14 +7,15 @@ trp.voronoi = function(){
 
   func = function(las, xymap){
     xt = terra::ext(las) + c(-1,1,-1,1)
-    v_poly = voronoi(xymap[,2:3], xt)
+    v_poly = terra::voronoi(xymap[,2:3], xt)
     v_poly$id = xymap$TreeID
     names(v_poly) = 'TreeID'
-    crs(v_poly) = crs(las)
+    v_poly = sf::st_as_sf(v_poly)
+    sf::st_crs(v_poly) = sf::st_crs(las)
 
-    xysp = las@data[,.(X,Y)] %>% SpatialPoints
-    crs(xysp) = crs(las)
-    xysp %<>% over(y = v_poly)
+    xysp = st_as_sf( las@data[,.(X,Y)], coords = c("X","Y"))
+    sf::st_crs(xysp) = sf::st_crs(las)
+    xysp %<>% sf::st_intersection(y = v_poly)
 
     xysp = xysp[,1] %>% as.double
     xysp[is.na(xysp)] = 0
