@@ -536,7 +536,7 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
   if(!any(las$Classification == 2)){
     message('no ground points found, performing ground segmentation')
-    las = classify_ground(las, RCSF::csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
+    las = classify_ground(las, RCSF::CSF(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
   }
 
   res = as.numeric(sf::st_area(las)) / nrow(las@data[Classification == 2])
@@ -859,7 +859,7 @@ tlsRotate = function(las){
 
   ground = las@data[,c('X','Y','Z')] %>%
     toLAS %>%
-    classify_ground( RCSF::csf(class_threshold = .2), F) %>%
+    classify_ground( RCSF::CSF(class_threshold = .2), F) %>%
     filter_poi(Classification == 2)
 
   center = ground@data[,.(median(X), median(Y))] %>% as.double
