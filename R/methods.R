@@ -403,7 +403,7 @@ nnFilter = function(las, d = 0.05, n = 2){
 
   sizeCheck(las, n)
 
-  rnn = knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
+  rnn = nabor::knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
 
   keep = rep(T, nrow(las@data))
   for(i in 1:ncol(rnn)){
@@ -645,7 +645,7 @@ treeMap.merge = function(map, d=.2){
   is_data_table = hasAttribute(map, 'tree_map_dt')
   nxy = if(is_data_table) map else treeMap.positions(map, plot = F)
   if(nrow(nxy) <= 1) return(map)
-  nn = knn(nxy[,-1], k=2)
+  nn = nabor::knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
   lg_step = which(step > d)
