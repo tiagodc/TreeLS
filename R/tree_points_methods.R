@@ -1,21 +1,20 @@
 #' Tree points algorithm: voronoi polygons.
 #' @description This function is meant to be used inside \code{\link{treePoints}}. Assign **all** points to a \code{TreeID} based on their closest \code{\link{treeMap}} coordinate.
-#' @importFrom dismo voronoi
-#' @importFrom sp over SpatialPoints
+#' @importFrom sf st_as_sf st_crs st_intersection
 #' @export
 trp.voronoi = function(){
 
   func = function(las, xymap){
     xt = terra::ext(las) + c(-1,1,-1,1)
-    v_poly = terra::voronoi(xymap[,2:3], xt)
+    v_poly = dismo::voronoi(xymap[,2:3], xt)
     v_poly$id = xymap$TreeID
     names(v_poly) = 'TreeID'
-    v_poly = sf::st_as_sf(v_poly)
-    sf::st_crs(v_poly) = sf::st_crs(las)
+    v_poly = st_as_sf(v_poly)
+    st_crs(v_poly) = st_crs(las)
 
     xysp = st_as_sf( las@data[,.(X,Y)], coords = c("X","Y"))
-    sf::st_crs(xysp) = sf::st_crs(las)
-    xysp %<>% sf::st_intersection(y = v_poly)
+    sf::st_crs(xysp) = st_crs(las)
+    xysp %<>% st_intersection(y = v_poly)
 
     xysp = xysp[,1] %>% as.double
     xysp[is.na(xysp)] = 0
