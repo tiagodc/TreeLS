@@ -525,7 +525,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' tls = tlsNormalize(tls, 0.5, FALSE)
 #' plot(tls)
 #' rgl::axes3d(col='white')
-#' @importFrom raster raster extent res<-
+#' @importFrom terra rast ext res<-
 #' @export
 tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
