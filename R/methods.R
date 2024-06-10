@@ -1275,7 +1275,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
   h_plot = function(las){
     colors = set.colors(las$Z, lidR::height.colors(50))
-    rgl.points(las %>% las2xyz, color=colors, size=pt_cex)
+    points3d(las %>% las2xyz, color=colors, size=pt_cex)
   }
 
   open3d()
