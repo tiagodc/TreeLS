@@ -6,7 +6,9 @@ trp.voronoi = function(){
 
   func = function(las, xymap){
     xt = terra::ext(las) + c(-1,1,-1,1)
-    v_poly = dismo::voronoi(xymap[,2:3], xt)
+    # v_poly = dismo::voronoi(xymap[,2:3], xt)
+    v_poly = vect(xymap[,2:3], type="points")
+    v_poly = terra::voronoi( v_poly, terra::vect(xt))
     v_poly$id = xymap$TreeID
     names(v_poly) = 'TreeID'
     v_poly = st_as_sf(v_poly)
