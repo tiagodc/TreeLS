@@ -542,8 +542,8 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
   res = as.numeric(sf::st_area(las)) / nrow(las@data[Classification == 2])
   res = ifelse(res < min_res, min_res, res)
 
-  grid = las %>% ext %>% rast
-  res(grid) = res
+  grid = terra::rast(ext(las))
+  terra::res(grid) = res
 
   dtm = rasterize_terrain(las, res = grid, algorithm = knnidw())#, full_raster=TRUE)
   las = normalize_height(las, dtm, na.rm=TRUE, Wdegenerated = TRUE)
