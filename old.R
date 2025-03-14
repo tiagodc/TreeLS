@@ -248,7 +248,7 @@ rglAXES = function(xyz = c(1,1,1), cols = c('red','green','blue'), ...){
 #' trunk <- pref_HT(spruce)
 #' stem <- fit_RANSAC_circle(trunk)
 #' obj3d <- stem.model(stem)
-#' rgl.points(spruce, size=1)
+#' points3d(spruce, size=1)
 #'}
 #' @return 3D stem model of stacked cylinders/circles
 #' @import alphashape3d
@@ -336,7 +336,7 @@ stem.model = function(stem.out, cyl.len=NA, col=rainbow, bg='black', alpha=.5){
 
   bg3d(bg)
   lapply(1:length(abs), function(u) if(!nulls[u]) plot.ashape3d(abs[[u]], clear=F, edges=F, vertices=F, col=cols[[u]]))
-  lapply(1:length(pts), function(u) if(!nl2[u]) rgl.points(pts[[u]], col=cols[[u]]) )
+  lapply(1:length(pts), function(u) if(!nl2[u]) points3d(pts[[u]], col=cols[[u]]) )
 
   return(abs[!nulls])
 
