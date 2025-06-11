@@ -369,7 +369,7 @@ writeTLS = function(las, file, col_names=NULL, index=FALSE){
   }
 
   for(f in fields){
-    las = add_lasattribute(las, las@data[,f,with=F] %>% unlist %>% as.double, f, f)
+    las = lidR::add_lasattribute(las, las@data[,f,with=F] %>% unlist %>% as.double, f, f)
   }
 
   writeLAS(las, file, index)
@@ -403,7 +403,7 @@ nnFilter = function(las, d = 0.05, n = 2){
 
   sizeCheck(las, n)
 
-  rnn = knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
+  rnn = nabor::knn(las %>% las2xyz, k = n+1)$nn.dists[,-1]
 
   keep = rep(T, nrow(las@data))
   for(i in 1:ncol(rnn)){
@@ -525,7 +525,7 @@ tlsCrop = function(las, x, y, len, circle=TRUE, negative=FALSE){
 #' tls = tlsNormalize(tls, 0.5, FALSE)
 #' plot(tls)
 #' rgl::axes3d(col='white')
-#' @importFrom raster raster extent res<-
+#' @importFrom terra rast ext res<-
 #' @export
 tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
 
@@ -539,13 +539,14 @@ tlsNormalize = function(las, min_res=.25, keep_ground=TRUE){
     las = classify_ground(las, csf(class_threshold = 0.05, cloth_resolution = 0.05), last_returns = F)
   }
 
-  res = area(las) / nrow(las@data[Classification == 2])
+  res = as.numeric(sf::st_area(las)) / nrow(las@data[Classification == 2])
   res = ifelse(res < min_res, min_res, res)
 
-  grid = las %>% extent %>% raster
-  res(grid) = res
+  grid = terra::rast(ext(las))
+  terra::res(grid) = res
+  terra::crs(grid) = terra::crs(las)
 
-  dtm = grid_terrain(las, res = grid, algorithm = knnidw(), full_raster=TRUE)
+  dtm = rasterize_terrain(las, res = grid, algorithm = knnidw())#, full_raster=TRUE)
   las = normalize_height(las, dtm, na.rm=TRUE, Wdegenerated = TRUE)
 
   if(!keep_ground) las = filter_poi(las, Classification != 2)
@@ -645,7 +646,7 @@ treeMap.merge = function(map, d=.2){
   is_data_table = hasAttribute(map, 'tree_map_dt')
   nxy = if(is_data_table) map else treeMap.positions(map, plot = F)
   if(nrow(nxy) <= 1) return(map)
-  nn = knn(nxy[,-1], k=2)
+  nn = nabor::knn(nxy[,-1], k=2)
   dst = nn$nn.dists[,2] %>% sort %>% unique
   step = dst[-1] - dst[-length(dst)]
   lg_step = which(step > d)
@@ -859,7 +860,7 @@ tlsRotate = function(las){
 
   ground = las@data[,c('X','Y','Z')] %>%
     toLAS %>%
-    classify_ground(csf(class_threshold = .2), F) %>%
+    classify_ground( csf(class_threshold = .2), F) %>%
     filter_poi(Classification == 2)
 
   center = ground@data[,.(median(X), median(Y))] %>% as.double
@@ -1274,7 +1275,7 @@ tlsPlot = function(..., fast=FALSE, tree_id = NULL, segment = NULL){
 
   h_plot = function(las){
     colors = set.colors(las$Z, lidR::height.colors(50))
-    rgl.points(las %>% las2xyz, color=colors, size=pt_cex)
+    points3d(las %>% las2xyz, color=colors, size=pt_cex)
   }
 
   open3d()
@@ -1429,7 +1430,7 @@ shapeFit.forks = function(dlas, pixel_size = .02, max_d = .4, votes_percentile =
     thickness = ifelse(rad/2 > pixel_size, pixel_size,  rad/2)
 
     inner = dst <= thickness
-    area_inner = pi*thickness^2
+    area_inner = pi * thickness^2
     den_inner = (inner %>% which %>% length) / area_inner
 
     strip = dst > (rad - thickness/2) & dst < (rad + thickness/2)

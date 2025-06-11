@@ -162,7 +162,7 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
   }
 
   func = function(las){
-    las = filter_poi(las, Classification != 2 & Z > min_h & Z < max_h)
+    las = lidR::filter_poi(las, Classification != 2 & Z > min_h & Z < max_h)
 
     if(lidR::is.empty(las)){
       stop('no points found in the specified min_h/max_h range')
@@ -176,14 +176,14 @@ map.eigen.knn = function(max_curvature = .1, max_verticality = 10, max_mean_dist
       las = fastPointMetrics(las, ptm.knn(), mtrlst)
     }
 
-    f3d = nrow(las@data) / (area(las) * abs(diff(range(las$Z))))
+    f3d = nrow(las@data) / (as.numeric(sf::st_area(las)) * abs(diff(range(las$Z))))
     n1 = ceiling(f3d * (.1^3) * 3) + 1
     n2 = ceiling(f3d * (.25^3) * 3) + 1
 
     md = 20/f3d
     if(md > max_mean_dist) max_mean_dist = md
 
-    las = filter_poi(las, Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < max_mean_dist)
+    las = lidR::filter_poi(las, Curvature < max_curvature & abs(Verticality - 90) < max_verticality & MeanDist < max_mean_dist)
     if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
     las %<>% nnFilter(.1, n1)
     if(is.empty(las)) stop('map.eigen.knn parameters too restrictive, try increasing some of them.')
@@ -261,7 +261,7 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
   }
 
   func = function(las){
-    las = filter_poi(las, Classification != 2 & Z > min_h & Z < max_h)
+    las = lidR::filter_poi(las, Classification != 2 & Z > min_h & Z < max_h)
 
     if(lidR::is.empty(las)){
       stop('no points found in the specified min_h/max_h range')
@@ -274,7 +274,7 @@ map.eigen.voxel = function(max_curvature = .15, max_verticality = 15, voxel_spac
       las = fastPointMetrics(las, ptm.voxel(voxel_spacing), mtrlst)
     }
 
-    f3d = nrow(las@data) / (area(las) * abs(diff(range(las$Z))))
+    f3d = nrow(las@data) / (as.numeric(sf::st_area(las)) * abs(diff(range(las$Z))))
     n1 = ceiling(f3d * (.1^3) * 3) + 1
     n2 = ceiling(f3d * (.25^3) * 3) + 1
 
